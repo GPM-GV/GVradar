@@ -1,0 +1,18 @@
+{
+    'site': 'NPOL',
+    'StartTime': [2020,  4, 30, 21, 25],
+    'EndTime':   [2020,  4, 30, 21, 30],
+    'in_dir': '/gpmgv1/NPOL/PyArt/DPQCV0.1/CF/PPI/',
+    'cf_dir': '/gpmgv1/NPOL/PyArt/DPQCV0.1/CF/DP_products/PPI/',
+    'max_range': 150, 
+    'max_height': 10,
+    'sweeps_to_plot': [0],
+    'output_cf': True,
+    'output_fields': ['ZZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD', 'SQ', 'FH', 'RC', 'DM', 'NW'],
+    'plot_images': True,
+    'plot_single': False,
+    'fields_to_plot': ['CZ','RC','FH', 'DM', 'NW'],
+    'plot_dir': '/gpmgv1/NPOL/PyArt/DPQCV0.1/Plots/PPI/',
+    'sounding_dir': '/gvraid/trmmgv/Soundings/RUC_Soundings/'
+}
+
