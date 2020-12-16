@@ -3,7 +3,7 @@ Dual Pol Quality Control (DPQC)  and precipitation product package which utilize
 
 To run DPQC:
 
-         python DPQC.py 'thresh_dict.txt'
+         python DPQC.py --file /file/location/data_file --thresh_dict optional_threshold_dictionary.txt
 
 For thresh_dict description see:
         thresh_dict_description.txt
