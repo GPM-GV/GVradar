@@ -38,4 +38,4 @@ Calculating Precipitation Products
 
 To run calc_DP_products:
 
-        python calc_DP_products.py 'DP_product_dict.txt'
+        python calc_DP_products.py --file /file/location/QC.file --product_dict DP_product_dict.txt
