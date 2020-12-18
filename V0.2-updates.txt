@@ -1,0 +1,16 @@
+pyDPQC V0.2 updates 
+
+DPQC.py 
+  Program now accepts two arguments –file –thresh_dict. 
+  A sounding is not required to run QC, program applies QC to a default qc_height. 
+  If no thresh_dict is specified program creates a default dictionary. 
+  Fields are renamed to 2 letter fields names before processing begins. 
+  If NEXRAD, rsl_in_idl will organize split cuts and remove MRLE sweeps 
+  If NEXRAD, data beyond 200 km will be masked. 
+  All GPM-GV radars are now compatible. 
+
+calc_DP_products.py 
+  Program now accepts two arguments –file –product_dict. 
+ 
+  Python notebooks are now available for both programs. 
+ 
