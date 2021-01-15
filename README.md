@@ -7,13 +7,21 @@ Dependencies
 pyDPQC is tested to work with the following versions:
 
 python                    3.8.6
+
 arm_pyart                 1.11.3
+
 numpy                     1.19.5
+
 scipy                     1.6.0
+
 matplotlib                3.3.3
+
 netcdf4                   1.5.5.1
+
 csu-radartools            1.3.0.dev0
+
 skewt                     1.2.0
+
 cartopy                   0.18.0
 
 Required dependencies to run pyDPQC in addition to Python are:
