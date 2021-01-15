@@ -13,4 +13,12 @@ calc_DP_products.py
   Program now accepts two arguments –file –product_dict. 
  
   Python notebooks are now available for both programs. 
+  
+  **01/15/2021**
+  
+  sounding_type flag was added.  User can set to 'ruc', 'uwy', or 'ruc_archive'.
+  
+  'ruc' - model sounding data.  https://rucsoundings.noaa.gov
+  'uwy' - real sounding data.  http://weather.uwyo.edu/upperair/sounding.html
+  'ruc_archive' - archive of ruc model data.
  
