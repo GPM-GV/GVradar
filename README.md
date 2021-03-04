@@ -51,19 +51,19 @@ User information
 
 positional arguments:
 
-  file  File to process
+    file  File to process
 
 optional arguments:
 
-  -h, --help                      show this help message and exit
+    -h, --help                      show this help message and exit
 
-  --thresh_dict THRESH_DICT       Threshold dictionary
+    --thresh_dict THRESH_DICT       Threshold dictionary
 
-  --product_dict PRODUCT_DICT     DP product dictionary
+    --product_dict PRODUCT_DICT     DP product dictionary
 
-  --do_qc                         Run QC
+    --do_qc                         Run QC
 
-  --dp_products                   Create DP products
+    --dp_products                   Create DP products
 
 Perform DPQC
 ============
