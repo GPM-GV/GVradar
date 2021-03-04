@@ -40,7 +40,7 @@ We suggest creating an environment, GVradar, with the tested dependency versions
 
 Execute the following command in the active GVradar environment:
 
-  python setup.py install
+    python setup.py install
 
 Running GVradar
 ===============
