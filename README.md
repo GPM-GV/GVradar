@@ -41,7 +41,7 @@ usage: GVradar.py [-h] [--thresh_dict THRESH_DICT] [--product_dict PRODUCT_DICT]
 User information
 
 positional arguments:
-  file                  File to process
+  file  File to process
 
 optional arguments:
   -h, --help                      show this help message and exit
