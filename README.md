@@ -1,7 +1,7 @@
 # GVradar
 Global Precipitation Measurement (GPM) Ground Validation (GV) ground radar processing software (GVradar). 
-    -Python based Dual Pol Quality Control (DPQC), utilizing the Python Atmospheric Radiation Measurement (ARM) Radar Toolkit (Py-ART) and CSU Radar Tools.
-    -Precipitation product generation from Dual Pol, utilizing the Python Atmospheric Radiation Measurement (ARM) Radar Toolkit (Py-ART) and CSU Radar Tools.
+* Python based Dual Pol Quality Control (DPQC), utilizing the Python Atmospheric Radiation Measurement (ARM) Radar Toolkit (Py-ART) and CSU Radar Tools.
+* Precipitation product generation from Dual Pol, utilizing the Python Atmospheric Radiation Measurement (ARM) Radar Toolkit (Py-ART) and CSU Radar Tools.
 
 Dependencies
 ============
@@ -19,15 +19,15 @@ Required dependencies to run GVradar:
 
 GVradar is tested to work with the following versions:
 
-*python                    3.8.6
-*arm_pyart                 1.11.3
-*numpy                     1.19.5
-*scipy                     1.6.0
-*matplotlib                3.3.3
-*netcdf4                   1.5.5.1
-*csu-radartools            1.3.0.dev0
-*skewt                     1.2.0
-*cartopy                   0.18.0
+* python                    3.8.6
+* arm_pyart                 1.11.3
+* numpy                     1.19.5
+* scipy                     1.6.0
+* matplotlib                3.3.3
+* netcdf4                   1.5.5.1
+* csu-radartools            1.3.0.dev0
+* skewt                     1.2.0
+* cartopy                   0.18.0
 
 If you would like to merge NEXRAD split cuts and remove MRLE scans:
 
