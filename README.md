@@ -8,14 +8,14 @@ Dependencies
 
 Required dependencies to run GVradar:
 
-* PyArt <https://arm-doe.github.io/pyart/>
-* NumPy <https://www.numpy.org/>
-* SciPy <https://www.scipy.org>
-* matplotlib <https://matplotlib.org/>
-* netCDF4 <https://github.com/Unidata/netcdf4-python>
-* CSU_RadarTools <https://github.com/CSU-Radarmet/CSU_RadarTools>
-* SkewT <https://github.com/tjlang/SkewT>
-* cartopy <https://anaconda.org/conda-forge/cartopy>
+* [PyArt](https://arm-doe.github.io/pyart/)
+* [NumPy](https://www.numpy.org/)
+* [SciPy](https://www.scipy.org)
+* [matplotlib](https://matplotlib.org/)
+* [netCDF4](https://github.com/Unidata/netcdf4-python)
+* [CSU_RadarTools](https://github.com/CSU-Radarmet/CSU_RadarTools)
+* [SkewT](https://github.com/tjlang/SkewT)
+* [cartopy](https://anaconda.org/conda-forge/cartopy)
 
 GVradar is tested to work with the following versions:
 
@@ -41,13 +41,19 @@ usage: GVradar.py [-h] [--thresh_dict THRESH_DICT] [--product_dict PRODUCT_DICT]
 User information
 
 positional arguments:
+
   file  File to process
 
 optional arguments:
+
   -h, --help                      show this help message and exit
+
   --thresh_dict THRESH_DICT       Threshold dictionary
+
   --product_dict PRODUCT_DICT     DP product dictionary
+
   --do_qc                         Run QC
+
   --dp_products                   Create DP products
 
 Perform DPQC
