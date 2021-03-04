@@ -31,10 +31,18 @@ GVradar is tested to work with the following versions:
 
 If you would like to merge NEXRAD split cuts and remove MRLE scans:
 
-* rsl_in_idl <https://trmm-fc.gsfc.nasa.gov/trmm_gv/software/rsl/>
+* [rsl_in_idl](https://trmm-fc.gsfc.nasa.gov/trmm_gv/software/rsl/)
+
+Installing GVradar
+==================
+
+We suggest creating an environment, GVradar, with the tested dependency versions.
+
+Execute the following command in the active GVradar environment:
+python setup.py install
 
 Running GVradar
-==============
+===============
 
 usage: GVradar.py [-h] [--thresh_dict THRESH_DICT] [--product_dict PRODUCT_DICT] [--do_qc] [--dp_products] file
 
