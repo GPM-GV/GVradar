@@ -207,6 +207,34 @@ def calc_dsd_sband_tokay_2020(dz, zdr, loc='wff', d0_n2=False):
 
 # ***************************************************************************************
 
+def get_kdp(self):
+
+    '''If no KDP field, we need to calculate one.'''
+    
+    print('    Calculating Kdp...', '', sep='\n')
+    
+#    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+#    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
+    DP = self.radar.fields[self.phi_field_name]['data'].copy()
+
+    # Range needs to be supplied as a variable, with same shape as DZ
+    rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+    gate_spacing = self.radar.range['meters_between_gates']
+
+    KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
+                                                    thsd=25, gs=gate_spacing, window=5)
+
+    self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
+		units='deg/km',
+		long_name='Specific Differential Phase (Bringi)',
+		standard_name='Specific Differential Phase (Bringi)',
+		dz_field=self.ref_field_name)
+
+    return self.radar
+
+# ***************************************************************************************        
+
 def remove_undesirable_fields(self):
 
     print("Removing unwanted fields...", '', sep='\n')

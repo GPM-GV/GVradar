@@ -136,8 +136,8 @@ def threshold_qc_dpfields(self):
         dz = self.radar.fields['CZ']['data'].copy()
         dr = self.radar.fields['DR']['data'].copy()
         ap = np.ones(dz.shape)
-        dz_lt = np.ma.where(dz <= 45 , 1, 0)
-        dr_lt = np.ma.where(dr >= 3 , 1, 0)
+        dz_lt = np.ma.where(dz <= self.ap_dbz , 1, 0)
+        dr_lt = np.ma.where(dr >= self.ap_zdr , 1, 0)
         ap_t = np.logical_and(dz_lt == 1 , dr_lt == 1)
         ap[ap_t] = 0
         cm.add_field_to_radar_object(ap, self.radar, field_name='AP', 
@@ -905,7 +905,7 @@ def get_default_thresh_dict():
                            'apply_cal': False, 'ref_cal': 0.2, 'zdr_cal': 0.0, 
                            'use_qc_height': True, 'qc_height': 4.4, 
                            'cf_dir': './cf',
-                           'plot_images': True, 'max_range': 150, 'max_height': 15,
+                           'plot_images': True, 'max_range': 200, 'max_height': 10,
                            'sweeps_to_plot': [0], 
                            'plot_single': False, 
                            'fields_to_plot': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD'],

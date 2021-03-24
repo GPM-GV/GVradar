@@ -11,6 +11,8 @@ import numpy as np
 from copy import deepcopy
 import pyart
 import os
+import gzip
+import shutil
 import pandas as pd
 from skewt import SkewT
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,
@@ -276,9 +278,30 @@ def output_cf(self):
     
     pyart.io.write_cfradial(out_file,self.radar)
     
-    print('Output cfRadial --> ' + out_file, '', sep='\n')
+    #Gzip cf file
+    with open(out_file, 'rb') as f_in:
+        with gzip.open(out_file + '.gz', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    os.remove(out_file)
+    
+    gz_file = out_file + '.gz'
+    print('Output cfRadial --> ' + gz_file, '', sep='\n')
+        
+    return gz_file
 
 # ***************************************************************************************
+    
+def unzip_file(file):
+    
+    # Unzips input file
+    file_unzip = os.path.basename(file)[0:-3]
+    with gzip.open(file, 'rb') as f_in:
+        with open(file_unzip, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    
+    return file_unzip      
+    
+ # ***************************************************************************************   
 
 def check_kwargs(kwargs, default_kw):
     """

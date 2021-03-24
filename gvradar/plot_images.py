@@ -445,18 +445,19 @@ def annotate_plot(display, radar_lat, radar_lon, max_range, ax, add_logos):
     
     # Annotate NASA GPM logos
     if add_logos:
-        nasalogo = Image.open('nasa.png')
-        gpmlogo = Image.open('gpm.png')
+        logo_dir = os.path.dirname(__file__)
+        nasalogo = Image.open(logo_dir + '/nasa.png')
+        gpmlogo = Image.open(logo_dir + '/gpm.png')
     
-        imageboxnasa = OffsetImage(nasalogo, zoom=0.10)
-        imageboxgpm = OffsetImage(gpmlogo, zoom=0.05)
+        imageboxnasa = OffsetImage(nasalogo, zoom=0.07)
+        imageboxgpm = OffsetImage(gpmlogo, zoom=0.03)
         imageboxnasa.image.axes = ax
         imageboxgpm.image.axes = ax 
     
         abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[.095, .91],
                                 xycoords= 'axes pixels', boxcoords='axes fraction',
                                 pad=0.0, frameon=False)
-        abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[.89, .935],                               
+        abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[.89, .93],                               
                                xycoords= 'axes pixels', boxcoords='axes fraction',
                                pad=0.0, frameon=False)
         ax.add_artist(abnasa)
@@ -469,18 +470,19 @@ def annotate_plot(display, radar_lat, radar_lon, max_range, ax, add_logos):
 def annotate_plot_rhi(ax):
     
     # Annotate NASA GPM logos
-    nasalogo = Image.open('nasa.png')
-    gpmlogo = Image.open('gpm.png')
+    logo_dir = os.path.dirname(__file__)
+    nasalogo = Image.open(logo_dir + '/nasa.png')
+    gpmlogo = Image.open(logo_dir + '/gpm.png')
     
-    imageboxnasa = OffsetImage(nasalogo, zoom=0.11)
-    imageboxgpm = OffsetImage(gpmlogo, zoom=0.055)
+    imageboxnasa = OffsetImage(nasalogo, zoom=0.07)
+    imageboxgpm = OffsetImage(gpmlogo, zoom=0.03)
     imageboxnasa.image.axes = ax
     imageboxgpm.image.axes = ax 
     
-    abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[.10, .90],
+    abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[.065, .925],
                             xycoords= 'axes pixels', boxcoords='axes fraction',
                             pad=0.0, frameon=False)
-    abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[.90, .90],                               
+    abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[.93, .925],                               
                            xycoords= 'axes pixels', boxcoords='axes fraction',
                            pad=0.0, frameon=False)
     ax.add_artist(abnasa)

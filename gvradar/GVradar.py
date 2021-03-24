@@ -10,9 +10,10 @@ V0.3 - 02/19/2021 - update by Jason Pippitt NASA/GSFC/SSAI
 # ***************************************************************************************
 
 import pyart
-import sys
+import sys, os
 import ast
 import argparse
+import pathlib
 from gvradar import (dp_products as dp, dpqc as qc, 
                      common as cm, plot_images as pi)
 import warnings
@@ -27,13 +28,36 @@ class QC:
     '''
 
     # Constructor:  Specifies necessary initialization parameters
-    def __init__(self, file, radar, **kwargs):
+    def __init__(self, file, **kwargs):
         self.file = file
+        
+        # Uncompress input file, and create radar structure
+        cfy = pathlib.Path(file).suffix
+        if cfy == '.gz': 
+            self.file = cm.unzip_file(self.file)
+            file_unzip = self.file      
+            radar = pyart.io.read(self.file, file_field_names=True)
+        else:
+            radar = pyart.io.read(self.file, file_field_names=True)
+        
         self.radar = radar
+        
+        # Check and fix missing user defined kwargs
+        default_kw = qc.get_default_thresh_dict()
+        kwargs = cm.check_kwargs(kwargs, default_kw)
+        
+        # Get site name and date time from radar
+        site_time = cm.get_site_date_time(self.radar)
+        kwargs = {**site_time, **kwargs}
+        
         for key, value in kwargs.items():
             setattr(self, key, value)
-
-        self.run_dpqc()
+            
+        print('', 'QC parameters:    ', '', kwargs, '',
+              'Processing --> ' + file, sep='\n')     
+        
+        # Remove temp file
+        if cfy == '.gz': os.remove(file_unzip)
 
     # Instance Method
     def run_dpqc(self):
@@ -105,14 +129,14 @@ class QC:
         qc.remove_fields_from_radar(self)
         
     # Write cfRadial file
-        cm.output_cf(self)
+        self.gz_file = cm.output_cf(self)
 
     # Plotting images 
         if self.plot_images == True:   
             pi.plot_fields(self)
-   
-        radar = self.radar
-        return radar
+        
+    def return_gz_file(self):
+        return self.gz_file
 
 class DP_products:
     '''
@@ -121,18 +145,46 @@ class DP_products:
     '''
 
     # Constructor:  Specifies necessary initialization parameters
-    def __init__(self, radar, **kwargs):
+    def __init__(self, file, **kwargs):
+        self.file = file
+        
+        # Uncompress input file, and create radar structure
+        cfy = pathlib.Path(file).suffix
+        if cfy == '.gz': 
+            self.file = cm.unzip_file(self.file)
+            file_unzip = self.file      
+            radar = pyart.io.read(self.file, file_field_names=True)
+        else:
+            radar = pyart.io.read(self.file, file_field_names=True)
+        
         self.radar = radar
+        
+        # Check and fix missing user defined kwargs
+        default_product = dp.get_default_product_dict()
+        kwargs = cm.check_kwargs(kwargs, default_product)
+        
+        # Get site name and date time from radar
+        site_time = cm.get_site_date_time(self.radar)
+        kwargs = {**site_time, **kwargs}
+        
         for key, value in kwargs.items():
             setattr(self, key, value)
-
-        self.run_DP_products()
+        
+        print('', 'DP products parameters:    ', '', kwargs, '', 
+              'Processing --> ' + file, sep='\n')    
+        
+        # Remove temp file
+        if cfy == '.gz': os.remove(file_unzip)
 
     # Instance Method
     def run_DP_products(self):
         
     # Rename fields with GPM, 2-letter IDs (e.g. CZ, DR, KD)
         self.radar, zz = cm.rename_fields_in_radar(self)
+        
+    # If no KDP, calculate field
+        if 'KD' not in self.radar.fields.keys():  
+            self.radar = dp.get_kdp(self)
        
     # Create Temperature field   
         if self.use_sounding == True:
@@ -200,47 +252,31 @@ if __name__ == '__main__':
 
     # Import QC thresholds and in out dirs
     if args.thresh_dict == None:
-        default_kw = qc.get_default_thresh_dict()
-        kwargs = default_kw
+        kwargs = qc.get_default_thresh_dict()
     else:
-        default_kw = qc.get_default_thresh_dict()
         current_dict = args.thresh_dict
         kwargs = ast.literal_eval(open(current_dict).read())
 
     # Import DP products thresholds and in out dirs
     if args.product_dict == None:
-        default_product = dp.get_default_product_dict()
-        kwargs_product = default_product
+        kwargs_product = dp.get_default_product_dict()
     else:
-        default_product = dp.get_default_product_dict()
         product_dict = args.product_dict
         kwargs_product = ast.literal_eval(open(product_dict).read())
-
-    # Check and fix missing user defined kwargs
-    kwargs = cm.check_kwargs(kwargs, default_kw)
-    kwargs_product = cm.check_kwargs(kwargs_product, default_product)
-
-    radar = pyart.io.read(file, file_field_names=True)
-    
-    # Get site name and date time from radar
-    site_time = cm.get_site_date_time(radar)
-    kwargs = {**site_time, **kwargs}
-    kwargs_product = {**site_time, **kwargs_product} 
-
+        
     # If do_qc = True create QC Class with class variables
     if args.do_qc:
-        print('', 'QC parameters:    ', '', kwargs, '', 'Processing --> ' + file, sep='\n')       
-        QC(file, radar, **kwargs)
+        q = QC(file, **kwargs)
+        q.run_dpqc()
 
     # If dp_products = True create  DP_products Class with class variables
     if args.dp_products:
-        print('', 'DP products parameters:    ', '', kwargs_product, '', sep='\n')
         if args.dp_products and args.do_qc:
-            print('Processing from QCed radar structure.')
-        else:  
-            print('Processing --> ' + file)
-
-        DP_products(radar, **kwargs_product)
+            gz_file = q.return_gz_file()
+            file = gz_file
+            
+        d = DP_products(file, **kwargs_product)
+        d.run_DP_products()
 
 print('Done.', '', sep='\n')
 
