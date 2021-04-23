@@ -38,7 +38,7 @@ Installing GVradar
 
 We suggest creating an environment, GVradar, with the tested dependency versions.
 
-Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar.tar.gz) tarball.
+Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/) tarball.
 
 Execute the following command in the active GVradar environment:
 
