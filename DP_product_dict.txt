@@ -1,0 +1,19 @@
+{
+    'do_HID': True,
+    'do_mass': True,
+    'do_RC': True,
+    'do_tokay_DSD': True,
+    'max_range': 200, 
+    'max_height': 10,
+    'sweeps_to_plot': [0],
+    'output_cf': True,
+    'cf_dir': './cf/',
+    'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD', 'SQ', 'FH', 'RC', 'DM', 'NW'],
+    'plot_images': True,
+    'plot_single': False,
+    'fields_to_plot': ['CZ','DM', 'NW',  'FH', 'RC', 'MW', 'MI'],
+    'plot_dir': './plots/',
+    'use_sounding': True, 'sounding_type': 'ruc_archive',
+    'sounding_dir': '/gvraid/trmmgv/Soundings/RUC_Soundings/'
+}
+
