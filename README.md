@@ -17,18 +17,6 @@ Required dependencies to run GVradar:
 * [SkewT](https://github.com/tjlang/SkewT)
 * [cartopy](https://anaconda.org/conda-forge/cartopy)
 
-GVradar is tested to work with the following versions:
-
-* python                    3.8.6
-* arm_pyart                 1.11.3
-* numpy                     1.19.5
-* scipy                     1.6.0
-* matplotlib                3.3.3
-* netcdf4                   1.5.5.1
-* csu-radartools            1.3.0.dev0
-* skewt                     1.2.0
-* cartopy                   0.18.0
-
 If you would like to merge NEXRAD split cuts and remove MRLE scans:
 
 * [rsl_in_idl](https://trmm-fc.gsfc.nasa.gov/trmm_gv/software/rsl/)
@@ -36,11 +24,13 @@ If you would like to merge NEXRAD split cuts and remove MRLE scans:
 Installing GVradar
 ==================
 
-We suggest creating an environment, GVradar, with the tested dependency versions.
+We suggest creating an environment, GVradar.  Intall the following programs.
 
-Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/) tarball.
+Download [CSU Radar Tools](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/CSU_RadarTools-master.tar.gz) tarball.
+Download [SkewT](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/SkewT-master.tar.gz) tarball.
+Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradar.tar.gz) tarball.
 
-Execute the following command in the active GVradar environment:
+Execute the following command in the active GVradar environment for each above program:
 
     python setup.py install
 
