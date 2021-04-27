@@ -1,0 +1,23 @@
+kwargs_product = {}
+
+# Select if you want to output a cf file and what fields to write
+kwargs_product.update({'output_cf': True, 'cf_dir': './cf/', 
+               'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 
+                                 'PH', 'RH', 'SD', 'SQ', 'FH',
+                                 'RC', 'DM', 'NW', 'MW', 'MI']})
+
+# Select which products to produce.
+kwargs_product.update({'do_HID': True,
+                       'do_mass': True,
+                       'do_RC': True,
+                       'do_tokay_DSD': True})
+
+# Select plots ranges, type, and fields
+kwargs_product.update({'plot_images': True, 'plot_single': False,
+                       'max_range': 150, 'max_height': 10, 'sweeps_to_plot': [0],
+                       'fields_to_plot': ['DM', 'NW', 'FH', 'RC', 'MW', 'MI'],
+                       'plot_dir': './plots/', 'add_logos': True})
+
+# A Sounding is needed for DP products, sounding type can be; uwy, ruc, ruc_archive)
+kwargs_product.update({'use_sounding': True, 'sounding_type': 'ruc_archive',
+                       'sounding_dir': './sounding/'})
