@@ -66,3 +66,33 @@ Calculate Precipitation Products
 ===============================
 
     python GVradar.py --dp_products  file
+    
+Run large data sets with run_multi_GVradar.py
+=============================================
+
+usage: run_multi_GVradar.py [-h] [--stime STIME [STIME ...]]
+                            [--etime ETIME [ETIME ...]]
+                            [--thresh_dict THRESH_DICT]
+                            [--product_dict PRODUCT_DICT] [--do_qc]
+                            [--dp_products]
+                            in_dir
+
+User information
+
+positional arguments:
+  in_dir                Input Directory
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --stime STIME [STIME ...]
+                        Year Month Day Hour Minute ex: 2020 1 1 0 59
+  --etime ETIME [ETIME ...]
+                        Year, Month, Day, Hour, Minute ex: 2020 1 1 23 59
+  --thresh_dict THRESH_DICT
+                        Threshold dictionary
+  --product_dict PRODUCT_DICT
+                        DP product dictionary
+  --do_qc               Run QC
+  --dp_products         Create DP products    
+  
+      python run_multi_GVradar.py /raw/dir/ --stime 2020 10 29 15 0 --etime 2020 10 29 15 5 --do_qc --dp_products
