@@ -98,5 +98,7 @@ optional arguments:
     --do_qc               Run QC
   
     --dp_products         Create DP products    
-  
-      python run_multi_GVradar.py /raw/dir/ --stime 2020 10 29 15 0 --etime 2020 10 29 15 5 --do_qc --dp_products
+    
+Run
+===
+    python run_multi_GVradar.py /raw/dir/ --stime 2020 10 29 15 0 --etime 2020 10 29 15 5 --do_qc --dp_products
