@@ -24,7 +24,7 @@ If you would like to merge NEXRAD split cuts and remove MRLE scans:
 Installing GVradar
 ==================
 
-We suggest creating an environment, GVradar.  Intall the following programs.
+We suggest creating an environment, GVradar.  Install the following programs.
 
 * Download [CSU Radar Tools](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/CSU_RadarTools-master.tar.gz) tarball.
 * Download [SkewT](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/SkewT-master.tar.gz) tarball.
