@@ -1,4 +1,4 @@
-## GVradar
+# GVradar
 Global Precipitation Measurement (GPM) Ground Validation (GV) radar processing software (GVradar). 
 * Python based Dual Pol Quality Control (DPQC), utilizing the Python Atmospheric Radiation Measurement (ARM) Radar Toolkit (Py-ART) and CSU Radar Tools.
 * Precipitation product generation from Dual Pol, utilizing the Python Atmospheric Radiation Measurement (ARM) Radar Toolkit (Py-ART) and CSU Radar Tools.
