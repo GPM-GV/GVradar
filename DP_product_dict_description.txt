@@ -11,11 +11,12 @@
  'do_tokay_DSD': True}
 
 # Select plots ranges, type, and fields
-{'plot_images': True, 'plot_single': False,
+{'plot_images': True, 'plot_single': False, 'plot_multi': True,
  'max_range': 150, 'max_height': 10, 'sweeps_to_plot': [0],
  'fields_to_plot': ['DM', 'NW', 'FH', 'RC', 'MW', 'MI'],
  'plot_dir': './plots/', 'add_logos': True}
 
-# A Sounding is needed for DP products, sounding type can be; uwy, ruc, ruc_archive)
+# A Sounding is needed for DP products, sounding type can be; uwy, get_ruc, ruc, ruc_archive)
+# get_ruc will download model sounding data for radar lat, lon
 {'use_sounding': True, 'sounding_type': 'ruc_archive',
  'sounding_dir': './sounding/'}
