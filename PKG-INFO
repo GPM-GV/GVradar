@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: GVradar
-Version: 0.4
+Version: 0.5
 Summary: Global Precipitation Measurement (GPM) Ground Validation (GV) radar processing software (GVradar)
 Home-page: https://github.com/jlpippitt/GVradar
 Author:  Jason Pippitt
