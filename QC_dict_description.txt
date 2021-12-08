@@ -70,6 +70,6 @@
 
 # Select plot limits, plot type (single or multiplot), and fields to plot.
 {'plot_images': True, 'max_range': 150, 'max_height': 15, 
- 'sweeps_to_plot': [0], 'plot_single': False, 'add_logos': True, 
+ 'sweeps_to_plot': [0], 'plot_single': False, 'plot_multi': True, 'add_logos': True, 
  'fields_to_plot': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD'],
  'plot_dir': './plots/'}
