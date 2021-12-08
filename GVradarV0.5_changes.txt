@@ -1,3 +1,15 @@
+Update - 12/06/2021 - V0.5
+
+Added the ability to retrieve sounding data from the Rapid Refresh (RAP) model.
+  User can select sounding type as get_ruc, this will retrieve sounding file for the radar's lat, lon.
+  
+Updated plotting to use gridspec, for better multi-plot spacing.
+
+Notebooks
+Updated notebooks to reflect upgrades and added an RHI notebook.
+
+
+************************************************************************
 Update - 04/22/2021 - V0.4
 
 Added multiple user options.
