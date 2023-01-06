@@ -36,11 +36,11 @@ Installing from source
 
 Checkout the GVradar repository:
 
-    git clone https://github.com/GPMGV/GVradar.git
+    git clone https://github.com/GPM-GV/GVradar.git
     
-Updating from source:
+Updating from source in clone directory:
 
-    git pull https://github.com/GPMGV/GVradar
+    git pull https://github.com/GPM-GV/GVradar.git
 
 Install using pip from within GVradar directory:
 
