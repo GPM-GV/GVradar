@@ -4,6 +4,7 @@ Python based Quality Control utilizing PyArt
 
 Developed by the NASA GPM-GV group
 V0.5 - 12/06/2021 - update by Jason Pippitt NASA/GSFC/SSAI
+V1.0 - 11/01/2022 - update by Jason Pippitt NASA/GSFC/SSAI
 '''
 # ***************************************************************************************
 import cartopy.crs as ccrs
@@ -124,7 +125,8 @@ def threshold_qc_dpfields(self):
     if self.do_rh_sector == True: dbzfilter.exclude_not_equal('SECRH', sec) 
     if self.do_cos == True: dbzfilter.exclude_not_equal('COS', cos)
     if self.do_sq == True: dbzfilter.exclude_below('SQ', self.sq_thresh)
-    if self.radar.metadata['instrument_name'] == 'WSR-88D': dbzfilter.exclude_not_equal('WSR', cos)
+    if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
+       self.radar.metadata['original_container'] == 'UF': dbzfilter.exclude_not_equal('WSR', cos)
     
     # Apply gate filters to radar
     for fld in self.radar.fields:
@@ -682,10 +684,10 @@ def ph_sector(self):
     elif sector['azmax'] is not None:
         sector_wipeout[self.radar.azimuth['data'] > sector['azmax'], :] = 0
     
-    ph = self.radar.fields['PHM']['data'].copy()
+    ph = self.radar.fields['PH']['data'].copy()
     sector_p = np.ones(ph.shape)
     ph_sec = sector['ph_sec']
-    ph_lt = np.ma.where(ph < ph_sec , 1, 0)
+    ph_lt = np.ma.where(ph > ph_sec , 1, 0)
     sec_f = np.logical_and(ph_lt == 1 , sector_wipeout == 1)
     sector_p[sec_f] = 0
 
@@ -792,17 +794,23 @@ def calculate_kdp(self):
     """
     print('    Getting new Kdp...')
 
-#    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-#    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
-    DP = self.radar.fields[self.phi_field_name]['data'].copy()
+    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+#    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
+#    DP = self.radar.fields[self.phi_field_name]['data'].copy()
+
+    if self.site == 'KWAJ':
+        window=4
+    else:
+        window=5
 
     # Range needs to be supplied as a variable, with same shape as DZ
     rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
     gate_spacing = self.radar.range['meters_between_gates']
 
     KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
-                                                    thsd=25, gs=gate_spacing, window=5)
+                                                    thsd=25, gs=gate_spacing, 
+                                                    window=window, nfilter=1, std_gate=15)
 
     self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
 		units='deg/km',
@@ -823,56 +831,6 @@ def calculate_kdp(self):
 		dz_field=self.ref_field_name)
 
     return self.radar
-
-# ***************************************************************************************
-
-def get_vcp(self):
-
-    """ Return a list of elevation angles representative of each sweep.
-    These are the median of the elevation angles in each sweep, which are
-    more likely to be identical than the mean due to change of elevation angle
-    at the beginning and end of each sweep.
-
-    Written by:  Eric Bruning
-    """
-    vcp = [np.median(el_this_sweep) for el_this_sweep in self.radar.iter_elevation()]
-    return np.asarray(vcp, dtype=self.radar.elevation['data'].dtype)
-
-# ***************************************************************************************
-
-def unique_sweeps_by_elevation_angle(self):
-    """ Returns the sweep indices that correspond to unique
-    elevation angles, for use in extract_sweeps.
-    
-    The default is a tolerance of 0.05 deg. 
-
-    Written by:  Eric Bruning
-    """
-    tol=0.09
-    vcp = get_vcp(self.radar)
-    close_enough = (vcp/tol).astype('int32')
-    unq_el, unq_el_idx, o_idx = np.unique(close_enough, return_index=True, return_inverse=True)
-    u,indices = np.unique(close_enough, return_inverse = True)
-    return unq_el_idx
-
-# ***************************************************************************************
-
-def convert_to_cf(self):
-
-    print('', self.radar.metadata['original_container'], 
-          '    Converting data to cfRadial to organize split cuts and remove MRLE scans.',
-          '', sep='\n')
-    
-    path_file = os.path.dirname(__file__)
-    convert_path = path_file + '/convert_to_cf.csh ' + self.file
-    
-    subprocess.call(shlex.split(convert_path))
-    
-    cf_file = self.file + '.cf'
-    radar = pyart.io.read(cf_file, file_field_names=True)
-    os.remove(cf_file)
-
-    return radar
 
 # ***************************************************************************************
 
@@ -915,9 +873,9 @@ def get_default_thresh_dict():
                            'do_zdr': True, 'dr_min': -6.0, 'dr_max': 4.0, 
                            'do_kdp': False, 'kdp_min': -2.0, 'kdp_max': 7.0, 
                            'do_sq': False, 'sq_thresh': 0.45, 
-                           'do_sd': True, 'sd_thresh': 25.0, 
+                           'do_sd': True, 'sd_thresh': 18.0, 
                            'do_ph': False, 'ph_thresh': 80.0, 
-                           'do_ap': False, 'ap_dbz': 45, 'ap_zdr': 3,
+                           'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
                            'dealias_velocity': False,
                            'do_insect': False, 
                            'do_despeckle': True, 
@@ -942,12 +900,14 @@ def get_default_thresh_dict():
                            'phazmin': 160, 'phazmax': 165, 
                            'phelmin': 0, 'phelmax': 20.0, 'ph_sec': 80.0, 
                            'apply_cal': False, 'ref_cal': 0.1, 'zdr_cal': 0.0, 
-                           'use_qc_height': True, 'qc_height': 3.94,
+                           'use_qc_height': True, 'qc_height': 4.4,
                            'output_cf': False,
+                           'output_grid': False,
                            'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD'],
                            'cf_dir': './cf',
+                           'grid_dir': './grid',
                            'plot_raw_images': False,
-                           'plot_images': True, 'max_range': 150, 'max_height': 10,
+                           'plot_images': True, 'max_range': 200, 'max_height': 10,
                            'sweeps_to_plot': [0], 
                            'plot_single': True,
                            'plot_multi': False,

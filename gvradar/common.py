@@ -4,16 +4,19 @@ Functions used by both dpqc.py and dp_products.py.
 
 Developed by the NASA GPM-GV group
 V0.5 - 12/06/2021 - update by Jason Pippitt NASA/GSFC/SSAI
+V1.0 - 11/01/2022 - update by Jason Pippitt NASA/GSFC/SSAI
 '''
 # ***************************************************************************************
 
 import numpy as np
+import copy
 from copy import deepcopy
 import pyart
 import os
 import datetime
 import gzip
 import shutil
+import xarray
 import pandas as pd
 from skewt import SkewT
 import urllib.request
@@ -66,6 +69,8 @@ def get_ruc_sounding(self):
                                  long_name='Height',
                                  standard_name='Height', 
                                  dz_field=self.ref_field_name)
+
+    self.expected_ML = retrieve_ML(mydata)
 
     return self.radar
 
@@ -142,6 +147,8 @@ def get_ruc_archive(self):
                                  standard_name='Height', 
                                  dz_field=self.ref_field_name)
 
+    self.expected_ML = retrieve_ML(mydata)
+
     return self.radar
 
 # ***************************************************************************************
@@ -200,6 +207,9 @@ def use_ruc_sounding(self):
                                  long_name='Height',
                                  standard_name='Height', 
                                  dz_field=self.ref_field_name)
+
+    self.expected_ML = retrieve_ML(mydata)
+
     return self.radar
 
 # ***************************************************************************************
@@ -244,6 +254,9 @@ def use_uwy_sounding(self):
                                  long_name='Height',
                                  standard_name='Height', 
                                  dz_field=self.ref_field_name)
+
+    self.expected_ML = retrieve_ML(mydata)
+
     return self.radar
 
 # ***************************************************************************************
@@ -284,6 +297,9 @@ def rename_fields_in_radar(self):
     elif 'DZ' in self.radar.fields.keys():
         old_fields = []
         new_fields = []
+    elif 'CZ' in self.radar.fields.keys():
+        old_fields = []
+        new_fields = []
 
     # Change names of old fields to new fields using pop
     nl = len(old_fields)
@@ -302,7 +318,7 @@ def rename_fields_in_radar(self):
                                          units=' ',
                                          long_name='Corrected Reflectivity', 
                                          standard_name='Corrected Reflectivity', 
-                                         dz_field='DZ') 
+                                         dz_field='DZ')
         else: 
             zz = deepcopy(self.radar.fields['DZ'])
             cz = self.radar.fields['DZ']['data'].copy()
@@ -357,6 +373,41 @@ def output_cf(self):
     gz_file = out_file + '.gz'
     print('Output cfRadial --> ' + gz_file, '', sep='\n')
 
+# ***************************************************************************************       
+
+def output_grid(self):
+
+    # Outputs xarray gridded file
+
+    out_dir = self.grid_dir + '/' + self.year + '/' + self.month + self.day + '/'
+    os.makedirs(out_dir, exist_ok=True)
+   
+    out_file = out_dir + '/' + self.site + '_' + self.year + '_' + self.month + self.day + '_' + self.hh + self.mm + self.ss + '_' + self.scan_type + '.nc'
+    
+    radar_lat = self.radar.latitude['data'][0]
+    radar_lon = self.radar.longitude['data'][0]
+
+    Grid = pyart.map.grid_from_radars((self.radar,),
+           grid_shape=(16, 251, 251),
+           weighting_function='Barnes2',
+           grid_origin=[radar_lat, radar_lon],
+           grid_limits=((500, 16000), (-125000, 125000), (-125000, 125000)),
+           fields=self.output_fields,
+           gridding_algo="map_gates_to_grid")
+
+    xradar = Grid.to_xarray()
+
+    xarray.Dataset.to_netcdf(xradar, path=out_file)
+    
+    #Gzip cf file
+    with open(out_file, 'rb') as f_in:
+        with gzip.open(out_file + '.gz', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    os.remove(out_file)
+    
+    gz_file = out_file + '.gz'
+    print('Output xarray grid --> ' + gz_file, '', sep='\n')
+
 # ***************************************************************************************
     
 def unzip_file(file):
@@ -399,6 +450,7 @@ def get_site_date_time(radar):
 
     if site == 'NPOL1': site = 'NPOL'         
     if site == 'LAVA1': site = 'KWAJ'
+    if site == b'AN1-P\x00\x00\x00': site = 'AL1'
     
     scan_type = radar.scan_type.upper()
     
@@ -629,7 +681,7 @@ def retrieveData(timeStamp, radar_site):
     month_name = datetime_object.strftime("%b")
 
     # Web address for the archive corresponding to the given timestamp and station ID
-    requestURL = "https://rucsoundings.noaa.gov/get_soundings.cgi?data_source=Op40&latest=latest&start_year="+year+"&start_month_name="+month_name+"&start_mday="+day+"&start_hour="+hour+"&start_min=0&n_hrs=1.0&fcst_len=shortest&airport="+lat+"%2C"+lon+"&text=Ascii%20text%20%28GSD%20format%29&hydrometeors=false&start=latest"
+    requestURL = "https://rucsoundings.noaa.gov/get_soundings.cgi?data_source=Op40&latest=latest&start_year="+year+"&start_month_name="+month_name+"&start_mday="+day+"&start_hour="+hour+"&start_min=0&n_hrs=1.0&fcst_len=shortest&airport="+lat+"%2C"+lon+"&text=Ascii%20text%20%28GSD%20format%29&hydrometeors=false&start="+hour
     try:
         # Get the data at the web address
         theData = urllib.request.urlopen(requestURL).read()
@@ -671,3 +723,122 @@ def isNumeric(theChar):
     return ( (cc >= 0x30 and cc <= 0x39) or (cc == 0x2e) or (cc == 0x2d) )
 
 # ***************************************************************************************
+
+def merge_split_cuts(self):
+
+    '''
+    Functionm to merge 88D split cut sweeps and output new radar object.
+    '''
+
+    sweep_table = []
+    reflectivity = []
+    velocity = []
+
+    # Create a list of elevations
+    vcp = self.radar.metadata['vcp_pattern']
+    print('VCP Pattern:  ', vcp)
+    elist = [x.shape[0] for x in self.radar.iter_elevation()]
+    n = 0
+    while n < len(elist)-1:
+   
+        if elist[n] == 720 and elist[n+1] == 720:
+            sweep_table.append((n, n+1))
+            reflectivity.append(n)
+            velocity.append(n+1)
+            if vcp == 215:
+                n += 2
+            elif vcp == 112:
+                n += 3
+           
+        if elist[n] == 360:
+            sweep_table.append((n, n))
+            reflectivity.append(n)
+            velocity.append(n)
+            n += 1
+
+    print(" ","Merging WSR-88D Split Cuts", sep='\n')
+    #print("\n Number of reflectivity levels:  %d" % len(reflectivity))
+    #print("\n Number of radial velocity  levels:  %d\n" % len(velocity))
+    
+    #Create DZ and VR radar structures
+    radar_dz = self.radar.extract_sweeps(reflectivity)
+    radar_vr = self.radar.extract_sweeps(velocity)
+    #print(radar_dz.fixed_angle['data'][:])
+    #print(radar_vr.fixed_angle['data'][:])
+
+    #Create new radar
+    radar = copy.deepcopy(radar_dz)
+
+    fill_value = -32767.0
+
+    #Add VR and SW fleids to new radar
+    vr_field = radar_vr.fields['VEL']['data'].copy()
+    vr_dict = {'data': vr_field, 'units': '', 'long_name': 'Velocity',
+               '_FillValue': fill_value, 'standard_name': 'VEL'}
+    radar.add_field('VEL', vr_dict, replace_existing=True)
+
+    sw_field = radar_vr.fields['SW']['data'].copy()
+    sw_dict = {'data': sw_field, 'units': '', 'long_name': 'Spectrum Wdith',
+               '_FillValue': fill_value, 'standard_name': 'SW'}
+    radar.add_field('SW', sw_dict, replace_existing=True)
+
+
+    print("New merged elevation angles:  ", radar.fixed_angle['data'][:], sep='\n')
+
+    return radar
+
+# ***************************************************************************************
+
+def remove_mrle(self):
+
+    '''
+    Function to remove 88D MRLE and SAILS sweeps.
+    '''  
+
+    #Get list of elevations
+    elev_list = self.radar.fixed_angle['data'][:]
+
+    last_num = elev_list[0]
+    new_list = [last_num]
+    sw = 1
+    sweep_index = [0]
+
+    #Get index of elevations greater than last elevation 
+    for x in elev_list[1:]:
+        if x >= last_num:
+            sweep_index.append(sw)
+            new_list.append(x)
+            last_num = x
+        sw = sw+1
+        
+    print(" ", "Removing MRLE sweeps", "Following sweeps will be kept:  ", sweep_index, sep='\n')     
+
+    final_radar = self.radar.extract_sweeps(sweep_index)
+
+    print("With the following elevations:  ", final_radar.fixed_angle['data'][:], sep='\n')
+
+    return final_radar
+
+# ***************************************************************************************
+
+def retrieve_ML(mydata):
+
+    # Retrieve expected ML for winter HID
+
+    is_all_neg = np.all(mydata['temp'] < 0)
+    if is_all_neg:
+        expected_ML = 0
+    else:
+        a = mydata['temp']
+        idx=np.where(np.diff(np.sign(a)) != 0)[0] + 1
+        int1 = (idx[0])
+        int2 = int1 - 1
+        atol = a[int2] + a[int2]
+        wh0 = np.where(np.isclose(np.abs(mydata['temp']),0.0,atol=atol))
+        expected_ML = np.array(mydata['hght'])[wh0[0]][0]/1000.
+    
+    print('    Expected ML:  ',expected_ML)   
+
+    return expected_ML
+
+# ***************************************************************************************    

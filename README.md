@@ -8,18 +8,14 @@ Dependencies
 
 Required dependencies to run GVradar:
 
-* [PyArt](https://arm-doe.github.io/pyart/)
-* [NumPy](https://www.numpy.org/)
+* [PyArt](https://github.com/ARM-DOE/pyart)
+* [NumPy](https://www.numpy.org)
 * [SciPy](https://www.scipy.org)
-* [matplotlib](https://matplotlib.org/)
+* [matplotlib](https://matplotlib.org)
 * [netCDF4](https://github.com/Unidata/netcdf4-python)
 * [CSU_RadarTools](https://github.com/CSU-Radarmet/CSU_RadarTools)
 * [SkewT](https://github.com/tjlang/SkewT)
 * [cartopy](https://anaconda.org/conda-forge/cartopy)
-
-If you would like to merge NEXRAD split cuts and remove MRLE scans:
-
-* [rsl_in_idl](https://trmm-fc.gsfc.nasa.gov/trmm_gv/software/rsl/)
 
 Installing GVradar
 ==================
@@ -28,13 +24,32 @@ We suggest creating an environment, GVradar.  Install the following programs.
 
 * Download [CSU Radar Tools](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/CSU_RadarTools-master.tar.gz) tarball.
 * Download [SkewT](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/SkewT-master.tar.gz) tarball.
-* Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV0.5.tar.gz) tarball.
-* If you would like to test with data used in notebooks, Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV0.5_raw.tar.gz) tarball.
+* Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV1.0.tar.gz) tarball.
+* If you would like to test with data used in notebooks, Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV1.0_raw.tar.gz) tarball.
 
 Execute the following command in the active GVradar environment for each above program:
 
     python setup.py install
+    
+Installing from source
+======================
 
+Checkout the GVradar repository:
+
+    git clone https://github.com/GPMGV/GVradar.git
+    
+Updating from source:
+
+    git pull https://github.com/GPMGV/GVradar
+
+Install using pip from within GVradar directory:
+
+    pip install -e .
+    
+or
+
+    python setup.py install
+    
 Running GVradar
 ===============
 

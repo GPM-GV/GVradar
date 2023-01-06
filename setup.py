@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='GVradar',
-    version='0.5',
+    version='1.0',
     author='Jason Pippitt',
     author_email='jason.l.pippitt@nasa.gov',
     packages=['', 'gvradar'],

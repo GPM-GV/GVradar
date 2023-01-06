@@ -1,0 +1,31 @@
+GVradarV1.0 Details
+
+- Add WSR-88D merge split cuts
+    Function added to common.py, merge_split_cuts.
+    VCP 112 and 215
+- Add WSR-88D remove SAILS and MRLE
+    Function added to common.py, remove_mrle.
+- Add county outlines
+    Added county shape files, updated plot_images.py with multiple updates.
+- Add Winter HID option
+    Summer HID call updated.
+    Added expected melting layer calculation function retrieve_ML to common.py
+    Added SNR field for winter HID thresholding.
+    Added SNR threshold to input dictionary.
+    Added do_HID_summer and do_HID_winter to input dictionary, replaces do_HID
+- dp_products
+    Updated def calls to object oriented programming.
+    Added dsd_loc to dictionary (options; wff, alabama, ifloods, iphex, mc3e, olympex, all)
+- Fix sounding 
+    Changed latest=hour in retrieveData
+- Update KDP variables
+    Window size for KWAJ=4 all others 5.
+- Add gridded output option
+    Function added output_grid to common.py
+    Added output_grid and grid_dir to dictionary
+- Upgrades to plotting
+    Ocean and land color with cartopy
+    KWAJ atoll shape files
+    Discrete color maps
+- Added D3R capadbility
+- Added convective stratiform gridding and plotting

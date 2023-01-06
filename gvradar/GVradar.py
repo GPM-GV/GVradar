@@ -5,7 +5,7 @@ GPM-GV radar processing software.
     -Rainfall product generation from Dual Pol data
 
 Developed by the NASA GPM-GV group
-V0.5 - 12/05/2021 - update by Jason Pippitt NASA/GSFC/SSAI
+V1.0 - 11/01/2022 - update by Jason Pippitt NASA/GSFC/SSAI
 '''
 # ***************************************************************************************
 
@@ -15,9 +15,10 @@ import ast
 import argparse
 import pathlib
 from gvradar import (dp_products as dp, dpqc as qc, 
-                     common as cm, plot_images as pi)
-import warnings
-warnings.filterwarnings("ignore")
+                     common as cm, plot_images as pi,
+                     D3R as d3r)
+#import warnings
+#warnings.filterwarnings("ignore")
 
 # ***************************************************************************************
 
@@ -31,15 +32,22 @@ class QC:
     def __init__(self, file, **kwargs):
         
         self.file = file
+        # D3R check
+        fbase = os.path.basename(self.file)
+        fbase = fbase.split("_")
+        D3R_file = fbase[0][2:5]
+        cfy = pathlib.Path(file).suffix
         
         # Uncompress input file, and create radar structure
-        cfy = pathlib.Path(file).suffix
-        if cfy == '.gz': 
-            self.file = cm.unzip_file(self.file)
-            file_unzip = self.file      
-            radar = pyart.io.read(self.file, file_field_names=True)
-        else:
-            radar = pyart.io.read(self.file, file_field_names=True)
+        if D3R_file == 'D3R':
+            radar = d3r.read_d3r(self.file)
+        else: 
+            if cfy == '.gz': 
+                self.file = cm.unzip_file(self.file)
+                file_unzip = self.file
+                radar = pyart.io.read(self.file, file_field_names=True)
+            else:
+                radar = pyart.io.read(self.file, file_field_names=True)
         
         self.radar = radar
         
@@ -50,6 +58,7 @@ class QC:
         # Get site name and date time from radar
         site_time = cm.get_site_date_time(self.radar)
         kwargs = {**site_time, **kwargs}
+        if D3R_file == 'D3R': kwargs.update({'site': 'D3R'})
         
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -62,17 +71,29 @@ class QC:
 
     # Instance Method
     def run_dpqc(self):
-
-    # If radar is 88D convert file to cfRadial to organize split cuts and remove MRLE scans
+        
+        if self.site == 'D3R':
+            d3r.run_d3r(self)
+            '''
+            if self.scan_type == 'RHI':
+                d3r.plot_d3r_rhi(self)
+            elif self.scan_type == 'PPI':
+                d3r.plot_d3r_ppi(self)
+            else: 
+                print('Scan type not supported')
+            '''
+    # If radar is 88D merge split cuts and remove MRLE scans
         if self.radar.metadata['original_container'] == 'NEXRAD Level II':
-            self.radar = qc.convert_to_cf(self)
+            self.radar = cm.merge_split_cuts(self)
+            self.radar = cm.remove_mrle(self)
     
     # Rename fields with GPM, 2-letter IDs (e.g. CZ, DR, KD)
     # Save raw reflectivity, will be applied to DZ later
         self.radar, zz = cm.rename_fields_in_radar(self)
         
     # Create a filter to remove data beyond 200km
-        if self.radar.metadata['instrument_name'] == 'WSR-88D':
+        if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
+           self.radar.metadata['original_container'] == 'UF':
             self.radar = qc.mask_88D_200(self)
 
     # Plotting raw images
@@ -119,7 +140,8 @@ class QC:
         self.radar = qc.unfold_phidp(self)
         
     # Get KDP and Std(PhiDP)
-        self.radar = qc.calculate_kdp(self)
+        if self.site != 'D3R':
+            self.radar = qc.calculate_kdp(self)
         
     # Create mask to filter a range/azm/height sector of radar based on SD threshold
         if self.do_sd_sector == True:
@@ -140,7 +162,7 @@ class QC:
         self.radar.add_field('DZ', zz, replace_existing=True)
     
     # Remove QC threshold fields from radar
-        qc.remove_fields_from_radar(self)       
+        self.radar = qc.remove_fields_from_radar(self)       
     
     # Plotting images 
         if self.plot_images == True:   
@@ -148,9 +170,13 @@ class QC:
     
     # Write cfRadial file
         if self.output_cf == True:
-            cm.remove_undesirable_fields(self)
+            self.radar = cm.remove_undesirable_fields(self)
         # Write cfRadial file
             cm.output_cf(self)        
+
+    # Write xarray Grid file
+        if self.output_grid == True:
+            cm.output_grid(self)        
     
         return self.radar   
     
@@ -172,11 +198,10 @@ class DP_products:
             self.radar = radar
         else:
             self.file = file
-            #cfy = pathlib.Path(file).suffix
+            cfy = pathlib.Path(file).suffix
             if cfy == '.gz': 
-                self.file = cm.unzip_file(self.file)
-                file_unzip = self.file      
-                radar = pyart.io.read(self.file, file_field_names=True)
+                file_unzip = cm.unzip_file(self.file)  
+                radar = pyart.io.read(file_unzip, file_field_names=True)
             else:
                 radar = pyart.io.read(self.file, file_field_names=True)        
             
@@ -209,16 +234,16 @@ class DP_products:
         if 'KD' not in self.radar.fields.keys():  
             self.radar = dp.get_kdp(self)
         
-        dz = self.radar.fields['CZ']['data']
-        dr = self.radar.fields['DR']['data']
-        kd = self.radar.fields['KD']['data']
-        rh = self.radar.fields['RH']['data']
+        self.dz = self.radar.fields['CZ']['data']
+        self.dr = self.radar.fields['DR']['data']
+        self.kd = self.radar.fields['KD']['data']
+        self.rh = self.radar.fields['RH']['data']
         
         print('', 'Calculating DP products:  ', sep='\n')
     
     # Calculate Drop-Size Distribution from Tokay et al. 2020 and add to radar
         if self.do_tokay_DSD == True: 
-            self.radar = dp.add_calc_dsd_sband_tokay_2020(self.radar, dz, dr, 'wff')
+            self.radar = dp.add_calc_dsd_sband_tokay_2020(self)
        
     # Create Temperature field   
         if self.use_sounding == True:
@@ -231,29 +256,34 @@ class DP_products:
             if self.sounding_type == 'ruc_archive':
                 self.radar = cm.get_ruc_archive(self)
                 
-            radar_T = self.radar.fields['TEMP']['data']
-            radar_z = self.radar.fields['HEIGHT']['data']
+            self.radar_T = self.radar.fields['TEMP']['data']
+            self.radar_z = self.radar.fields['HEIGHT']['data']
 
     # Get HID scores and add FH to radar
-            if self.do_HID == True:
-                radar_band = 'S'
-                self.radar, fh = dp.add_csu_fhc(self.radar, dz, dr, rh, kd, radar_band, radar_T)
+            if self.do_HID_summer or self.do_HID_winter == True:
+                self.radar = dp.add_csu_fhc(self)
 
     # Calculate Cifelli et al. 2011 ice and water mass fields and add to radar.
     # Function expects, reflectivity, differential reflectivity, 
     # and altitude (km MSL) at a minimum. Temperature is optional.
             if self.do_mass == True:
-                self.radar = dp.add_csu_liquid_ice_mass(self.radar, dz, dr, radar_z/1000.0, radar_T)
+                self.radar = dp.add_csu_liquid_ice_mass(self)
         
     # Calculate Blended-rain from Cifelli et al. 2011 and addr to radar
             if self.do_RC == True:
-                self.radar = dp.add_csu_blended_rain(self.radar, dz, dr, kd, fh)
+                self.radar = dp.add_csu_blended_rain(self)
         
         else:  
             print('', 'Sounding file required to create HID, Ice and Water Mass and RC', '', sep='\n')
         
         print('DP products complete.')
     
+    # Calculate Conv/Strat
+        conv_strat =  False
+        self.plot_conv_strat = False
+        if conv_strat == True:
+            dp.get_conv_strat(self)
+
     # Plot radar images
         if self.plot_images == True:
             print()
@@ -261,9 +291,13 @@ class DP_products:
         
     # Remove unwanted fields from radar and write cfRadial
         if self.output_cf == True:
-            cm.remove_undesirable_fields(self)
+            self.radar = cm.remove_undesirable_fields(self)
         # Write cfRadial file
             cm.output_cf(self)
+
+    # Write xarray Grid file
+        if self.output_grid == True:
+            cm.output_grid(self)  
  
 # *******************************************  M  A  I  N  **************************************************
 
