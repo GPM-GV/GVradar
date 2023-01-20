@@ -744,13 +744,13 @@ def merge_split_cuts(self):
     print('VCP Pattern:  ', vcp)
     elist = [x.shape[0] for x in self.radar.iter_elevation()]
     n = 0
-    while n < len(elist)-1:
+    while n <= len(elist)-1:
    
         if elist[n] == 720 and elist[n+1] == 720:
             sweep_table.append((n, n+1))
             reflectivity.append(n)
             velocity.append(n+1)
-            if vcp == 215:
+            if vcp == 215 or vcp == 35:
                 n += 2
             elif vcp == 112:
                 n += 3
