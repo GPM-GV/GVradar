@@ -848,7 +848,10 @@ def retrieve_ML(mydata):
         int2 = int1 - 1
         atol = a[int2] + a[int2]
         wh0 = np.where(np.isclose(np.abs(mydata['temp']),0.0,atol=atol))
-        expected_ML = np.array(mydata['hght'])[wh0[0]][0]/1000.
+        try:
+            expected_ML = np.array(mydata['hght'])[wh0[0]][0]/1000.
+        except:
+            expected_ML = 0
     
     print('    Expected ML:  ',expected_ML)   
 
