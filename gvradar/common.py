@@ -463,8 +463,11 @@ def get_site_date_time(radar):
     if site == b'SF1-P\x00\x00\x00': site = 'SF1'
     if site == b'ST1-P\x00\x00\x00': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00': site = 'SV1'
-    if site == b'TM1-P\x00\x00\x00': site = 'TM1'
+    if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
 
+    radar.metadata['site_name'] = site
+    radar.metadata['instrument_name'] = site
+    
     scan_type = radar.scan_type.upper()
     
     radar_DT = pyart.util.datetime_from_radar(radar)   
