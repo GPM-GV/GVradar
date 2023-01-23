@@ -456,7 +456,15 @@ def get_site_date_time(radar):
     if site == 'NPOL1': site = 'NPOL'         
     if site == 'LAVA1': site = 'KWAJ'
     if site == b'AN1-P\x00\x00\x00': site = 'AL1'
-    
+    if site == b'JG1-P\x00\x00\x00': site = 'JG1'
+    if site == b'MC1-P\x00\x00\x00': site = 'MC1'
+    if site == b'NT1-P\x00\x00\x00': site = 'NT1'
+    if site == b'PE1-P\x00\x00\x00': site = 'PE1'
+    if site == b'SF1-P\x00\x00\x00': site = 'SF1'
+    if site == b'ST1-P\x00\x00\x00': site = 'ST1'
+    if site == b'SV1-P\x00\x00\x00': site = 'SV1'
+    if site == b'TM1-P\x00\x00\x00': site = 'TM1'
+
     scan_type = radar.scan_type.upper()
     
     radar_DT = pyart.util.datetime_from_radar(radar)   
