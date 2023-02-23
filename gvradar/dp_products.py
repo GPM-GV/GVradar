@@ -179,35 +179,35 @@ def calc_dsd_sband_tokay_2020(dz, zdr, loc='all', d0_n2=False):
         if loc == 'wff':
             high = zdr > 3.5
             low = zdr <= 3.5
-            dm[high] = 0.0188 * zdr[high]**3 - 0.1963 * zdr[high]**2 + 1.1796 * zdr[high] + 0.7183
+            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
             dm[low] = 0.0990 * zdr[low]**3 - 0.6141 * zdr[low]**2 + 1.8364 * zdr[low] + 0.4559
         elif loc == 'alabama':
-            high = zdr > 3.8
-            low = zdr <= 3.8
-            dm[high] = 0.0188 * zdr[high]**3 - 0.1963 * zdr[high]**2 + 1.1796 * zdr[high] + 0.7183
-            dm[low] = 0.0453 * zdr[low]**3 - 0.3236 * zdr[low]**2 + 1.2939 * zdr[low] + 0.7065
+            high = zdr > 3.1
+            low = zdr <= 3.1
+            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
+            dm[low] = 0.0782 * zdr[low]**3 - 0.4679 * zdr[low]**2 + 1.5355 * zdr[low] + 0.6377
         elif loc == 'ifloods':
             high = zdr > 3.1
             low = zdr <= 3.1
-            dm[high] = 0.0188 * zdr[high]**3 - 0.1963 * zdr[high]**2 + 1.1796 * zdr[high] + 0.7183
+            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
             dm[low] = 0.1988 * zdr[low]**3 - 1.0747 * zdr[low]**2 + 2.3786 * zdr[low] + 0.3623
         elif loc == 'iphex':
             high = zdr > 2.9
             low = zdr <= 2.9
-            dm[high] = 0.0188 * zdr[high]**3 - 0.1963 * zdr[high]**2 + 1.1796 * zdr[high] + 0.7183
+            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
             dm[low] = 0.1887 * zdr[low]**3 - 1.0024 * zdr[low]**2 + 2.3153 * zdr[low] + 0.3834
         elif loc == 'mc3e':
             high = zdr > 3.1
             low = zdr <= 3.1
-            dm[high] = 0.0188 * zdr[high]**3 - 0.1963 * zdr[high]**2 + 1.1796 * zdr[high] + 0.7183
+            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
             dm[low] = 0.1861 * zdr[low]**3 - 1.0453 * zdr[low]**2 + 2.3804 * zdr[low] + 0.3561
         elif loc == 'olpymex':
             high = zdr > 2.7
             low = zdr <= 2.7
-            dm[high] = 0.0188 * zdr[high]**3 - 0.1963 * zdr[high]**2 + 1.1796 * zdr[high] + 0.7183
+            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
             dm[low] = 0.2209 * zdr[low]**3 - 1.1577 * zdr[low]**2 + 2.3162 * zdr[low] + 0.3486
         elif loc == 'all':
-            dm = 0.0188 * zdr**3 - 0.1963 * zdr**2 + 1.1796 * zdr + 0.7183
+            dm = 0.0138 * zdr**3 - 0.1696 * zdr**2 + 1.1592 * zdr + 0.7215
 
         #compute nw
         nw = np.log10(35.43 * dz_lin * dm**-7.192)
