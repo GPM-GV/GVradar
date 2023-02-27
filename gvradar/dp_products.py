@@ -215,20 +215,20 @@ def calc_dsd_sband_tokay_2020(dz, zdr, loc='all', d0_n2=False):
         #set dm and nw missing based on acceptable zdr range
         #zdr_bad = np.logical_or(zdr <= 0.0, zdr > 4.0)
         zdr_bad = np.logical_and(np.logical_or(zdr <= 0.0, zdr > 4.0),np.abs(dm)>0)
-        dm[zdr_bad] = missing
-        nw[zdr_bad] = missing
+        dm[zdr_bad] = dm[zdr_bad] * -1.0
+        nw[zdr_bad] = nw[zdr_bad] * -1.0
     
         #set dm and nw missing based on acceptable dm range
         #dm_bad = np.logical_or(dm < 0.5, dm > 4.0)
         dm_bad = np.logical_and(np.logical_or(dm < 0.5, dm > 4.0),np.abs(dm)>0)
-        dm[dm_bad] = missing
-        nw[dm_bad] = missing
+        dm[dm_bad] = dm[dm_bad] * -1.0 
+        nw[dm_bad] = nw[dm_bad] * -1.0
     
         #set dm and nw missing based on acceptable nw range
         #bad_nw = np.logical_or(nw < 0.5, nw > 6.0)
         bad_nw = np.logical_and(np.logical_or(nw < 0.5, nw > 6.0),np.abs(dm)>0)
-        nw[bad_nw] = missing
-        dm[bad_nw] = missing
+        nw[bad_nw] = nw[bad_nw] * -1.0
+        dm[bad_nw] = dm[bad_nw] * -1.0
         
         return dm, nw
     else:
