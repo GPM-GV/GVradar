@@ -531,14 +531,14 @@ def get_field_info(radar, field):
         cmap=cmapmeth
     elif field == 'DM':
         units='DM [mm]'
-        vmin=0
+        vmin=-1
         vmax=4
         Nbins = 8
         title ='DM [mm]'
         cmap='pyart_BlueBrown10'
     elif field == 'NW':
         units='Log[Nw, m^-3 mm^-1]'
-        vmin=0
+        vmin=-1
         vmax=6
         Nbins = 12
         title ='Log[Nw, m^-3 mm^-1]'
