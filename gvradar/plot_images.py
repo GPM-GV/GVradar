@@ -116,11 +116,11 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
     if num_fields <= 4:
         width=num_fields * 6
         height = float((nrows)*4.5)
-        ncols=num_fields
+        ncols=num_fields 
     elif num_fields > 4:
         width=24
         height = float((nrows)*4.5)
-        ncols=4
+        ncols=round((num_fields)//2)
 
     r_c = []
     for x in range(nrows):
