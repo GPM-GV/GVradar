@@ -44,7 +44,7 @@ def run_d3r(self):
     # Rename fields we want to keep with GPM, 2-letter IDs (e.g. CZ, DR, KD)
     print('', "Renaming radar fields...", sep='\n')
 
-    old_fields = ['Reflectivity', 'Velocity', 'SpectralWidth', 
+    old_fields = ['ReflectivityHV', 'Velocity', 'SpectralWidth', 
                       'DifferentialReflectivity', 'DifferentialPhase', 
                       'CopolarCorrelation']
     new_fields = ['DZ', 'VR', 'SW', 'DR', 'PH', 'RH']

@@ -20,13 +20,13 @@ from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,
 
 def dbz_to_zlin(dz):
     """dz = Reflectivity (dBZ), returns Z (mm^6 m^-3)"""
-    return 10.0**(dz / 10.0)
+    return 10.**(np.asarray(dz)/10.)
 
 # ***************************************************************************************
 
 def zlin_to_dbz(Z):
     """Z (mm^6 m^-3), returns dbz = Reflectivity (dBZ) """
-    return 10.0 * np.log10(Z)
+    return 10. * np.log10(np.asarray(zlin))
 
 # ***************************************************************************************
 
@@ -118,6 +118,21 @@ def add_csu_blended_rain(self):
                                  standard_name='Rainfall Method',
                                  dz_field='CZ')
     return self.radar
+# ***************************************************************************************
+
+def add_polZR_rr(self):
+
+    nw = self.radar.fields['NW']['data']
+    rp = np.ma.zeros(self.dz.shape)
+    
+    rp, nw = get_bringi_rainrate_nw(rp, self.dz,self.dr,self.kd,self.rh,nw,self.fh)
+
+    self.radar = cm.add_field_to_radar_object(rp, self.radar, field_name='RP', units='mm/h',
+                                      long_name='Polzr_Rain_Rate', 
+                                      standard_name='Polzr_Rain_Rate',
+                                      dz_field='CZ')
+
+    return self.radar                                     
 
 # ***************************************************************************************
 
@@ -125,7 +140,7 @@ def add_calc_dsd_sband_tokay_2020(self):
 
     print('    Calculating Drop-Size Distribution...')
 
-    dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc, d0_n2=False)
+    dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc)
 
     self.radar = cm.add_field_to_radar_object(dm, self.radar, field_name='DM', units='mm',
                               long_name='Mass-weighted mean diameter',
@@ -140,12 +155,11 @@ def add_calc_dsd_sband_tokay_2020(self):
 
 # ***************************************************************************************
 
-def calc_dsd_sband_tokay_2020(dz, zdr, loc='all', d0_n2=False):
+def calc_dsd_sband_tokay_2020(dz, zdr, loc='all'):
 
     """
     Compute dm and nw or (d0 and n2) following the methodology of Tokay et al. 2020
     Works for S-band radars only
-    Written by: Charanjit S. Pabla, NASA/WFF/SSAI
 
     Parameters:
     -----------
@@ -156,99 +170,311 @@ def calc_dsd_sband_tokay_2020(dz, zdr, loc='all', d0_n2=False):
     -----------
     loc: all (default, string); region or field campaign name (DSD depends on environment)
          user options: wff, alabama, ifloods, iphex, mc3e, olympex, all
-    d0_n2: False (default, bool)
-        if true then function will return d0 and n2
 
     Return:
     -------
     dm and nw (default, numpy array)
-    if d0_n2 set to True then return d0 and n2 (numpy array)
-    """ 
-    missing = -32767.0 
-    dm = np.zeros(dz.shape)
-    nw = np.zeros(dz.shape)
+    """
+
+    dm = 0.0 * dz
+    nw = 0.0 * dz
     dz_lin = dbz_to_zlin(dz)
     
-    #force input string to lower case
+    # Force input string to lower case
     loc = loc.lower()
     
-    if not d0_n2:
+    # Compute dm for valid ZDR
+    #print('    DSD equation:  ',loc)
+    if loc == 'wff':
+        high = np.logical_and(zdr > 3.5, zdr <= 4.0)
+        dm[high] = get_dm(zdr[high],0.0138,0.1696,1.1592,0.7215)
+        low = np.logical_and(zdr <= 3.5, zdr > 0.0)
+        dm[low] = get_dm(zdr[low],0.0990,0.6141,1.8364,0.4559)
+    elif loc == 'alabama':
+        high = np.logical_and(zdr > 3.1, zdr <= 4.0)
+        dm[high] = get_dm(zdr[high],0.0138,0.1696,1.1592,0.7215)
+        low = np.logical_and(zdr <= 3.1, zdr > 0.0)
+        dm[low] = get_dm(zdr[low],0.0782,0.4679,1.5355,0.6377)
+    elif loc == 'ifloods':
+        high = np.logical_and(zdr > 3.1, zdr <= 4.0)
+        dm[high] = get_dm(zdr[high],0.0138,0.1696,1.1592,0.7215)
+        low = np.logical_and(zdr <= 3.1, zdr > 0.0)
+        dm[low] = get_dm(zdr[low],0.1988,1.0747,2.3786,0.3623)
+    elif loc == 'iphex':
+        high = np.logical_and(zdr > 2.9, zdr <= 4.0)
+        dm[high] = get_dm(zdr[high],0.0138,0.1696,1.1592,0.7215)
+        low = np.logical_and(zdr <= 2.9, zdr > 0.0)
+        dm[low] = get_dm(zdr[low],0.1887,1.0024,2.3153,0.3834)
+    elif loc == 'mc3e':
+        high = np.logical_and(zdr > 3.1, zdr <= 4.0)
+        dm[high] = get_dm(zdr[high],0.0138,0.1696,1.1592,0.7215)
+        low = np.logical_and(zdr <= 3.1, zdr > 0.0)
+        dm[low] = get_dm(zdr[low],0.1861,1.0453,2.3804,0.3561)
+    elif loc == 'olpymex':
+        high = np.logical_and(zdr > 2.7, zdr <= 4.0)
+        dm[high] = get_dm(zdr[high],0.0138,0.1696,1.1592,0.7215)
+        low = np.logical_and(zdr <= 2.7, zdr > 0.0)
+        dm[low] = get_dm(zdr[low],0.2209,1.1577,2.3162,0.3486)
+    elif loc == 'all':
+        good_zr = np.logical_and(zdr > 0.0, zdr <= 4.0)
+        dm[good_zr] = get_dm(zdr[good_zr],0.0138,0.1696,1.1592,0.7215)
         
-        #compute dm
-        print('    DSD equation:  ',loc)
-        if loc == 'wff':
-            high = zdr > 3.5
-            low = zdr <= 3.5
-            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
-            dm[low] = 0.0990 * zdr[low]**3 - 0.6141 * zdr[low]**2 + 1.8364 * zdr[low] + 0.4559
-        elif loc == 'alabama':
-            high = zdr > 3.1
-            low = zdr <= 3.1
-            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
-            dm[low] = 0.0782 * zdr[low]**3 - 0.4679 * zdr[low]**2 + 1.5355 * zdr[low] + 0.6377
-        elif loc == 'ifloods':
-            high = zdr > 3.1
-            low = zdr <= 3.1
-            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
-            dm[low] = 0.1988 * zdr[low]**3 - 1.0747 * zdr[low]**2 + 2.3786 * zdr[low] + 0.3623
-        elif loc == 'iphex':
-            high = zdr > 2.9
-            low = zdr <= 2.9
-            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
-            dm[low] = 0.1887 * zdr[low]**3 - 1.0024 * zdr[low]**2 + 2.3153 * zdr[low] + 0.3834
-        elif loc == 'mc3e':
-            high = zdr > 3.1
-            low = zdr <= 3.1
-            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
-            dm[low] = 0.1861 * zdr[low]**3 - 1.0453 * zdr[low]**2 + 2.3804 * zdr[low] + 0.3561
-        elif loc == 'olpymex':
-            high = zdr > 2.7
-            low = zdr <= 2.7
-            dm[high] = 0.0138 * zdr[high]**3 - 0.1696 * zdr[high]**2 + 1.1592 * zdr[high] + 0.7215
-            dm[low] = 0.2209 * zdr[low]**3 - 1.1577 * zdr[low]**2 + 2.3162 * zdr[low] + 0.3486
-        elif loc == 'all':
-            dm = 0.0138 * zdr**3 - 0.1696 * zdr**2 + 1.1592 * zdr + 0.7215
-
-        #compute nw
-        nw = np.log10(35.43 * dz_lin * dm**-7.192)
+    # Compute nw for valid dm and log(nw)
+    dm_range = np.logical_and(dm >= 0.5, dm <= 4.0)
+    nw[dm_range] = 35.43 * dz_lin[dm_range] * dm[dm_range]**-7.192
+    nw[dm_range] = np.log10(nw[dm_range])
+    nw_range = np.logical_and(nw >= 0.5, nw <= 6.0)    
+    n2 = 0.0 * dz
+    n2[nw_range] = nw[nw_range]
     
-        #set dm and nw missing based on acceptable zdr range
-        #zdr_bad = np.logical_or(zdr <= 0.0, zdr > 4.0)
-        zdr_bad = np.logical_and(np.logical_or(zdr <= 0.0, zdr > 4.0),np.abs(dm)>0)
-        dm[zdr_bad] = dm[zdr_bad] * -1.0
-        nw[zdr_bad] = nw[zdr_bad] * -1.0
+    # Set dm and nw based on acceptable dm range
+    bad_dm = np.less(dm,0.5)
+    n2[bad_dm] = n2[bad_dm] * -1.0
+    dm[bad_dm] = dm[bad_dm] * -1.0
     
-        #set dm and nw missing based on acceptable dm range
-        #dm_bad = np.logical_or(dm < 0.5, dm > 4.0)
-        dm_bad = np.logical_and(np.logical_or(dm < 0.5, dm > 4.0),np.abs(dm)>0)
-        dm[dm_bad] = dm[dm_bad] * -1.0 
-        nw[dm_bad] = nw[dm_bad] * -1.0
+    # Set dm and nw based on acceptable nw range
+    bad_nw = np.less(n2,0.5)
+    n2[bad_nw] = n2[bad_nw] * -1.0
+    dm[bad_nw] = dm[bad_nw] * -1.0
     
-        #set dm and nw missing based on acceptable nw range
-        #bad_nw = np.logical_or(nw < 0.5, nw > 6.0)
-        bad_nw = np.logical_and(np.logical_or(nw < 0.5, nw > 6.0),np.abs(dm)>0)
-        nw[bad_nw] = nw[bad_nw] * -1.0
-        dm[bad_nw] = dm[bad_nw] * -1.0
-        
-        return dm, nw
-    else:
-        #user request d0 and n2
-        
-        d0 = dm
-        n2 = nw
-        
-        d0 = 0.0215 * zdr**3 - 0.0836 * zdr**2 + 0.7898 * zdr + 0.8019
-        n2 = np.log10(20.957 * dz_lin * d0**-7.7)
-        
-        #set d0 and n2 missing
-        d0_bad = d0 <= 0
-        n2_bad = n2 <= 0
-        d0[d0_bad] = missing
-        n2[n2_bad] = missing
-        
-        return d0, n2
+    return dm, n2
 
 # ***************************************************************************************
+
+def get_dm(zdr,a,b,c,d):
+    
+    return a * zdr**3 - b * zdr**2 + c * zdr + d
+
+# ***************************************************************************************
+
+def get_bringi_rainrate_nw(rp,dbz,zdr,kdp,rhv,nw,fh):
+
+    # Calculate the coefficient a' in Z = a' * R^1.5 using the DSD
+    # parameters. First, calculate f(mu)
+    mu = 3.0
+    nw = 10**nw
+    rp = get_polzr_rainrate(dbz,nw,mu)
+    
+    # Max rain rate test
+    rr_max = np.greater(rp,300)
+    rp[rr_max] = rp[rr_max] * -1.0
+
+    # HID ice threshold
+    rp = remove_ice(fh,field=rp)
+    
+    # Check if Rain rate is not finite!
+    rr_inf = np.isinf(rp)
+    rp[rr_inf] = rp[rr_inf] * -1.0
+    
+    nw = np.log10(nw)
+    return rp, nw
+
+# ***************************************************************************************
+
+def get_polzr_rainrate(dbz,nw,mu):
+    
+    # From eq. A.25 in Bring et al. 2004
+    x1 = 6.0 * (3.67 + mu)**(4+mu)
+    x2 = (3.67**4) * gamma(mu+4)
+    f_mu = x1/x2
+
+    # From eq. A.23 in Bring et al. 2004
+    x3 = f_mu * gamma(7+mu)
+    x4 = (3.67+mu)**(7+mu)
+    fz_mu = x3/x4
+
+    # From eq. A.24 in Bring et al. 2004
+    x5  = np.pi * 0.0006 * 3.78 * f_mu
+    x6  = gamma(4.67 + mu) / (3.67+mu)**(4.67+mu)
+
+    fr_mu = x5 * x6
+    
+    a_mu = fz_mu / (fr_mu**(1.5))
+
+    # Now, the new A parameter for the Z-R relation is given by:
+    # a' = a_mu/(nw^1.5) 
+
+    a_prime = a_mu/(nw**0.5)
+    b = 1.5
+    rp =  get_zr_rain(dbz, a_prime, b)
+
+    return rp
+
+# ***************************************************************************************
+
+def get_zr_rain(dbz, a, b):
+    
+    # Set max_dbz dB as maximum reasonable reflectivity
+    max_dbz = 55
+    dbz_max = np.greater_equal(dbz,max_dbz)
+    dbz[dbz_max] = max_dbz
+
+    # Now calculate the rain rate from the pass dBZ value
+    zh = 10**(dbz/10.0)
+    rp = (zh/a)**(1.0/b)
+    
+    return rp
+
+# ***************************************************************************************
+
+def remove_ice(fh,field=' '):
+    
+    hid_ice = [0, 3, 4, 5, 6, 7, 8, 9]
+    for xice in hid_ice:
+        ice = np.equal(fh, xice)
+        field[ice] = -999
+        
+    return field
+
+# ***************************************************************************************
+
+def set_low_dbz(fl, zz):
+
+    #Use raw reflectivity since corrected reflectivity masks values <= 5
+    low_dbz = np.logical_and(zz > 0, zz <= 5)
+    fl[low_dbz] = 0.0
+    
+    return fl
+
+# ***************************************************************************************
+
+def mask_beyond_150(self.radar):
+
+    """
+    Filter out any data outside 150 KM set to missing(-32767.0)
+    """
+    
+    sector = {'hmin': 0, 'hmax': None,
+              'rmin': 150 * 1000, 'rmax':  400 * 1000,
+              'azmin': 0, 'azmax': 360,
+              'elmin': 0, 'elmax': None}
+    
+    beyond_flag = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
+    
+    # check for altitude limits
+    if sector['hmin'] is not None:
+        beyond_flag[self.radar.gate_altitude['data'] < sector['hmin']] = 0
+    if sector['hmax'] is not None:
+        beyond_flag[self.radar.gate_altitude['data'] > sector['hmax']] = 0
+
+    # check for range limits
+
+    if sector['rmin'] is not None:
+        beyond_flag[:, self.radar.range['data'] < sector['rmin']] = 0
+
+    if sector['rmax'] is not None:
+        beyond_flag[:, self.radar.range['data'] > sector['rmax']] = 0
+
+    # check elevation angle limits
+    if sector['elmin'] is not None:
+        beyond_flag[self.radar.elevation['data'] < sector['elmin'], :] = 0
+
+    if sector['elmax'] is not None:
+        beyond_flag[self.radar.elevation['data'] > sector['elmax'], :] = 0
+
+    # check min and max azimuth angle
+    if sector['azmin'] is not None and sector['azmax'] is not None:
+        if sector['azmin'] <= sector['azmax']:
+            beyond_flag[self.radar.azimuth['data'] < sector['azmin'], :] = 0
+            beyond_flag[self.radar.azimuth['data'] > sector['azmax'], :] = 0
+        if sector['azmin'] > sector['azmax']:
+            beyond_flag[np.logical_and(
+            self.radar.azimuth['data'] < sector['azmin'],
+            self.radar.azimuth['data'] > sector['azmax']), :] = 0
+    elif sector['azmin'] is not None:
+        beyond_flag[self.radar.azimuth['data'] < sector['azmin'], :] = 0
+    elif sector['azmax'] is not None:
+        beyond_flag[self.radar.azimuth['data'] > sector['azmax'], :] = 0
+
+    beyond_field = beyond_flag
+    apply_beyond = np.equal(beyond_field,1)
+    
+    fields = ['FS','FW','RC','RP','MW','MI','DM','NW']
+    for fld in fields:
+        nf = self.radar.fields[fld]['data']
+        nf[apply_beyond] = -32767.0
+        self.radar.add_field_like(fld,fld,nf,replace_existing=True)
+
+    beyond_dict = {"data": beyond_field, "units": "0: False, 1: True",
+                   "long_name": "BEYOND", "_FillValue": -32767.0,
+                   "standard_name": "BEYOND",}
+    self.radar.add_field("BEYOND", beyond_dict, replace_existing=True)    
+    
+    return self.radar
+
+# ***************************************************************************************
+
+def set_blockage(self, sector_dict):
+
+    """
+    Set known blocages to -888
+    """
+
+    for k in range(len(sector_dict)):
+        
+        sector = sector_dict[k]
+        
+        block_flag = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
+    
+        # check for altitude limits
+        if sector['hmin'] is not None:
+            block_flag[self.radar.gate_altitude['data'] < sector['hmin']] = 0
+        if sector['hmax'] is not None:
+            block_flag[self.radar.gate_altitude['data'] > sector['hmax']] = 0
+
+        # check for range limits
+
+        if sector['rmin'] is not None:
+            block_flag[:, self.radar.range['data'] < sector['rmin']] = 0
+
+        if sector['rmax'] is not None:
+            block_flag[:, self.radar.range['data'] > sector['rmax']] = 0
+
+        # check elevation angle limits
+        if sector['elmin'] is not None:
+            block_flag[self.radar.elevation['data'] < sector['elmin'], :] = 0
+
+        if sector['elmax'] is not None:
+            block_flag[self.radar.elevation['data'] > sector['elmax'], :] = 0
+
+        # check min and max azimuth angle
+        if sector['azmin'] is not None and sector['azmax'] is not None:
+            if sector['azmin'] <= sector['azmax']:
+                block_flag[self.radar.azimuth['data'] < sector['azmin'], :] = 0
+                block_flag[self.radar.azimuth['data'] > sector['azmax'], :] = 0
+            if sector['azmin'] > sector['azmax']:
+                block_flag[np.logical_and(
+                self.radar.azimuth['data'] < sector['azmin'],
+                self.radar.azimuth['data'] > sector['azmax']), :] = 0
+        elif sector['azmin'] is not None:
+            block_flag[self.radar.azimuth['data'] < sector['azmin'], :] = 0
+        elif sector['azmax'] is not None:
+            block_flag[self.radar.azimuth['data'] > sector['azmax'], :] = 0
+         
+        globals()['block_flag_%s' % k] = block_flag 
+    
+    block_flag = np.ma.zeros((self.radar.nrays, self.radar.ngates), dtype=int)
+    for k in range(len(sector_dict)):
+        globals()['apply_block_%s' % k] = np.equal(globals()['block_flag_%s' % k],1)
+        block_flag[globals()['apply_block_%s' % k]] = 1
+    
+    block_field = block_flag
+    apply_block = np.equal(block_flag,1)
+    
+    fields = ['CZ','DR','KD','PH','RH','SD','SW','VR','FS','FW','RC','RP','MW','MI','DM','NW']
+    for fld in fields:
+        nf = self.radar.fields[fld]['data']
+        nf[apply_block] = -888
+        self.radar.add_field_like(fld,fld,nf,replace_existing=True)
+    
+    block_dict = {"data": block_field, "units": "0: False, 1: True",
+                  "long_name": "BLOCK", "_FillValue": -32767.0,
+                  "standard_name": "BLOCK",}
+    self.radar.add_field("BLOCK", block_dict, replace_existing=False)
+    
+    return self.radar
+
+# *************************************************************************************** 
 
 def get_kdp(self):
 
@@ -268,7 +494,7 @@ def get_kdp(self):
     if self.site == 'KWAJ':
         window=4
     else:
-        window=5
+        window=4
 
     KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                     thsd=25, gs=gate_spacing, 
@@ -329,6 +555,7 @@ def get_default_product_dict():
                             'snthresh': -30,
                             'do_mass': True,
                             'do_RC': True,
+                            'do_RP': True,
                             'do_tokay_DSD': True,
                             'dsd_loc': 'all',
                             'max_range': 200, 
@@ -339,12 +566,13 @@ def get_default_product_dict():
                             'cf_dir': './cf',
                             'grid_dir': './grid',
                             'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 
-                                              'PH', 'RH', 'SD', 'SQ', 'FH',
-                                              'RC', 'DM', 'NW', 'MW', 'MI'],
+                                              'PH', 'RH', 'SD', 'SQ', 'FS',
+                                              'RC', 'DM', 'NW', 'MW', 'MI',
+                                              'RP'. 'FW'],
                             'plot_images': True,
                             'plot_single': True,
                             'plot_multi': False,
-                            'fields_to_plot': ['CZ', 'DR', 'KD', 'RH', 'RC', 'DM', 'NW', 'FH'],
+                            'fields_to_plot': ['CZ', 'DR', 'KD', 'RH', 'RC', 'DM', 'NW', 'FS', 'RP'],
                             'plot_dir': './plots/', 'add_logos': True,
                             'use_sounding': True,
                             'sounding_type': 'ruc_archive',
