@@ -568,7 +568,7 @@ def get_default_product_dict():
                             'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 
                                               'PH', 'RH', 'SD', 'SQ', 'FS',
                                               'RC', 'DM', 'NW', 'MW', 'MI',
-                                              'RP'. 'FW'],
+                                              'RP', 'FW'],
                             'plot_images': True,
                             'plot_single': True,
                             'plot_multi': False,
