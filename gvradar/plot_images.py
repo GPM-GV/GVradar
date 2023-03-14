@@ -107,12 +107,12 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
     lon_grid = np.arange(min_lon_rn - 1.00 , max_lon_rn + 1.00, 1.0)
     lat_grid = np.arange(min_lat_rn - 1.00 , max_lat_rn + 1.00, 1.0)
     
-    projection = ccrs.LambertConformal(radar_lon, radar_lat)
+    #projection = ccrs.LambertConformal(radar_lon, radar_lat)
+    projection = ccrs.Orthographic(radar_lon, radar_lat)
     display = pyart.graph.RadarMapDisplay(radar)
 
     num_fields = len(fields)
     nrows = math.ceil((num_fields)/4)
-    print(num_fields)
     if nrows < 1 : nrows = 1
     if num_fields <= 4:
         width=num_fields * 6
@@ -121,9 +121,8 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
     elif num_fields > 4:
         width=24
         height = float((nrows)*4.5)
-        ncols=round((num_fields)//2)
+        ncols=round((num_fields)/2)
 
-    print(nrows,ncols)
     r_c = []
     for x in range(nrows):
         for y in range(ncols):
