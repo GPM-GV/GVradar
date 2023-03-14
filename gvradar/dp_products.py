@@ -123,10 +123,17 @@ def add_csu_blended_rain(self):
 
 def add_polZR_rr(self):
 
-    nw = self.radar.fields['NW']['data']
     rp = np.ma.zeros(self.dz.shape)
-    
-    rp, nw = get_bringi_rainrate_nw(rp, self.dz,self.dr,self.kd,self.rh,nw,self.fh)
+
+    if 'NW' in self.radar.fields.keys():
+        # If NW exsits use to compute RP
+        print('    Calculating PolZR rain rate with Ali NW')
+        nw = self.radar.fields['NW']['data']
+        rp, nw = get_bringi_rainrate_nw(rp, self.dz,self.dr,self.kd,self.rh,nw,self.fh)
+    else:
+        # IF no NW compute with equations
+        print('    Calculating PolZR rain rate with computed NW')
+        rp, nw = get_bringi_rainrate(self.bz,self.dr,self.kd,self.rh,self.fh)
 
     self.radar = cm.add_field_to_radar_object(rp, self.radar, field_name='RP', units='mm/h',
                                       long_name='Polzr_Rain_Rate', 
@@ -245,6 +252,128 @@ def calc_dsd_sband_tokay_2020(dz, zdr, loc='all'):
 def get_dm(zdr,a,b,c,d):
     
     return a * zdr**3 - b * zdr**2 + c * zdr + d
+
+# ***************************************************************************************
+
+def get_bringi_rainrate(dbz,zdr,kdp,rhv,hid):
+
+    #Calculates DSD fields to assign a rain rate.  
+
+    #Disdrometer-based Z-R coefficients
+    #a1 = 0.024285, b1 = 0.6895, Z = 219 Z^1.45
+    #a1 = 0.017, b1 = 0.7143, Z = 300 Z^1.4 
+    #a1 = 0.036. b1 = 0.6250, Z = 200 R^1.6 
+    #a_dsd = (1.0/a1)**(1./b1)
+    #b_dsd = (1.0/b1)
+
+    #Check to see if DP variables can be used to calculate 
+    #the rain rate. We need D0, Nw and mu to calculate the 
+    #Polarimetric ZR
+
+    zh = 10.**(0.1*dbz)     
+    xi_dr = 10.**(0.1*zdr)
+    d0 = np.zeros(dbz.shape)
+    dm = np.zeros(dbz.shape)
+    nw = np.zeros(dbz.shape)
+    logNw = np.zeros(dbz.shape)
+    mu = 3.0
+    beta = 0
+
+    # Light rain rates with noisy Zd
+    light_rain = np.logical_and(zdr >= -0.5, zdr < 0.2)
+    nw[light_rain] = get_nw_light(zh[light_rain],xi_dr[light_rain])
+    
+    # Light rain rates with modest kdp
+    modest_kdp = np.logical_and(kdp < 0.3, zdr >= 0.2, zdr < 0.5)
+    nw[modest_kdp] = get_nw_modest(zdr[modest_kdp],zh[modest_kdp],xi_dr[modest_kdp])
+    
+    # Moderate rain rates
+    moderate_rr = np.logical_and(kdp < 0.3, zdr >= 0.5)
+    nw[moderate_rr] = get_moderate_nw(zdr[moderate_rr],zh[moderate_rr])
+    
+    # Heavy rain rates
+    heavy_rr = np.logical_and(dbz >= 35, kdp >= 0.3, zdr >= 0.2)
+    nw[heavy_rr] = get_heavy_nw(zdr[heavy_rr],kdp[heavy_rr],zh[heavy_rr],xi_dr[heavy_rr])
+           
+    # Calculate the coefficient a' in Z = a' * R^1.5 using the DSD
+    # parameters. First, calculate f(mu)
+    mu = 3.0
+    rp = get_polzr_rainrate(dbz,nw,mu)
+    
+    # Max rain rate test
+    rr_max = np.greater(rp,300)
+    rp[rr_max] = rp[rr_max] * -1.0
+
+    # HID ice threshold
+    rp = remove_ice(hid,field=rp)
+
+    # Check if Rain rate is not finite!
+    rr_inf = np.isinf(rp)
+    rp[rr_inf] = rp[rr_inf] * -1.0    
+    
+    nw = np.log10(nw)
+    
+    return rp, nw
+
+# ***************************************************************************************
+
+def get_nw_light(zh,xi_dr):
+
+    d0 = 0.6096*(zh**0.0516)*(xi_dr**3.111)
+    nw = (21*zh)/d0**7.3529
+    mu = 3.0
+    dm = d0 * ((4+mu)/(3.67+mu))
+    
+    return nw
+
+# ***************************************************************************************
+
+def get_nw_modest(zdr,zh,xi_dr):
+
+    x1 = ((zdr - 0.2)/0.3) * 1.81 * zdr**(0.486)
+    x2 = ((0.5-zdr)/0.3) * 0.6096*zh**(0.0516) * xi_dr**(3.111)
+    d0 = x1 + x2
+    nw = (21*zh)/d0**7.3529
+    mu = 3.0
+    dm = d0 * ((4+mu)/(3.67+mu))
+    
+    return nw
+
+# ***************************************************************************************
+
+def get_moderate_nw(zdr,zh):
+
+    d0 = 1.81*zdr**0.486
+    nw = (21*zh)/d0**7.3529
+    mu = 3.0
+    dm = d0 * ((4+mu)/(3.67+mu))
+    
+    return nw
+
+# ***************************************************************************************
+
+def get_heavy_nw(zdr,kdp,zh,xi_dr):
+
+    beta = 2.08*zh**(-0.365) * kdp**(0.38) * xi_dr**(0.965)
+    a1 = 0.56
+    b1 = 0.064
+    c1 = 0.024*beta**(-1.42)
+    d0 = a1 * zh**b1 * xi_dr**c1
+    a2 = 3.29
+    b2 = 0.058
+    c2 = -0.023 * beta**(-1.389)
+    logNw = a2 * zh**b2 * xi_dr**c2
+    nw = 10**(logNw)
+    a3 = 203. * beta**(1.89)
+    b3 = 2.23 * beta**(0.0388)
+    c3 = 3.16 * beta**(-0.0463)
+    d3 = 0.374 * beta**(-0.355)
+    x1 = a3 * (d0**b3)/(xi_dr-1)
+    x2 = c3 * (xi_dr**d3)
+    mu = x1 - x2
+    dm = d0 * ((4+mu)/(3.67+mu))    
+    
+    return nw
 
 # ***************************************************************************************
 
