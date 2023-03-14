@@ -338,7 +338,7 @@ def set_low_dbz(fl, zz):
 
 # ***************************************************************************************
 
-def mask_beyond_150(self.radar):
+def mask_beyond_150(self):
 
     """
     Filter out any data outside 150 KM set to missing(-32767.0)
