@@ -111,7 +111,7 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
     display = pyart.graph.RadarMapDisplay(radar)
 
     num_fields = len(fields)
-    nrows = round((num_fields)//4)
+    nrows = math.ceil((num_fields)//4)
     if nrows < 1 : nrows = 1
     if num_fields <= 4:
         width=num_fields * 6
