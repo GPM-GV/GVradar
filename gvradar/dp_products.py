@@ -129,11 +129,11 @@ def add_polZR_rr(self):
         # If NW exsits use to compute RP
         print('    Calculating PolZR rain rate with Ali NW')
         nw = self.radar.fields['NW']['data']
-        rp, nw = get_bringi_rainrate_nw(rp, self.dz,self.dr,self.kd,self.rh,nw,self.fh)
+        rp, nw = get_bringi_rainrate_nw(rp,self.dz,self.dr,self.kd,self.rh,nw,self.fh)
     else:
         # IF no NW compute with equations
         print('    Calculating PolZR rain rate with computed NW')
-        rp, nw = get_bringi_rainrate(self.bz,self.dr,self.kd,self.rh,self.fh)
+        rp, nw = get_bringi_rainrate(rp,self.dz,self.dr,self.kd,self.rh,self.fh)
 
     self.radar = cm.add_field_to_radar_object(rp, self.radar, field_name='RP', units='mm/h',
                                       long_name='Polzr_Rain_Rate', 
@@ -255,7 +255,7 @@ def get_dm(zdr,a,b,c,d):
 
 # ***************************************************************************************
 
-def get_bringi_rainrate(dbz,zdr,kdp,rhv,hid):
+def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
 
     #Calculates DSD fields to assign a rain rate.  
 
