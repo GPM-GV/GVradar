@@ -119,14 +119,14 @@ def add_csu_blended_rain(self):
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
     # Max rain rate test
-    rr_max = np.greater(rain,300)
-    rain[rr_max] = rain[rr_max] * -1.0
+    #rr_max = np.greater(rain,300)
+    #rain[rr_max] = rain[rr_max] * -1.0
 
     # HID ice threshold
-    rain = remove_ice(self.fh,field=rain)
+    #rain = remove_ice(self.fh,field=rain)
     
     # Low dbz to 0
-    rain = set_low_dbz(rain, self.zz)
+    #rain = set_low_dbz(rain, self.zz)
 
     self.radar = cm.add_field_to_radar_object(rain, self.radar, field_name='RC', units='mm/h',
                                  long_name='HIDRO Rainfall Rate', 
