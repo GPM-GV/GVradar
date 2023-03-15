@@ -229,7 +229,6 @@ class DP_products:
         
     # Rename fields with GPM, 2-letter IDs (e.g. CZ, DR, KD)
         self.radar, zz = cm.rename_fields_in_radar(self)
-        self.zz = zz
         
     # If no KDP, calculate field
         if 'KD' not in self.radar.fields.keys():  
@@ -239,6 +238,10 @@ class DP_products:
         self.dr = self.radar.fields['DR']['data']
         self.kd = self.radar.fields['KD']['data']
         self.rh = self.radar.fields['RH']['data']
+        if 'ZZ' in self.radar.fields.keys():
+            self.zz = self.radar.fields['ZZ']['data']
+        else:
+            self.zz = self.radar.fields['DZ']['data']
         
         print('', 'Calculating DP products:  ', sep='\n')
        
