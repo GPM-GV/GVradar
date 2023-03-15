@@ -170,8 +170,8 @@ def add_calc_dsd_sband_tokay_2020(self):
     dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc)
 
     # HID ice threshold
-    dm = remove_ice(self.fh,field=dm)
-    nw = remove_ice(self.fh,field=nw)
+    #dm = remove_ice(self.fh,field=dm)
+    #nw = remove_ice(self.fh,field=nw)
     
     # Low dbz to 0
     #dm = set_low_dbz(dm, self.zz)
