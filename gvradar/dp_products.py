@@ -414,7 +414,7 @@ def get_bringi_rainrate_nw(rp,dbz,zdr,kdp,rhv,nw,fh):
     #rp[rr_max] = rp[rr_max] * -1.0
 
     # HID ice threshold
-    #rp = remove_ice(fh,field=rp)
+    rp = remove_ice(rp,fh)
     
     # Check if Rain rate is not finite!
     #rr_inf = np.isinf(rp)
@@ -471,18 +471,18 @@ def get_zr_rain(dbz, a, b):
 
 # ***************************************************************************************
 
-def remove_ice(fh,field=' '):
+def remove_ice(fl,hid):
     
     hid_ice = [0, 3, 4, 5, 6, 7, 8, 9]
     for xice in hid_ice:
-        ice = np.equal(fh, xice)
-        field[ice] = -999
+        ice = np.equal(hid, xice)
+        fl[ice] = -999
         
-    return field
+    return fl
 
 # ***************************************************************************************
 
-def set_low_dbz(fl, zz):
+def set_low_dbz(fl,zz):
 
     #Use raw reflectivity since corrected reflectivity masks values <= 5
     low_dbz = np.logical_and(zz > 0, zz <= 5)
