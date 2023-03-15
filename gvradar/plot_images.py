@@ -485,7 +485,7 @@ def get_field_info(radar, field):
         vmin=0
         vmax=11
         Nbins = 0
-        title = 'Hydrometeor Identification'
+        title = 'Summmer Hydrometeor Identification'
         cmap=cmaphid
     elif field == 'FS':
         units='HID'

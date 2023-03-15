@@ -241,10 +241,6 @@ class DP_products:
         self.rh = self.radar.fields['RH']['data']
         
         print('', 'Calculating DP products:  ', sep='\n')
-    
-    # Calculate Drop-Size Distribution from Tokay et al. 2020 and add to radar
-        if self.do_tokay_DSD == True: 
-            self.radar = dp.add_calc_dsd_sband_tokay_2020(self)
        
     # Create Temperature field   
         if self.use_sounding == True:
@@ -263,6 +259,10 @@ class DP_products:
     # Get HID scores and add FH to radar
             if self.do_HID_summer or self.do_HID_winter == True:
                 self.radar = dp.add_csu_fhc(self)
+
+    # Calculate Drop-Size Distribution from Tokay et al. 2020 and add to radar
+            if self.do_tokay_DSD == True: 
+                self.radar = dp.add_calc_dsd_sband_tokay_2020(self)
 
     # Calculate Cifelli et al. 2011 ice and water mass fields and add to radar.
     # Function expects, reflectivity, differential reflectivity, 
