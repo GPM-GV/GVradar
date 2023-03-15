@@ -120,7 +120,7 @@ def add_csu_blended_rain(self):
     rain[rr_max] = rain[rr_max] * -1.0
 
     # HID ice threshold
-    #rain = remove_ice(self.fh,field=rain)
+    rain = remove_ice(self.fh,field=rain)
     
     # Low dbz to 0
     rain = set_low_dbz(rain, self.zz)
