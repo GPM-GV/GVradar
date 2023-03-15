@@ -13,7 +13,6 @@ import numpy as np
 import pyart
 from scipy.special import gamma
 from gvradar import (common as cm, plot_images as pi)
-
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain, 
                             csu_dsd, csu_kdp, csu_misc, fundamentals)
 
@@ -33,7 +32,7 @@ def zlin_to_dbz(Z):
 
 def add_csu_fhc(self):
     
-    #Run Summer HID
+    # Run Summer HID
 
     if self.do_HID_summer:
         print('    Add Summer HID field to radar...')
@@ -47,7 +46,7 @@ def add_csu_fhc(self):
 
         self.fh = self.radar.fields['FH']['data']  
 
-    #Run Winter HID
+    # Run Winter HID
     if self.do_HID_winter:
         print('    Add Winter HID field to radar...')
 
@@ -411,15 +410,15 @@ def get_bringi_rainrate_nw(rp,dbz,zdr,kdp,rhv,nw,fh):
     rp = get_polzr_rainrate(dbz,nw,mu)
     
     # Max rain rate test
-    rr_max = np.greater(rp,300)
-    rp[rr_max] = rp[rr_max] * -1.0
+    #rr_max = np.greater(rp,300)
+    #rp[rr_max] = rp[rr_max] * -1.0
 
     # HID ice threshold
-    rp = remove_ice(fh,field=rp)
+    #rp = remove_ice(fh,field=rp)
     
     # Check if Rain rate is not finite!
-    rr_inf = np.isinf(rp)
-    rp[rr_inf] = rp[rr_inf] * -1.0
+    #rr_inf = np.isinf(rp)
+    #rp[rr_inf] = rp[rr_inf] * -1.0
     
     nw = np.log10(nw)
     return rp, nw
