@@ -93,8 +93,8 @@ def add_csu_liquid_ice_mass(self):
     #mi = remove_ice(self.fh,field=mi)
     
     # Low dbz to 0
-    #mw = set_low_dbz(mw, self.zz)
-    #mi = set_low_dbz(mi, self.zz)
+    mw = set_low_dbz(mw, self.zz)
+    mi = set_low_dbz(mi, self.zz)
 
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
@@ -116,14 +116,14 @@ def add_csu_blended_rain(self):
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
     # Max rain rate test
-    #rr_max = np.greater(rain,300)
-    #rain[rr_max] = rain[rr_max] * -1.0
+    rr_max = np.greater(rain,300)
+    rain[rr_max] = rain[rr_max] * -1.0
 
     # HID ice threshold
     #rain = remove_ice(self.fh,field=rain)
     
     # Low dbz to 0
-    #rain = set_low_dbz(rain, self.zz)
+    rain = set_low_dbz(rain, self.zz)
 
     self.radar = cm.add_field_to_radar_object(rain, self.radar, field_name='RC', units='mm/h',
                                  long_name='HIDRO Rainfall Rate', 
@@ -329,7 +329,7 @@ def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
     rp[rr_max] = rp[rr_max] * -1.0
 
     # HID ice threshold
-    rp = remove_ice(hid,field=rp)
+    #rp = remove_ice(hid,field=rp)
 
     # Check if Rain rate is not finite!
     rr_inf = np.isinf(rp)
@@ -410,15 +410,15 @@ def get_bringi_rainrate_nw(rp,dbz,zdr,kdp,rhv,nw,fh):
     rp = get_polzr_rainrate(dbz,nw,mu)
     
     # Max rain rate test
-    #rr_max = np.greater(rp,300)
-    #rp[rr_max] = rp[rr_max] * -1.0
+    rr_max = np.greater(rp,300)
+    rp[rr_max] = rp[rr_max] * -1.0
 
     # HID ice threshold
-    rp = remove_ice(rp,fh)
+    #rp = remove_ice(rp,fh)
     
     # Check if Rain rate is not finite!
-    #rr_inf = np.isinf(rp)
-    #rp[rr_inf] = rp[rr_inf] * -1.0
+    rr_inf = np.isinf(rp)
+    rp[rr_inf] = rp[rr_inf] * -1.0
     
     nw = np.log10(nw)
     return rp, nw
