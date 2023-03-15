@@ -90,8 +90,8 @@ def add_csu_liquid_ice_mass(self):
     mw, mi = csu_liquid_ice_mass.calc_liquid_ice_mass(self.dz, self.dr, self.radar_z/1000.0, T=self.radar_T)
 
     # HID ice threshold
-    mw = remove_ice(self.fh,field=mw)
-    mi = remove_ice(self.fh,field=mi)
+    #mw = remove_ice(self.fh,field=mw)
+    #mi = remove_ice(self.fh,field=mi)
     
     # Low dbz to 0
     #mw = set_low_dbz(mw, self.zz)
