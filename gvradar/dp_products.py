@@ -476,8 +476,8 @@ def remove_ice(fl,hid):
     hid_ice = [0, 3, 4, 5, 6, 7, 8, 9]
     for xice in hid_ice:
         ice = np.equal(hid, xice)
-        #fl[ice] = -999
-        fl[ice] =-32767.0
+        fl[ice] = -999
+        #fl[ice] =-32767.0
         
     return fl
 
