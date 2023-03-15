@@ -167,12 +167,12 @@ def add_calc_dsd_sband_tokay_2020(self):
     dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc)
 
     # HID ice threshold
-    dm = remove_ice(dm, self.fh)
-    #nw = remove_ice(self.fh,field=nw)
+    #dm = remove_ice(dm, self.fh)
+    #nw = remove_ice(nw, self.fh)
     
     # Low dbz to 0
-    #dm = set_low_dbz(dm, self.zz)
-    #nw = set_low_dbz(nw, self.zz)
+    dm = set_low_dbz(dm, self.zz)
+    nw = set_low_dbz(nw, self.zz)
 
     self.radar = cm.add_field_to_radar_object(dm, self.radar, field_name='DM', units='mm',
                               long_name='Mass-weighted mean diameter',
