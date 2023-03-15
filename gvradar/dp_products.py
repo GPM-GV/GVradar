@@ -167,8 +167,8 @@ def add_calc_dsd_sband_tokay_2020(self):
     dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc)
 
     # HID ice threshold
-    #dm = remove_ice(dm, self.fh)
-    #nw = remove_ice(nw, self.fh)
+    dm = remove_ice(dm, self.fh)
+    nw = remove_ice(nw, self.fh)
     
     # Low dbz to 0
     dm = set_low_dbz(dm, self.zz)
@@ -329,7 +329,7 @@ def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
     rp[rr_max] = rp[rr_max] * -1.0
 
     # HID ice threshold
-    #rp = remove_ice(hid,field=rp)
+    rp = remove_ice(rp, hid)
 
     # Check if Rain rate is not finite!
     rr_inf = np.isinf(rp)
@@ -414,7 +414,7 @@ def get_bringi_rainrate_nw(rp,dbz,zdr,kdp,rhv,nw,fh):
     rp[rr_max] = rp[rr_max] * -1.0
 
     # HID ice threshold
-    #rp = remove_ice(rp,fh)
+    rp = remove_ice(rp,fh)
     
     # Check if Rain rate is not finite!
     rr_inf = np.isinf(rp)
