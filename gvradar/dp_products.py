@@ -80,8 +80,6 @@ def add_csu_fhc(self):
                                                   standard_name='Winter Hydrometeor ID',
                                                   dz_field='CZ')                            
 
-        self.fw = self.radar.fields['FW']['data']
-
     return self.radar
 # ***************************************************************************************
 
@@ -96,8 +94,8 @@ def add_csu_liquid_ice_mass(self):
     mi = remove_ice(self.fh,field=mi)
     
     # Low dbz to 0
-    mw = set_low_dbz(mw, self.zz)
-    mi = set_low_dbz(mi, self.zz)
+    #mw = set_low_dbz(mw, self.zz)
+    #mi = set_low_dbz(mi, self.zz)
 
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
