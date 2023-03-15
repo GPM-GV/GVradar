@@ -41,11 +41,11 @@ def add_csu_fhc(self):
                                     T=self.radar_T, band=self.radar_band, verbose=False,
                                     use_trap=False, method='hybrid')
     
-        self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FS',
+        self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
                                                   units='Unitless', long_name='Summer Hydrometeor ID', 
                                                   standard_name='Summer Hydrometeor ID', dz_field='CZ')
 
-        self.fh = self.radar.fields['FS']['data']  
+        self.fh = self.radar.fields['FH']['data']  
 
     #Run Winter HID
     if self.do_HID_winter:
@@ -90,6 +90,15 @@ def add_csu_liquid_ice_mass(self):
     print('    Calculating water and ice mass...')
 
     mw, mi = csu_liquid_ice_mass.calc_liquid_ice_mass(self.dz, self.dr, self.radar_z/1000.0, T=self.radar_T)
+
+    # HID ice threshold
+    mw = remove_ice(self.fh,field=mw)
+    mi = remove_ice(self.fh,field=mi)
+    
+    # Low dbz to 0
+    mw = set_low_dbz(mw, self.zz)
+    mi = set_low_dbz(mi, self.zz)
+
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
                                  standard_name='Liquid Water Mass',
@@ -108,6 +117,16 @@ def add_csu_blended_rain(self):
     print('    Calculating blended rainfall field...')
 
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
+
+    # Max rain rate test
+    rr_max = np.greater(rain,300)
+    rain[rr_max] = rain[rr_max] * -1.0
+
+    # HID ice threshold
+    rain = remove_ice(self.fh,field=rain)
+    
+    # Low dbz to 0
+    rain = set_low_dbz(rain, self.zz)
 
     self.radar = cm.add_field_to_radar_object(rain, self.radar, field_name='RC', units='mm/h',
                                  long_name='HIDRO Rainfall Rate', 
@@ -149,6 +168,14 @@ def add_calc_dsd_sband_tokay_2020(self):
     print('    Calculating Drop-Size Distribution...')
 
     dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc)
+
+    # HID ice threshold
+    dm = remove_ice(self.fh,field=dm)
+    nw = remove_ice(self.fh,field=nw)
+    
+    # Low dbz to 0
+    dm = set_low_dbz(dm, self.zz)
+    nw = set_low_dbz(nw, self.zz)
 
     self.radar = cm.add_field_to_radar_object(dm, self.radar, field_name='DM', units='mm',
                               long_name='Mass-weighted mean diameter',
