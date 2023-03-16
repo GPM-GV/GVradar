@@ -120,7 +120,7 @@ def add_csu_blended_rain(self):
     rain[rc_max] = rain[rc_max] * -1.0
 
     # HID ice threshold
-    #rain = remove_ice(rain, self.fh)
+    rain = remove_ice(rain, self.fh)
     
     # Low dbz to 0
     rain = set_low_dbz(rain, self.zz)
@@ -552,11 +552,11 @@ def mask_beyond_150(self):
             fields.append(fld)
     for fld in fields:
         nf = self.radar.fields[fld]['data']
-        nf[apply_beyond] = -32767.0
+        nf[apply_beyond] = -32767
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
 
     beyond_dict = {"data": beyond_field, "units": "0: False, 1: True",
-                   "long_name": "BEYOND", "_FillValue": -32767.0,
+                   "long_name": "BEYOND", "_FillValue": -32767,
                    "standard_name": "BEYOND",}
     self.radar.add_field("BEYOND", beyond_dict, replace_existing=True)    
     
@@ -632,7 +632,7 @@ def set_blockage(self, sector_dict):
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
     
     block_dict = {"data": block_field, "units": "0: False, 1: True",
-                  "long_name": "BLOCK", "_FillValue": -32767.0,
+                  "long_name": "BLOCK", "_FillValue": -32767,
                   "standard_name": "BLOCK",}
     self.radar.add_field("BLOCK", block_dict, replace_existing=False)
     

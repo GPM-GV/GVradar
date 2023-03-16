@@ -496,7 +496,7 @@ def add_field_to_radar_object(field, radar, field_name='UN', units='',
     Adds a newly created field to the Py-ART radar object. If reflectivity is a 
     masked array, make the new field masked the same as reflectivity.
     """
-    fill_value = -32767.0
+    fill_value = -32767
     masked_field = np.ma.asanyarray(field)
     masked_field.mask = masked_field == fill_value,
     if hasattr(radar.fields[dz_field]['data'], 'mask'):
