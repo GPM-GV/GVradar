@@ -169,7 +169,7 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
                      lat_0=radar_lat,
                      lon_0=radar_lon,
                      embellish = False,
-                     mask_outside=False)
+                     mask_outside=True)
         
         add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols)
 

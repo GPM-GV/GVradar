@@ -475,12 +475,11 @@ def get_zr_rain(dbz, a, b):
 
 def remove_ice(fl,hid):
     
-    '''
     hid_ice = [0, 3, 4, 5, 6, 7, 8, 9]
     for xice in hid_ice:
         ice = np.equal(hid, xice)
         fl[ice] = -999
-    '''    
+        
     return fl
 
 # ***************************************************************************************
