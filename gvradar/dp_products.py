@@ -414,7 +414,7 @@ def get_bringi_rainrate_nw(rp,dbz,zdr,kdp,rhv,nw,fh):
     rp[rr_max] = rp[rr_max] * -1.0
 
     # HID ice threshold
-    #rp = remove_ice(rp,fh)
+    rp = remove_ice(rp,fh)
     
     # Check if Rain rate is not finite!
     rr_inf = np.isinf(rp)
