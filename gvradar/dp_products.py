@@ -478,8 +478,7 @@ def remove_ice(fl,hid):
     hid_ice = [0, 3, 4, 5, 6, 7, 8, 9]
     for xice in hid_ice:
         ice = np.equal(hid, xice)
-        #fl[ice] = -999
-        fl[ice] =-32767.0
+        fl[ice] = -999
         
     return fl
 
@@ -546,7 +545,11 @@ def mask_beyond_150(self):
     beyond_field = beyond_flag
     apply_beyond = np.equal(beyond_field,1)
     
-    fields = ['FS','FW','RC','RP','MW','MI','DM','NW']
+    fields = []
+    product_fields = ['FS','FW','RC','RP','MW','MI','DM','NW']
+    for fld in product_fields:
+        if fld in self.radar.fields.keys():
+            fields.append(fld)
     for fld in fields:
         nf = self.radar.fields[fld]['data']
         nf[apply_beyond] = -32767.0
@@ -715,6 +718,7 @@ def get_default_product_dict():
                             'do_RP': True,
                             'do_tokay_DSD': True,
                             'dsd_loc': 'all',
+                            'do_150_mask': True,
                             'max_range': 200, 
                             'max_height': 10,
                             'sweeps_to_plot': [0],

@@ -284,6 +284,10 @@ class DP_products:
         else:  
             print('', 'Sounding file required to create HID, Ice and Water Mass and RC', '', sep='\n')
         
+        # Set data beyond 150 km to missing
+        if self.do_150_mask == True:
+            self.radar = mask_beyond_150(self)
+
         print('DP products complete.')
     
     # Calculate Conv/Strat
