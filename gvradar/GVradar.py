@@ -286,7 +286,7 @@ class DP_products:
         
         # Set data beyond 150 km to missing
         if self.do_150_mask == True:
-            self.radar = mask_beyond_150(self)
+            self.radar = dp.mask_beyond_150(self)
 
         print('DP products complete.')
     
