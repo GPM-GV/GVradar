@@ -550,10 +550,9 @@ def mask_beyond_150(self):
     for fld in product_fields:
         if fld in self.radar.fields.keys():
             fields.append(fld)
-    print(fields)
     for fld in fields:
         nf = self.radar.fields[fld]['data']
-        nf[apply_beyond] = -32768.0
+        nf[apply_beyond] = -32767.0
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
 
     beyond_dict = {"data": beyond_field, "units": "0: False, 1: True",
@@ -568,7 +567,7 @@ def mask_beyond_150(self):
 def set_blockage(self, sector_dict):
 
     """
-    Set known blocages to -888
+    Set known blockages to -888
     """
 
     for k in range(len(sector_dict)):
@@ -622,7 +621,11 @@ def set_blockage(self, sector_dict):
     block_field = block_flag
     apply_block = np.equal(block_flag,1)
     
-    fields = ['CZ','DR','KD','PH','RH','SD','SW','VR','FS','FW','RC','RP','MW','MI','DM','NW']
+    fields = []
+    all_fields = ['CZ','DR','KD','PH','RH','SD','SW','VR','FS','FW','RC','RP','MW','MI','DM','NW']
+    for fld in all_fields:
+        if fld in self.radar.fields.keys():
+            fields.append(fld)
     for fld in fields:
         nf = self.radar.fields[fld]['data']
         nf[apply_block] = -888
@@ -720,6 +723,7 @@ def get_default_product_dict():
                             'do_tokay_DSD': True,
                             'dsd_loc': 'all',
                             'do_150_mask': True,
+                            'do_block_mask': True,
                             'max_range': 200, 
                             'max_height': 10,
                             'sweeps_to_plot': [0],

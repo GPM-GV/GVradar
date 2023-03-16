@@ -288,6 +288,15 @@ class DP_products:
         if self.do_150_mask == True:
             self.radar = dp.mask_beyond_150(self)
 
+        # Set data blockages to -888
+        if self.do_block_mask == True:
+            KMQT_blockage_1 = {'hmin': 0, 'hmax': None, 'rmin': 0 * 1000, 'rmax': 200 * 1000,
+                     'azmin': 315, 'azmax': 345, 'elmin': 0, 'elmax': None}
+            KMQT_blockage_2 = {'hmin': 0, 'hmax': None, 'rmin': 0 * 1000, 'rmax': 200 * 1000,
+                     'azmin': 20, 'azmax': 25, 'elmin': 0, 'elmax': None}
+            blockage = [KMQT_blockage_1, KMQT_blockage_2]
+            self.radar = dp.set_blockage(self, blockage):
+
         print('DP products complete.')
     
     # Calculate Conv/Strat
