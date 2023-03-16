@@ -116,8 +116,8 @@ def add_csu_blended_rain(self):
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
     # Max rain rate test
-    rr_max = np.greater(rain,300)
-    rain[rr_max] = rain[rr_max] * -1.0
+    rc_max = np.greater(rain,300)
+    rain[rc_max] = rain[rc_max] * -1.0
 
     # HID ice threshold
     rain = remove_ice(rain, self.fh)
@@ -145,11 +145,25 @@ def add_polZR_rr(self):
         # If NW exsits use to compute RP
         print('    Calculating PolZR rain rate with Ali NW')
         nw = self.radar.fields['NW']['data']
-        rp, nw = get_bringi_rainrate_nw(rp,self.dz,self.dr,self.kd,self.rh,nw,self.fh)
+        rp = get_bringi_rainrate_nw(rp,self.dz,self.dr,self.kd,self.rh,nw,self.fh)
     else:
         # IF no NW compute with equations
         print('    Calculating PolZR rain rate with computed NW')
         rp, nw = get_bringi_rainrate(rp,self.dz,self.dr,self.kd,self.rh,self.fh)
+
+    # Max rain rate test
+    rp_max = np.greater(rp,300)
+    rp[rp_max] = rp[rp_max] * -1.0
+
+    # HID ice threshold
+    rp = remove_ice(rp,self.fh)
+    
+    # Check if Rain rate is not finite!
+    rp_inf = np.isinf(rp)
+    rp[rp_inf] = rp[rp_inf] * -1.0
+
+    # Low dbz to 0
+    rp = set_low_dbz(rp, self.zz)
 
     self.radar = cm.add_field_to_radar_object(rp, self.radar, field_name='RP', units='mm/h',
                                       long_name='Polzr_Rain_Rate', 
@@ -409,19 +423,7 @@ def get_bringi_rainrate_nw(rp,dbz,zdr,kdp,rhv,nw,fh):
     nw = 10**nw
     rp = get_polzr_rainrate(dbz,nw,mu)
     
-    # Max rain rate test
-    rr_max = np.greater(rp,300)
-    rp[rr_max] = rp[rr_max] * -1.0
-
-    # HID ice threshold
-    rp = remove_ice(rp,fh)
-    
-    # Check if Rain rate is not finite!
-    #rr_inf = np.isinf(rp)
-    #rp[rr_inf] = rp[rr_inf] * -1.0
-    
-    nw = np.log10(nw)
-    return rp, nw
+    return rp
 
 # ***************************************************************************************
 
