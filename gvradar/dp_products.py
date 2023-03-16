@@ -553,7 +553,7 @@ def mask_beyond_150(self):
     print(fields)
     for fld in fields:
         nf = self.radar.fields[fld]['data']
-        nf[apply_beyond] = -32767.0
+        nf[apply_beyond] = -32768.0
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
 
     beyond_dict = {"data": beyond_field, "units": "0: False, 1: True",
