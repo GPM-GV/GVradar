@@ -417,8 +417,8 @@ def get_bringi_rainrate_nw(rp,dbz,zdr,kdp,rhv,nw,fh):
     #rp = remove_ice(rp,fh)
     
     # Check if Rain rate is not finite!
-    #rr_inf = np.isinf(rp)
-    #rp[rr_inf] = rp[rr_inf] * -1.0
+    rr_inf = np.isinf(rp)
+    rp[rr_inf] = rp[rr_inf] * -1.0
     
     nw = np.log10(nw)
     return rp, nw
