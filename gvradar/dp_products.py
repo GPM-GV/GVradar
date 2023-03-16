@@ -123,7 +123,7 @@ def add_csu_blended_rain(self):
     rain = remove_ice(rain, self.fh)
     
     # Low dbz to 0
-    rain = set_low_dbz(rain, self.zz)
+    #rain = set_low_dbz(rain, self.zz)
 
     self.radar = cm.add_field_to_radar_object(rain, self.radar, field_name='RC', units='mm/h',
                                  long_name='HIDRO Rainfall Rate', 
