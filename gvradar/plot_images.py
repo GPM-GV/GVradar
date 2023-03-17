@@ -113,6 +113,18 @@ def plot_fields_PPI(radar, fig, ax, COUNTIES, sweep=0, fields=['CZ'], max_range=
 
     lon_grid = np.arange(min_lon_rn - 1.00 , max_lon_rn + 1.00, 1.0)
     lat_grid = np.arange(min_lat_rn - 1.00 , max_lat_rn + 1.00, 1.0)
+
+    num_fields = len(fields)
+    nrows = round((num_fields)/4)
+    if nrows < 1 : nrows = 1
+    if num_fields <= 4:
+        width=num_fields * 6
+        height = float((nrows)*4.5)
+        ncols=num_fields
+    elif num_fields > 4:
+        width=24
+        height = float((nrows)*4.5)
+        ncols=round((num_fields)/2)
     
     #projection = ccrs.LambertConformal(radar_lon, radar_lat)
     projection = ccrs.Orthographic(radar_lon, radar_lat)
