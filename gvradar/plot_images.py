@@ -45,21 +45,17 @@ def plot_fields(self):
                 plot_fields_RHI(self.radar, sweep=sweep, fields=self.fields_to_plot , ymax=self.max_height,
                                 xmax=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
         if self.plot_single == True:
-            fig = setup_single_fig(self.radar, max_range=self.max_range)
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
                 field = self.fields_to_plot[ifld]
                 #plot_dir = self.plot_dir + '/' + field
                 os.makedirs(self.plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
-                    ax = get_ax(self.radar, fig)
                     sweep = sweepn[isweeps]
                     plot_fields_RHI(self.radar, sweep=sweep, fields=[field] , ymax=self.max_height, 
 	                            xmax=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
-                    ax.remove()
-                fig.clear()
+
     if self.scan_type == 'PPI':
-        COUNTIES = load_counties()
         print('Plotting PPI images...')
         if self.plot_multi == True:
             for isweeps in range(len(sweepn)):
@@ -67,23 +63,20 @@ def plot_fields(self):
                 os.makedirs(self.plot_dir, exist_ok=True)
                 plot_fields_PPI(self.radar, sweep=sweep, fields=self.fields_to_plot , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
         if self.plot_single == True:
-            fig = setup_single_fig(self.radar, max_range=self.max_range)
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
                 field = self.fields_to_plot[ifld]
                 #plot_dir = self.plot_dir + '/' + field + '/'
                 os.makedirs(self.plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
-                    ax = get_ax(self.radar, fig)
                     sweep = sweepn[isweeps]
-                    plot_fields_PPI(self.radar, fig, ax, COUNTIES, sweep=sweep, fields=[field] , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
-                    ax.remove()
-                fig.clear()
+                    plot_fields_PPI(self.radar, sweep=sweep, fields=[field] , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+
     end = time.time()
     print('ploting time:  ', end - start)
 # ****************************************************************************************
 
-def plot_fields_PPI(radar, fig, ax, COUNTIES, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
+def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
 
     #
     # *** Get radar elevation, date, time
@@ -117,8 +110,7 @@ def plot_fields_PPI(radar, fig, ax, COUNTIES, sweep=0, fields=['CZ'], max_range=
     #projection = ccrs.LambertConformal(radar_lon, radar_lat)
     projection = ccrs.Orthographic(radar_lon, radar_lat)
     display = pyart.graph.RadarMapDisplay(radar)
-    
-    ''''
+
     num_fields = len(fields)
     nrows = math.ceil((num_fields)/4)
     if nrows < 1 : nrows = 1
@@ -146,7 +138,7 @@ def plot_fields_PPI(radar, fig, ax, COUNTIES, sweep=0, fields=['CZ'], max_range=
     else:
         fig = plt.figure(figsize=[width, height], constrained_layout=False)
         spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig, left=0.0, right=1.0, top=1.0, bottom=0, wspace=0.000000009, hspace=0.15)
-    '''
+    
     for index, field in enumerate(fields):
         
         units,vmin,vmax,cmap,title,Nbins = get_field_info(radar, field)
@@ -163,7 +155,7 @@ def plot_fields_PPI(radar, fig, ax, COUNTIES, sweep=0, fields=['CZ'], max_range=
 
         kwargs = {}
         kwargs.update({'transform_first': True})
-        #ax = fig.add_subplot(spec[r_c[index]], projection=projection)
+        ax = fig.add_subplot(spec[r_c[index]], projection=projection)
         display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                      resolution='10m',
                      title = title,
@@ -179,7 +171,7 @@ def plot_fields_PPI(radar, fig, ax, COUNTIES, sweep=0, fields=['CZ'], max_range=
                      embellish = False,
                      mask_outside=True)
         
-        add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES)
+        add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols)
 
         Brazil_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1']
         if site == 'KWAJ': 
@@ -632,7 +624,7 @@ def add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, n
             imageboxgpm = OffsetImage(gpmlogo, zoom=0.018*ncols)
             imageboxnasa.image.axes = fig
             imageboxgpm.image.axes = fig
-            abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[ncols/100, 1.0+(ncols*0.03)],
+            abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[ncols/100, 1.0+(ncols*0.02)],
                                     xycoords= 'figure pixels', boxcoords='figure fraction',
                                     pad=0.0, frameon=False)
             abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[3.8/ncols, 1.0+(ncols*0.03)],                               
@@ -645,8 +637,7 @@ def add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, n
 
 # ****************************************************************************************
 
-def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, 
-                      num_fields, nrows, ncols, COUNTIES):
+def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols):
 
     # NASA WFF instrument pad locations
     Pad_lon = -75.471
@@ -690,12 +681,11 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
                                 scale='10m',
                                 facecolor='lightcyan')
     ax.add_feature(lakes, edgecolor='black', lw=0.25, zorder=0)
-    
+    '''
     county_dir = os.path.dirname(__file__)
     reader = shpreader.Reader(county_dir + '/shape_files/countyl010g.shp')
     counties = list(reader.geometries())
     COUNTIES = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
-    '''
     ax.add_feature(COUNTIES, facecolor='none', edgecolor='black', lw=0.25)
     ax.add_feature(cfeature.OCEAN.with_scale('10m'),facecolor=("lightcyan"))
     ax.add_feature(cfeature.LAND.with_scale('10m'), facecolor=("wheat"), edgecolor=None, alpha=1)
@@ -712,17 +702,6 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
     grid_lines.ylabel_style = {'size': 6, 'color': 'black', 'rotation': 90, 'weight': 'bold', 'va': 'bottom', 'ha': 'center'}
 
     return
-
-# ****************************************************************************************
-
-def load_counties():
-
-    county_dir = os.path.dirname(__file__)
-    reader = shpreader.Reader(county_dir + '/shape_files/countyl010g.shp')
-    counties = list(reader.geometries())
-    COUNTIES = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
-
-    return COUNTIES
 
 # ****************************************************************************************
   
@@ -761,100 +740,6 @@ def annotate_plot_rhi(ax,fig,num_fields,nrows):
         fig.add_artist(abgpm)
     
     return
-
-# ****************************************************************************************
-def setup_single_fig(radar, max_range):
-
-    # *** Calculate bounding limits for map
-    #
-    radar_lat = radar.latitude['data'][0]
-    radar_lon = radar.longitude['data'][0]
-    dtor = math.pi/180.0
-    maxrange_meters = max_range * 1000.
-    meters_to_lat = 1. / 111177.
-    meters_to_lon =  1. / (111177. * math.cos(radar_lat * dtor))
-
-    min_lat = radar_lat - maxrange_meters * meters_to_lat
-    max_lat = radar_lat + maxrange_meters * meters_to_lat
-    min_lon = radar_lon - maxrange_meters * meters_to_lon
-    max_lon = radar_lon + maxrange_meters * meters_to_lon
-    min_lon_rn=round(min_lon,2)
-    max_lon_rn=round(max_lon,2)
-    min_lat_rn=round(min_lat,2)
-    max_lat_rn=round(max_lat,2)
-
-    lon_grid = np.arange(min_lon_rn - 1.00 , max_lon_rn + 1.00, 1.0)
-    lat_grid = np.arange(min_lat_rn - 1.00 , max_lat_rn + 1.00, 1.0)
-    
-    projection = ccrs.LambertConformal(radar_lon, radar_lat)
-    display = pyart.graph.RadarMapDisplay(radar)
-
-    '''
-    num_fields = len(fields)
-    nrows = round((num_fields)/4)
-    if nrows < 1 : nrows = 1
-    if num_fields <= 4:
-        width=num_fields * 6
-        height = float((nrows)*4.5)
-        ncols=num_fields
-    elif num_fields > 4:
-        width=24
-        height = float((nrows)*4.5)
-        ncols=4
-    '''
-    num_fields = 1
-    width = 6
-    height = 4.5
-    nrows = 1
-    ncols = 1
-
-    r_c = []
-    for x in range(nrows):
-        for y in range(ncols):
-            r_c.append((x,y))
-    #
-    # *** Plotting Begins
-    #
-    set_plot_size_parms_ppi(num_fields)
-
-    if num_fields < 2:
-        fig = plt.figure(figsize=[width, height], constrained_layout=False)
-        spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
-    else:
-        fig = plt.figure(figsize=[width, height], constrained_layout=False)
-        spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig, left=0.0, right=1.0, top=1.0, bottom=0, wspace=0.000000009, hspace=0.15)
-    
-    return fig
-
-# ****************************************************************************************
-
-def get_ax(radar, fig):
-
-    radar_lat = radar.latitude['data'][0]
-    radar_lon = radar.longitude['data'][0]
-    projection = ccrs.LambertConformal(radar_lon, radar_lat)
-    
-    num_fields = 1
-    width = 6
-    height = 4.5
-    nrows = 1
-    ncols = 1
-
-    r_c = []
-    for x in range(nrows):
-        for y in range(ncols):
-            r_c.append((x,y))
-
-    set_plot_size_parms_ppi(num_fields)
-
-    if num_fields < 2:
-        spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
-    else:
-        spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig, left=0.0, right=1.0, top=1.0, bottom=0, wspace=0.000000009, hspace=0.15)
-    
-    ax = fig.add_subplot(spec[r_c[0]], projection=projection)
-
-    return ax
 
 # ****************************************************************************************
 
