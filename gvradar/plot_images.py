@@ -76,7 +76,7 @@ def plot_fields(self):
     print('ploting time:  ', end - start)
 # ****************************************************************************************
 
-def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
+def plot_fields_ppi(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
 
     #
     # *** Get radar elevation, date, time
@@ -195,6 +195,115 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
             if num_fields >= 2:
                 plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(ncols*0.025)))
                 
+        if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
+        if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
+        if field == 'FS' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
+        if field == 'FW' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
+        
+    #
+    # *** save plot
+    #
+    if png:
+        if num_fields == 1:
+            png_file='{}_{}_{}_{}_{}_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,field,string_csweep)
+            outdir_daily = outdir + '/' + year + '/' + month + day + '/PPI/' + field + '/'
+            os.makedirs(outdir_daily, exist_ok=True)
+            fig.savefig(outdir_daily + '/' + png_file, dpi=240, bbox_inches='tight')
+            print('  --> ' + outdir_daily + '/' + png_file, '', sep='\n')
+        elif num_fields >1:
+            png_file='{}_{}_{}_{}_{}panel_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,num_fields,string_csweep)
+            outdir_multi = outdir + '/' + year + '/' + month + day + '/multi/' 
+            os.makedirs(outdir_multi, exist_ok=True)
+            fig.savefig(outdir_multi + '/' + png_file, dpi=240, bbox_inches='tight')
+            print('  --> ' + outdir_multi + '/' + png_file, '', sep='\n')
+        if outdir == '':
+            outdir = os.getcwd()
+    else:
+        plt.show()
+
+# ****************************************************************************************
+
+def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
+
+    '''
+    two_panel_plot(radar, sweep=0, var1='reflectivity', vmin1=0, vmax1=65,
+                   cmap1='RdYlBu_r', units1='dBZ', var2='differential_reflectivity',
+                   vmin2=-5, vmax2=5, cmap2='RdYlBu_r', units2='dB', return_flag=False,
+                   xlim=[-150,150], ylim=[-150,150]):
+    '''
+    site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
+
+    #
+    # *** Calculate bounding limits for map
+    #
+    radar_lat = radar.latitude['data'][0]
+    radar_lon = radar.longitude['data'][0]
+    dtor = math.pi/180.0
+    maxrange_meters = max_range * 1000.
+    meters_to_lat = 1. / 111177.
+    meters_to_lon =  1. / (111177. * math.cos(radar_lat * dtor))
+
+    min_lat = radar_lat - maxrange_meters * meters_to_lat
+    max_lat = radar_lat + maxrange_meters * meters_to_lat
+    min_lon = radar_lon - maxrange_meters * meters_to_lon
+    max_lon = radar_lon + maxrange_meters * meters_to_lon
+    min_lon_rn=round(min_lon,2)
+    max_lon_rn=round(max_lon,2)
+    min_lat_rn=round(min_lat,2)
+    max_lat_rn=round(max_lat,2)
+
+    lon_grid = np.arange(min_lon_rn - 1.00 , max_lon_rn + 1.00, 1.0)
+    lat_grid = np.arange(min_lat_rn - 1.00 , max_lat_rn + 1.00, 1.0)
+
+    num_fields = len(fields)
+    nrows = math.ceil((num_fields)/4)
+    if nrows < 1 : nrows = 1
+    if num_fields <= 4:
+        width=num_fields * 6
+        height = float((nrows)*4.5)
+        ncols=num_fields 
+    elif num_fields > 4:
+        width=24
+        height = float((nrows)*4.5)
+        ncols=round((num_fields)/2)
+
+    r_c = []
+    for x in range(nrows):
+        for y in range(ncols):
+            r_c.append((x,y))
+    #
+    # *** Plotting Begins
+    #
+    set_plot_size_parms_ppi(num_fields)
+
+    display = pyart.graph.RadarDisplay(radar)
+
+    if num_fields < 2:
+        fig = plt.figure(figsize=[width, height], constrained_layout=False)
+        spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
+    else:
+        fig = plt.figure(figsize=[width, height], constrained_layout=False)
+        spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig, left=0.0, right=1.0, top=1.0, bottom=0, wspace=0.000000009, hspace=0.15)
+    
+    for index, field in enumerate(fields):
+        
+        units,vmin,vmax,cmap,title,Nbins = get_field_info(radar, field)
+        
+        if num_fields < 2:
+            title = '{} {} {} {} UTC PPI Elev: {:2.1f} deg'.format(site,field,mydate,mytime,elv)
+        else:
+            mytitle = '{} {} {} UTC PPI {:2.1f} deg'.format(site,mydate,mytime,elv)
+        
+        if Nbins == 0:
+            cmap=cmap
+        else:
+            cmap=discrete_cmap(Nbins, base_cmap=cmap)
+
+        ax = fig.add_subplot(spec[r_c[index]])
+        display.plot_ppi(fields, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
+                     colorbar_label=units, mask_outside=True)
+        display.set_limits(xlim=xlim, ylim=ylim)
+    
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
         if field == 'FS' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
