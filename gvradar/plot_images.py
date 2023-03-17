@@ -193,7 +193,7 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
         if index == num_fields-1:
             add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols)
             if num_fields >= 2:
-                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(ncols*0.05)))
+                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(ncols*0.025)))
                 
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
