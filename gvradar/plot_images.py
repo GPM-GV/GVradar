@@ -225,12 +225,6 @@ def plot_fields_ppi(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
 
 def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
 
-    '''
-    two_panel_plot(radar, sweep=0, var1='reflectivity', vmin1=0, vmax1=65,
-                   cmap1='RdYlBu_r', units1='dBZ', var2='differential_reflectivity',
-                   vmin2=-5, vmax2=5, cmap2='RdYlBu_r', units2='dB', return_flag=False,
-                   xlim=[-150,150], ylim=[-150,150]):
-    '''
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
 
     #
@@ -300,7 +294,7 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
             cmap=discrete_cmap(Nbins, base_cmap=cmap)
 
         ax = fig.add_subplot(spec[r_c[index]])
-        display.plot_ppi(fields, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
+        display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
                      colorbar_label=units, mask_outside=True)
         display.set_limits(xlim=xlim, ylim=ylim)
     
