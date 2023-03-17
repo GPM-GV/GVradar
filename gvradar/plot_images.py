@@ -624,7 +624,7 @@ def add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, n
             imageboxgpm = OffsetImage(gpmlogo, zoom=0.018*ncols)
             imageboxnasa.image.axes = fig
             imageboxgpm.image.axes = fig
-            abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[ncols/100, 1.0+(ncols*0.04)],
+            abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[ncols/100, 1.0+(ncols*0.02)],
                                     xycoords= 'figure pixels', boxcoords='figure fraction',
                                     pad=0.0, frameon=False)
             abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[3.8/ncols, 1.0+(ncols*0.03)],                               
