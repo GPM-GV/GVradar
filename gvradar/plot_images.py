@@ -299,7 +299,7 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
         display.set_limits(xlim=[-max_range,max_range], ylim=[-max_range,max_range])
 
         for rng in range(50,max_range+50,50):
-            display.plot_range_ring(rng, color = 'k', ls='--', lw=0.5)
+            display.plot_range_ring(rng, col = 'k', ls='--', lw=0.5)
     
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
