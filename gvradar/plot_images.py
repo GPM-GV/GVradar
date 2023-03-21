@@ -122,8 +122,8 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
     lon_grid = np.arange(min_lon_rn - 1.00 , max_lon_rn + 1.00, 1.0)
     lat_grid = np.arange(min_lat_rn - 1.00 , max_lat_rn + 1.00, 1.0)
     
-    #projection = ccrs.LambertConformal(radar_lon, radar_lat)
-    projection = ccrs.Orthographic(radar_lon, radar_lat)
+    projection = ccrs.LambertConformal(radar_lon, radar_lat)
+    #projection = ccrs.Orthographic(radar_lon, radar_lat)
     display = pyart.graph.RadarMapDisplay(radar)
 
     num_fields = len(fields)
@@ -789,9 +789,9 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
         lat_maxrange = radar_lat + math.sin(dazimuth) * meters_to_lat * maxrange_meters
         display.plot_line_geo([radar_lon, lon_maxrange], [radar_lat, lat_maxrange],
                               line_style='k--',lw=0.5)
-    #display.plot_cross_hair(10,npts=100)
-    #display.plot_point(Pad_lon, Pad_lat, symbol = 'kv', markersize=5)
-    #display.plot_point(PCMK_lon, PCMK_lat, symbol = 'kv', markersize=5)
+    
+    display.plot_point(Pad_lon, Pad_lat, symbol = 'kv', markersize=5)
+    display.plot_point(PCMK_lon, PCMK_lat, symbol = 'kv', markersize=5)
 
     # Add state and countines to map
     ax.add_feature(STATES, edgecolor='black', lw=0.5)
@@ -802,7 +802,6 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
     #ax.add_feature(cfeature.RIVERS,facecolor=("lightcyan"), edgecolor="lightcyan", zorder=0)
 
     # Add cartopy grid lines
-    '''
     grid_lines = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', x_inline=False)
     grid_lines.top_labels = False
     grid_lines.right_labels = False
@@ -810,7 +809,7 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
     grid_lines.yformatter = LATITUDE_FORMATTER
     grid_lines.xlabel_style = {'size': 6, 'color': 'black', 'rotation': 0, 'weight': 'bold', 'ha': 'center'}
     grid_lines.ylabel_style = {'size': 6, 'color': 'black', 'rotation': 90, 'weight': 'bold', 'va': 'bottom', 'ha': 'center'}
-    '''
+    
     return
 
 # ****************************************************************************************
