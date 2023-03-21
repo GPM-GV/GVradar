@@ -296,13 +296,14 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
         ax = fig.add_subplot(spec[r_c[index]])
         display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
                          colorbar_label=units, mask_outside=True, title=title,
-                         axislabels_flag=False)
+                         lat_lines=np.arange(min_lat,max_lat,.5),
+                         lon_lines=np.arange(min_lon, max_lon, 1))
         display.set_limits(xlim=[-max_range,max_range], ylim=[-max_range,max_range])
 
         for rng in range(50,max_range+50,50):
             display.plot_range_ring(rng, col = 'k', ls='-', lw=0.5)
         display.plot_grid_lines(col="k", ls=":")
-        display.set_aspect_ratio(aspect_ratio=0.75)
+        display.set_aspect_ratio(aspect_ratio=1.0)
         plt.yticks(rotation=90, va = 'center')
     
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
