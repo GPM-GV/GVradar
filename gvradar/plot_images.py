@@ -76,7 +76,7 @@ def plot_fields(self):
     print('ploting time:  ', end - start)
 # ****************************************************************************************
 
-def plot_fields_ppi(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
+def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
 
     #
     # *** Get radar elevation, date, time
@@ -223,7 +223,7 @@ def plot_fields_ppi(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
 
 # ****************************************************************************************
 
-def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
+def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
 
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
 
@@ -304,6 +304,8 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
         display.plot_grid_lines(col="k", ls=":")
         display.set_aspect_ratio(aspect_ratio=1.0)
         plt.yticks(rotation=90, va = 'center')
+        ax.set_xlabel("Latitude")
+        ax.set_ylabel("Longitude")
     
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
