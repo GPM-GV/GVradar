@@ -243,28 +243,6 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, png=False, 
 
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
 
-    #
-    # *** Calculate bounding limits for map
-    #
-    radar_lat = radar.latitude['data'][0]
-    radar_lon = radar.longitude['data'][0]
-    dtor = math.pi/180.0
-    maxrange_meters = max_range * 1000.
-    meters_to_lat = 1. / 111177.
-    meters_to_lon =  1. / (111177. * math.cos(radar_lat * dtor))
-
-    min_lat = radar_lat - maxrange_meters * meters_to_lat
-    max_lat = radar_lat + maxrange_meters * meters_to_lat
-    min_lon = radar_lon - maxrange_meters * meters_to_lon
-    max_lon = radar_lon + maxrange_meters * meters_to_lon
-    min_lon_rn=round(min_lon,2)
-    max_lon_rn=round(max_lon,2)
-    min_lat_rn=round(min_lat,2)
-    max_lat_rn=round(max_lat,2)
-
-    lon_grid = np.arange(min_lon_rn - 1.00 , max_lon_rn + 1.00, 1.0)
-    lat_grid = np.arange(min_lat_rn - 1.00 , max_lat_rn + 1.00, 1.0)
-
     num_fields = len(fields)
     nrows = math.ceil((num_fields)/4)
     if nrows < 1 : nrows = 1
@@ -773,7 +751,7 @@ def add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, n
             imageboxgpm = OffsetImage(gpmlogo, zoom=0.018*ncols)
             imageboxnasa.image.axes = fig
             imageboxgpm.image.axes = fig
-            abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[ncols/100, 1.0+(ncols*0.02)],
+            abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[ncols/100, 1.0+(ncols*0.025)],
                                     xycoords= 'figure pixels', boxcoords='figure fraction',
                                     pad=0.0, frameon=False)
             abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[3.8/ncols, 1.0+(ncols*0.03)],                               
@@ -811,9 +789,9 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
         lat_maxrange = radar_lat + math.sin(dazimuth) * meters_to_lat * maxrange_meters
         display.plot_line_geo([radar_lon, lon_maxrange], [radar_lat, lat_maxrange],
                               line_style='k--',lw=0.5)
-    display.plot_cross_hair(10,npts=100)
-    display.plot_point(Pad_lon, Pad_lat, symbol = 'kv', markersize=5)
-    display.plot_point(PCMK_lon, PCMK_lat, symbol = 'kv', markersize=5)
+    #display.plot_cross_hair(10,npts=100)
+    #display.plot_point(Pad_lon, Pad_lat, symbol = 'kv', markersize=5)
+    #display.plot_point(PCMK_lon, PCMK_lat, symbol = 'kv', markersize=5)
 
     # Add state and countines to map
     ax.add_feature(STATES, edgecolor='black', lw=0.5)
@@ -955,6 +933,7 @@ def discrete_cmap(N, base_cmap=None):
     return plt.cm.colors.ListedColormap(color_list, color_list, N)
 
 # ****************************************************************************************
+
 def plot_conv_strat(self):
 
     self.ds['convsf'].values[self.ds['convsf'].values == 0] = np.nan
