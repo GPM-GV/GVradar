@@ -91,7 +91,7 @@ def plot_fields(self):
     print('ploting time:  ', end - start)
 # ****************************************************************************************
 
-def plot_fields_PPI(radar, COUNTIES, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
+def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
 
     #
     # *** Get radar elevation, date, time
