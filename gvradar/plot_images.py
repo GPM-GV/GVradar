@@ -27,7 +27,6 @@ def plot_fields(self):
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
     """
     start = time.time()
-    plot_fast = True
     if self.sweeps_to_plot == 'all':
         sweepn = self.radar.sweep_number['data'][:][:]
         swn = []
