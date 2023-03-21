@@ -296,7 +296,7 @@ def plot_fields_PPI(radar, sweep=0, fields=['CZ'], max_range=150, png=False, out
         ax = fig.add_subplot(spec[r_c[index]])
         display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
                          colorbar_label=units, mask_outside=True, title=title,
-                         axislabels = (lat_grid, lon_grid))
+                         ticklabs = (lat_grid, lon_grid))
         display.set_limits(xlim=[-max_range,max_range], ylim=[-max_range,max_range])
 
         for rng in range(50,max_range+50,50):
