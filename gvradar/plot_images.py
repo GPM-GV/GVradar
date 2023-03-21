@@ -63,7 +63,7 @@ def plot_fields(self):
                 sweep = sweepn[isweeps]
                 os.makedirs(self.plot_dir, exist_ok=True)
                 if self.plot_fast:
-                    plot_fields_PPI_QC(self.radar, COUNTIES, STATES, sweep=sweep, fields=self.fields_to_plot, 
+                    plot_fields_PPI_QC(self.radar, sweep=sweep, fields=self.fields_to_plot, 
                                        max_range=self.max_range, png=True, outdir=self.plot_dir, 
                                        add_logos = self.add_logos)
                 else:
@@ -79,7 +79,7 @@ def plot_fields(self):
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     if self.plot_fast:
-                        plot_fields_PPI_QC(self.radar, COUNTIES, STATES, sweep=sweep, fields=[field], 
+                        plot_fields_PPI_QC(self.radar, sweep=sweep, fields=[field], 
                                            max_range=self.max_range, png=True, outdir=self.plot_dir, 
                                            add_logos = self.add_logos)
                     else:
