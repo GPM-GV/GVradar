@@ -310,8 +310,9 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, png=False, 
             display.plot_range_ring(rng, col = 'k', ls='-', lw=0.5)
         display.plot_grid_lines(col="k", ls=":")
         display.set_aspect_ratio(aspect_ratio=1.0)
-        ax.set_xticklabels(lat_grid, rotation = 45)
-        plt.yticks(rotation=90, va = 'center')
+        ax.set_xticklabels(lat_grid, rotation = 0)
+        ax.set_yticklabels(lon_grid, rotation = 90)
+        #plt.yticks(rotation=90, va = 'center')
         ax.set_xlabel("Latitude")
         ax.set_ylabel("Longitude")
     
