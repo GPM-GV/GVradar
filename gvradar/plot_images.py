@@ -802,6 +802,7 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
     #ax.add_feature(cfeature.RIVERS,facecolor=("lightcyan"), edgecolor="lightcyan", zorder=0)
 
     # Add cartopy grid lines
+    '''
     grid_lines = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', x_inline=False)
     grid_lines.top_labels = False
     grid_lines.right_labels = False
@@ -809,7 +810,7 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
     grid_lines.yformatter = LATITUDE_FORMATTER
     grid_lines.xlabel_style = {'size': 6, 'color': 'black', 'rotation': 0, 'weight': 'bold', 'ha': 'center'}
     grid_lines.ylabel_style = {'size': 6, 'color': 'black', 'rotation': 90, 'weight': 'bold', 'va': 'bottom', 'ha': 'center'}
-
+    '''
     return
 
 # ****************************************************************************************
