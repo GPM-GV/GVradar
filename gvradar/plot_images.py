@@ -57,15 +57,19 @@ def plot_fields(self):
 
     if self.scan_type == 'PPI':
         print('Plotting PPI images...')
-        COUNTIES = load_counties()
+        COUNTIES, STATES = load_counties()
         if self.plot_multi == True:
             for isweeps in range(len(sweepn)):
                 sweep = sweepn[isweeps]
                 os.makedirs(self.plot_dir, exist_ok=True)
                 if self.plot_fast:
-                    plot_fields_PPI_QC(self.radar, COUNTIES, sweep=sweep, fields=self.fields_to_plot , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                    plot_fields_PPI_QC(self.radar, COUNTIES, STATES, sweep=sweep, fields=self.fields_to_plot, 
+                                       max_range=self.max_range, png=True, outdir=self.plot_dir, 
+                                       add_logos = self.add_logos)
                 else:
-                    plot_fields_PPI(self.radar, COUNTIES, sweep=sweep, fields=self.fields_to_plot , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                    plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, fields=self.fields_to_plot, 
+                                    max_range=self.max_range, png=True, outdir=self.plot_dir, 
+                                    add_logos = self.add_logos)
         if self.plot_single == True:
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
@@ -75,9 +79,13 @@ def plot_fields(self):
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     if self.plot_fast:
-                        plot_fields_PPI_QC(self.radar, COUNTIES, sweep=sweep, fields=[field] , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                        plot_fields_PPI_QC(self.radar, COUNTIES, STATES, sweep=sweep, fields=[field], 
+                                           max_range=self.max_range, png=True, outdir=self.plot_dir, 
+                                           add_logos = self.add_logos)
                     else:
-                        plot_fields_PPI(self.radar, COUNTIES, sweep=sweep, fields=[field] , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                        plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, fields=[field], 
+                                        max_range=self.max_range, png=True, outdir=self.plot_dir, 
+                                        add_logos = self.add_logos)
 
     end = time.time()
     print('ploting time:  ', end - start)
@@ -144,7 +152,8 @@ def plot_fields_PPI(radar, COUNTIES, sweep=0, fields=['CZ'], max_range=150, png=
         spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig)
     else:
         fig = plt.figure(figsize=[width, height], constrained_layout=False)
-        spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig, left=0.0, right=1.0, top=1.0, bottom=0, wspace=0.000000009, hspace=0.15)
+        spec = plt.GridSpec(ncols=ncols, nrows=nrows, figure=fig, left=0.0, right=1.0,
+                            top=1.0, bottom=0, wspace=0.000000009, hspace=0.15)
     
     for index, field in enumerate(fields):
         
@@ -178,7 +187,7 @@ def plot_fields_PPI(radar, COUNTIES, sweep=0, fields=['CZ'], max_range=150, png=
                      embellish = False,
                      mask_outside=True)
         
-        add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES)
+        add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES, STATES)
 
         Brazil_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1']
         if site == 'KWAJ': 
@@ -686,7 +695,13 @@ def load_counties():
     counties = list(reader.geometries())
     COUNTIES = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
 
-    return COUNTIES
+    STATES = cfeature.NaturalEarthFeature(
+                                category='cultural',
+                                name='admin_1_states_provinces_lines',
+                                scale='10m',
+                                facecolor='none')
+
+    return COUNTIES, STATES
 
  # ****************************************************************************************   
 
@@ -771,7 +786,7 @@ def add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, n
 
 # ****************************************************************************************
 
-def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES):
+def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES, STATES):
 
     # NASA WFF instrument pad locations
     Pad_lon = -75.471
@@ -801,13 +816,7 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
     display.plot_point(PCMK_lon, PCMK_lat, symbol = 'kv', markersize=5)
 
     # Add state and countines to map
-    
-    states_provinces = cfeature.NaturalEarthFeature(
-                                category='cultural',
-                                name='admin_1_states_provinces_lines',
-                                scale='10m',
-                                facecolor='none')
-    ax.add_feature(states_provinces, edgecolor='black', lw=0.5)
+    ax.add_feature(STATES, edgecolor='black', lw=0.5)
     ax.add_feature(COUNTIES, facecolor='none', edgecolor='black', lw=0.25)
     ax.add_feature(cfeature.OCEAN.with_scale('10m'),facecolor=("lightcyan"))
     ax.add_feature(cfeature.LAND.with_scale('10m'), facecolor=("wheat"), edgecolor=None, alpha=1)
