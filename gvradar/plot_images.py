@@ -27,6 +27,7 @@ def plot_fields(self):
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
     """
     start = time.time()
+    plot_fast = True
     if self.sweeps_to_plot == 'all':
         sweepn = self.radar.sweep_number['data'][:][:]
         swn = []
@@ -61,7 +62,10 @@ def plot_fields(self):
             for isweeps in range(len(sweepn)):
                 sweep = sweepn[isweeps]
                 os.makedirs(self.plot_dir, exist_ok=True)
-                plot_fields_PPI(self.radar, sweep=sweep, fields=self.fields_to_plot , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                if plot_fast:
+                    plot_fields_PPI_QC(self.radar, sweep=sweep, fields=self.fields_to_plot , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                else:
+                    plot_fields_PPI(self.radar, sweep=sweep, fields=self.fields_to_plot , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
         if self.plot_single == True:
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
@@ -70,7 +74,10 @@ def plot_fields(self):
                 os.makedirs(self.plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
-                    plot_fields_PPI(self.radar, sweep=sweep, fields=[field] , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                    if plot_fast:
+                        plot_fields_PPI_QC(self.radar, sweep=sweep, fields=[field] , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                    else:
+                        plot_fields_PPI(self.radar, sweep=sweep, fields=[field] , max_range=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
 
     end = time.time()
     print('ploting time:  ', end - start)
