@@ -59,8 +59,8 @@ def add_csu_fhc(self):
             nsect = 36
         
         rheights = self.radar_z/1000.
-
         minRH = 0.5
+
         if self.scan_type == 'RHI':
            fw = csu_fhc.run_winter(dz=self.dz, zdr=self.dr, kdp=self.kd, rho=self.rh, 
                                    expected_ML=self.expected_ML, sn = None, T = self.radar_T, 
@@ -91,10 +91,6 @@ def add_csu_liquid_ice_mass(self):
     # HID ice threshold
     mw = remove_ice(mw, self.fh)
     mi = remove_ice(mi, self.fh)
-    
-    # Low dbz to 0
-    mw = set_low_dbz(mw, self.zz)
-    mi = set_low_dbz(mi, self.zz)
 
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
@@ -125,15 +121,11 @@ def add_csu_blended_rain(self):
     # Low dbz to 0
     rain = set_low_dbz(rain, self.zz)
 
-    self.radar = cm.add_field_to_radar_object(rain, self.radar, field_name='RC', units='mm/h',
-                                 long_name='HIDRO Rainfall Rate', 
-                                 standard_name='Rainfall Rate',
-                                 dz_field='CZ')
+    rc_dict = {"data": rain, "units": "mm/h",
+                "long_name": "HIDRO Rainfall Rate", "_FillValue": 0.0,
+                "standard_name": "HIDRO Rainfall Rate",}
+    self.radar.add_field("RC", rc_dict, replace_existing=True)
 
-    self.radar = cm.add_field_to_radar_object(method, self.radar, field_name='MRC', units='',
-                                 long_name='HIDRO Rainfall Method', 
-                                 standard_name='Rainfall Method',
-                                 dz_field='CZ')
     return self.radar
 # ***************************************************************************************
 
@@ -141,7 +133,8 @@ def add_polZR_rr(self):
 
     rp = np.ma.zeros(self.dz.shape)
 
-    if 'NW' in self.radar.fields.keys():
+    use_nw = False
+    if use_nw:
         # If NW exsits use to compute RP
         print('    Calculating PolZR rain rate with Ali NW')
         nw = self.radar.fields['NW']['data']
@@ -165,10 +158,10 @@ def add_polZR_rr(self):
     # Low dbz to 0
     rp = set_low_dbz(rp, self.zz)
 
-    self.radar = cm.add_field_to_radar_object(rp, self.radar, field_name='RP', units='mm/h',
-                                      long_name='Polzr_Rain_Rate', 
-                                      standard_name='Polzr_Rain_Rate',
-                                      dz_field='CZ')
+    rp_dict = {"data": rp, "units": "mm/h",
+               "long_name": "Polzr_Rain_Rate", "_FillValue": 0.0,
+               "standard_name": "Polzr_Rain_Rate",}
+    self.radar.add_field("RP", rp_dict, replace_existing=True)
 
     return self.radar                                     
 
@@ -188,14 +181,15 @@ def add_calc_dsd_sband_tokay_2020(self):
     dm = set_low_dbz(dm, self.zz)
     nw = set_low_dbz(nw, self.zz)
 
-    self.radar = cm.add_field_to_radar_object(dm, self.radar, field_name='DM', units='mm',
-                              long_name='Mass-weighted mean diameter',
-                              standard_name='Mass-weighted mean diameter',
-                              dz_field='CZ')
-    self.radar = cm.add_field_to_radar_object(nw, self.radar, field_name='NW', units='[Log Nw, m^-3 mm^-1]',
-                              long_name='Normalized intercept parameter',
-                              standard_name='Normalized intercept parameter',
-                              dz_field='CZ')     
+    dm_dict = {"data": dm, "units": "DM [mm]",
+                "long_name": "Mass-weighted mean diameter", "_FillValue": 0.0,
+                "standard_name": "Mass-weighted mean diameter",}
+    self.radar.add_field("DM", dm_dict, replace_existing=True)
+    
+    nw_dict = {"data": nw, "units": "Log[Nw, m^-3 mm^-1]",
+                "long_name": "Normalized intercept parameter", "_FillValue": 0.0,
+                "standard_name": "Normalized intercept parameter",}
+    self.radar.add_field("NW", nw_dict, replace_existing=True)
 
     return self.radar
 
@@ -269,21 +263,22 @@ def calc_dsd_sband_tokay_2020(dz, zdr, loc='all'):
     dm_range = np.logical_and(dm >= 0.5, dm <= 4.0)
     nw[dm_range] = 35.43 * dz_lin[dm_range] * dm[dm_range]**-7.192
     nw[dm_range] = np.log10(nw[dm_range])
-    nw_range = np.logical_and(nw >= 0.5, nw <= 6.0)    
-    n2 = 0.0 * dz
-    n2[nw_range] = nw[nw_range]
     
     # Set dm and nw based on acceptable dm range
     bad_dm = np.less(dm,0.5)
-    n2[bad_dm] = n2[bad_dm] * -1.0
-    dm[bad_dm] = dm[bad_dm] * -1.0
+    nw[bad_dm] = -1.0 * nw[bad_dm]
+    dm[bad_dm] = -1.0 * dm[bad_dm]
+    dm4 = np.greater(dm,4)
+    nw[dm4] = -1.0 * nw[dm4]
+    dm[dm4] = -1.0 * dm[dm4]
     
-    # Set dm and nw based on acceptable nw range
-    bad_nw = np.less(n2,0.5)
-    n2[bad_nw] = n2[bad_nw] * -1.0
-    dm[bad_nw] = dm[bad_nw] * -1.0
+    # Set nw based on acceptable nw range
+    bad_nw = np.less(nw,0.5)
+    nw[bad_nw] = -1.0 * nw[bad_nw]
+    nw6 = np.greater(nw,6)
+    nw[nw6] = -1.0 * nw[nw6]
     
-    return dm, n2
+    return dm, nw
 
 # ***************************************************************************************
 
@@ -314,7 +309,7 @@ def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
     dm = np.zeros(dbz.shape)
     nw = np.zeros(dbz.shape)
     logNw = np.zeros(dbz.shape)
-    mu = 3.0
+    mu = np.ones(dbz.shape) * 3.0
     beta = 0
 
     # Light rain rates with noisy Zd
@@ -331,23 +326,11 @@ def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
     
     # Heavy rain rates
     heavy_rr = np.logical_and(dbz >= 35, kdp >= 0.3, zdr >= 0.2)
-    nw[heavy_rr] = get_heavy_nw(zdr[heavy_rr],kdp[heavy_rr],zh[heavy_rr],xi_dr[heavy_rr])
+    nw[heavy_rr], mu[heavy_rr] = get_heavy_nw(zdr[heavy_rr],kdp[heavy_rr],zh[heavy_rr],xi_dr[heavy_rr])
            
     # Calculate the coefficient a' in Z = a' * R^1.5 using the DSD
     # parameters. First, calculate f(mu)
-    mu = 3.0
     rp = get_polzr_rainrate(dbz,nw,mu)
-    
-    # Max rain rate test
-    rr_max = np.greater(rp,300)
-    rp[rr_max] = rp[rr_max] * -1.0
-
-    # HID ice threshold
-    rp = remove_ice(rp, hid)
-
-    # Check if Rain rate is not finite!
-    rr_inf = np.isinf(rp)
-    rp[rr_inf] = rp[rr_inf] * -1.0    
     
     nw = np.log10(nw)
     
@@ -411,7 +394,7 @@ def get_heavy_nw(zdr,kdp,zh,xi_dr):
     mu = x1 - x2
     dm = d0 * ((4+mu)/(3.67+mu))    
     
-    return nw
+    return nw, mu
 
 # ***************************************************************************************
 
