@@ -802,7 +802,7 @@ def calculate_kdp(self):
     if self.site == 'KWAJ':
         window=4
     else:
-        window=5
+        window=4
 
     # Range needs to be supplied as a variable, with same shape as DZ
     rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])

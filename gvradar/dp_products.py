@@ -707,6 +707,7 @@ def get_default_product_dict():
                             'dsd_loc': 'all',
                             'do_150_mask': True,
                             'do_block_mask': False,
+                            'get_Bringi_kdp': False,
                             'max_range': 200, 
                             'max_height': 10,
                             'sweeps_to_plot': [0],
