@@ -48,8 +48,8 @@ def plot_fields(self):
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
                 field = self.fields_to_plot[ifld]
-                self.plot_dir = self.plot_dir + '/' + field
-                os.makedirs(self.plot_dir, exist_ok=True)
+                plot_dir = self.plot_dir + '/' + field
+                os.makedirs(plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     plot_fields_RHI(self.radar, sweep=sweep, fields=[field] , ymax=self.max_height, 
@@ -74,8 +74,8 @@ def plot_fields(self):
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
                 field = self.fields_to_plot[ifld]
-                self.plot_dir = self.plot_dir + '/' + field + '/'
-                os.makedirs(self.plot_dir, exist_ok=True)
+                plot_dir = self.plot_dir + '/' + field + '/'
+                os.makedirs(plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     if self.plot_fast:
