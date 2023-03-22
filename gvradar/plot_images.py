@@ -289,7 +289,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, png=False, 
 
         ax = fig.add_subplot(spec[r_c[index]])
         display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
-                         colorbar_label=units, mask_outside=True, title=title,
+                         colorbar_label=units, mask_outside=False, title=title,
                          axislabels_flag=False)
         display.set_limits(xlim=[-max_range,max_range], ylim=[-max_range,max_range])
 
