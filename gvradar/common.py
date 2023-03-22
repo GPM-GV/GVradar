@@ -359,10 +359,13 @@ def output_cf(self):
     # Outputs CF radial file
     # Declare output dir
 
-    out_dir = self.cf_dir + '/' + self.year + '/' + self.month + self.day + '/'
+    out_dir = self.cf_dir
     os.makedirs(out_dir, exist_ok=True)
-   
-    out_file = out_dir + '/' + self.site + '_' + self.year + '_' + self.month + self.day + '_' + self.hh + self.mm + self.ss + '_' + self.scan_type + '.cf'
+
+    if self.scan_type == RHI
+        out_file = out_dir + '/' + self.site + '_' + self.year + '_' + self.month + self.day + '_' + self.hh + self.mm + self.ss + '_rhi.cf'
+    else: 
+        out_file = out_dir + '/' + self.site + '_' + self.year + '_' + self.month + self.day + '_' + self.hh + self.mm + self.ss + '.cf'
     
     pyart.io.write_cfradial(out_file,self.radar)
     
