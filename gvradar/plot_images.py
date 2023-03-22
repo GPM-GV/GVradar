@@ -48,7 +48,7 @@ def plot_fields(self):
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
                 field = self.fields_to_plot[ifld]
-                #plot_dir = self.plot_dir + '/' + field
+                self.plot_dir = self.plot_dir + '/' + field
                 os.makedirs(self.plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
@@ -74,7 +74,7 @@ def plot_fields(self):
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
                 field = self.fields_to_plot[ifld]
-                #plot_dir = self.plot_dir + '/' + field + '/'
+                self.plot_dir = self.plot_dir + '/' + field + '/'
                 os.makedirs(self.plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
