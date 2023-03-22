@@ -222,13 +222,13 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
     if png:
         if num_fields == 1:
             png_file='{}_{}_{}_{}_{}_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,field,string_csweep)
-            outdir_daily = outdir + '/' + year + '/' + month + day + '/PPI/' + field + '/'
+            outdir_daily = outdir 
             os.makedirs(outdir_daily, exist_ok=True)
             fig.savefig(outdir_daily + '/' + png_file, dpi=240, bbox_inches='tight')
             print('  --> ' + outdir_daily + '/' + png_file, '', sep='\n')
         elif num_fields >1:
             png_file='{}_{}_{}_{}_{}panel_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,num_fields,string_csweep)
-            outdir_multi = outdir + '/' + year + '/' + month + day + '/multi/' 
+            outdir_multi = outdir
             os.makedirs(outdir_multi, exist_ok=True)
             fig.savefig(outdir_multi + '/' + png_file, dpi=240, bbox_inches='tight')
             print('  --> ' + outdir_multi + '/' + png_file, '', sep='\n')
@@ -316,13 +316,13 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, png=False, 
     if png:
         if num_fields == 1:
             png_file='{}_{}_{}_{}_{}_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,field,string_csweep)
-            outdir_daily = outdir + '/' + year + '/' + month + day + '/PPI/' + field + '/'
+            outdir_daily = outdir
             os.makedirs(outdir_daily, exist_ok=True)
             fig.savefig(outdir_daily + '/' + png_file, dpi=240, bbox_inches='tight')
             print('  --> ' + outdir_daily + '/' + png_file, '', sep='\n')
         elif num_fields >1:
             png_file='{}_{}_{}_{}_{}panel_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,num_fields,string_csweep)
-            outdir_multi = outdir + '/' + year + '/' + month + day + '/multi/' 
+            outdir_multi = outdir
             os.makedirs(outdir_multi, exist_ok=True)
             fig.savefig(outdir_multi + '/' + png_file, dpi=240, bbox_inches='tight')
             print('  --> ' + outdir_multi + '/' + png_file, '', sep='\n')
@@ -415,14 +415,14 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
         if num_fields == 1:
             png_file = '{}_{}_{}_{}_{}_{:2.1f}AZ_RHI.png'.format(site,year
                                                     ,month+day,hh+mm+ss,field,azi)
-            outdir_daily = outdir + '/' + year + '/' + month + day + '/RHI/' + field + '/'
+            outdir_daily = outdir
             os.makedirs(outdir_daily, exist_ok=True)
             fig.savefig(outdir_daily + '/' + png_file, dpi=240, bbox_inches='tight')
             print('  --> ' + outdir_daily + '/' + png_file, '', sep='\n')
         elif num_fields >1:
             png_file = '{}_{}_{}_{}_{}panel_{:2.1f}AZ_RHI.png'.format(site,year
                                                     ,month+day,hh+mm+ss,num_fields,azi)
-            outdir_multi = outdir + '/' + year + '/' + month + day + '/multi/'
+            outdir_multi = outdir
             os.makedirs(outdir_multi, exist_ok=True)
             fig.savefig(outdir_multi + '/' + png_file, dpi=240, bbox_inches='tight')
             print('  --> ' + outdir_multi + '/' + png_file, '', sep='\n')

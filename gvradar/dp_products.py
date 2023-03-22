@@ -706,7 +706,7 @@ def get_default_product_dict():
                             'do_tokay_DSD': True,
                             'dsd_loc': 'all',
                             'do_150_mask': True,
-                            'do_block_mask': True,
+                            'do_block_mask': False,
                             'max_range': 200, 
                             'max_height': 10,
                             'sweeps_to_plot': [0],
