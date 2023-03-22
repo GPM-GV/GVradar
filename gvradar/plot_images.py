@@ -53,7 +53,7 @@ def plot_fields(self):
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     plot_fields_RHI(self.radar, sweep=sweep, fields=[field] , ymax=self.max_height, 
-	                            xmax=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+	                            xmax=self.max_range, png=True, outdir=plot_dir, add_logos = self.add_logos)
 
     if self.scan_type == 'PPI':
         print('Plotting PPI images...')
@@ -80,11 +80,11 @@ def plot_fields(self):
                     sweep = sweepn[isweeps]
                     if self.plot_fast:
                         plot_fields_PPI_QC(self.radar, sweep=sweep, fields=[field], 
-                                           max_range=self.max_range, png=True, outdir=self.plot_dir, 
+                                           max_range=self.max_range, png=True, outdir=plot_dir, 
                                            add_logos = self.add_logos)
                     else:
                         plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, fields=[field], 
-                                        max_range=self.max_range, png=True, outdir=self.plot_dir, 
+                                        max_range=self.max_range, png=True, outdir=plot_dir, 
                                         add_logos = self.add_logos)
 
     end = time.time()
@@ -224,13 +224,13 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
             png_file='{}_{}_{}_{}_{}_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,field,string_csweep)
             outdir_daily = outdir 
             os.makedirs(outdir_daily, exist_ok=True)
-            fig.savefig(outdir_daily + '/' + png_file, dpi=240, bbox_inches='tight')
+            fig.savefig(outdir_daily + '/' + png_file, dpi=120, bbox_inches='tight')
             print('  --> ' + outdir_daily + '/' + png_file, '', sep='\n')
         elif num_fields >1:
             png_file='{}_{}_{}_{}_{}panel_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,num_fields,string_csweep)
-            outdir_multi = outdir
+            outdir_multi = outdir + 'Multi'
             os.makedirs(outdir_multi, exist_ok=True)
-            fig.savefig(outdir_multi + '/' + png_file, dpi=240, bbox_inches='tight')
+            fig.savefig(outdir_multi + '/' + png_file, dpi=120, bbox_inches='tight')
             print('  --> ' + outdir_multi + '/' + png_file, '', sep='\n')
         if outdir == '':
             outdir = os.getcwd()
@@ -318,13 +318,13 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, png=False, 
             png_file='{}_{}_{}_{}_{}_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,field,string_csweep)
             outdir_daily = outdir
             os.makedirs(outdir_daily, exist_ok=True)
-            fig.savefig(outdir_daily + '/' + png_file, dpi=240, bbox_inches='tight')
+            fig.savefig(outdir_daily + '/' + png_file, dpi=120, bbox_inches='tight')
             print('  --> ' + outdir_daily + '/' + png_file, '', sep='\n')
         elif num_fields >1:
             png_file='{}_{}_{}_{}_{}panel_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,num_fields,string_csweep)
-            outdir_multi = outdir
+            outdir_multi = outdir + '/Multi/'
             os.makedirs(outdir_multi, exist_ok=True)
-            fig.savefig(outdir_multi + '/' + png_file, dpi=240, bbox_inches='tight')
+            fig.savefig(outdir_multi + '/' + png_file, dpi=120, bbox_inches='tight')
             print('  --> ' + outdir_multi + '/' + png_file, '', sep='\n')
         if outdir == '':
             outdir = os.getcwd()
@@ -417,14 +417,14 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
                                                     ,month+day,hh+mm+ss,field,azi)
             outdir_daily = outdir
             os.makedirs(outdir_daily, exist_ok=True)
-            fig.savefig(outdir_daily + '/' + png_file, dpi=240, bbox_inches='tight')
+            fig.savefig(outdir_daily + '/' + png_file, dpi=120, bbox_inches='tight')
             print('  --> ' + outdir_daily + '/' + png_file, '', sep='\n')
         elif num_fields >1:
             png_file = '{}_{}_{}_{}_{}panel_{:2.1f}AZ_RHI.png'.format(site,year
                                                     ,month+day,hh+mm+ss,num_fields,azi)
-            outdir_multi = outdir
+            outdir_multi = outdir + 'Multi'
             os.makedirs(outdir_multi, exist_ok=True)
-            fig.savefig(outdir_multi + '/' + png_file, dpi=240, bbox_inches='tight')
+            fig.savefig(outdir_multi + '/' + png_file, dpi=120, bbox_inches='tight')
             print('  --> ' + outdir_multi + '/' + png_file, '', sep='\n')
         if outdir == '':
             outdir = os.getcwd()
