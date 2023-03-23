@@ -170,6 +170,8 @@ def add_polZR_rr(self):
 
     rp = mask_beyond_150(self,rp)
 
+    np.ma.filled(rp, fill_value=0)
+
     rp_dict = {"data": rp, "units": "mm/h",
                "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
                "standard_name": "Polzr_Rain_Rate",}
@@ -545,10 +547,6 @@ def mask_beyond_150(self,fl):
     apply_beyond = np.equal(beyond_field,1)
 
     fl[apply_beyond] = -32767.0
-
-    apply_zero = np.logical_and(np.equal(beyond_field,0),np.equal(fl,-32767.0))
-    fl[apply_zero] = 0
-    np.ma.filled(fl, fill_value=0)
     
     return fl
     '''
