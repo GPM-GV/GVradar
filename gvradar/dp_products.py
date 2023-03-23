@@ -529,7 +529,6 @@ def mask_beyond_150(self):
     beyond_field = beyond_flag
     
     apply_beyond = np.equal(beyond_field,1)
-
     for fld in self.radar.fields:
         nf = self.radar.fields[fld]['data']
         nf[apply_beyond] = -777

@@ -290,10 +290,6 @@ class DP_products:
         else:  
             print('', 'Sounding file required to create HID, Ice and Water Mass and RC', '', sep='\n')
 
-        # Set data beyond 150 km to missing
-        #if self.do_150_mask == True:
-        #    self.radar = dp.mask_beyond_150(self)
-
         # Set data blockages to -888
         if self.do_block_mask == True:
             KMQT_blockage_1 = {'hmin': 0, 'hmax': None, 'rmin': 0 * 1000, 'rmax': 200 * 1000,
