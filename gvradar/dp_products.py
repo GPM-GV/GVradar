@@ -529,7 +529,7 @@ def mask_beyond_150(self):
     apply_beyond = np.equal(beyond_field,1)
     
     fields = []
-    product_fields = ['FH','FW','RC','RP','MW','MI','DM','NW']
+    product_fields = ['FH','RC','RP','MW','MI','DM','NW']
     for fld in product_fields:
         if fld in self.radar.fields.keys():
             fields.append(fld)
