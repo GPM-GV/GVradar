@@ -547,7 +547,8 @@ def mask_beyond_150(self,fl):
     fl[apply_beyond] = -32767.0
 
     apply_zero = np.logical_and(np.equal(beyond_field,0),np.equal(fl,-32767.0))
-    fl[apply_zero].filled(fill_value=0)
+    fl[apply_zero] = 0
+    fl.filled(fill_value=0)
     
     return fl
     '''
