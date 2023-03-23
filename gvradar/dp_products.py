@@ -527,7 +527,7 @@ def mask_beyond_150(self):
         beyond_flag[self.radar.azimuth['data'] > sector['azmax'], :] = 0
 
     beyond_field = beyond_flag
-    '''
+    
     apply_beyond = np.equal(beyond_field,1)
     
     fields = []
@@ -559,7 +559,7 @@ def mask_beyond_150(self):
         nf = deepcopy(self.radar.fields[fld])
         nf['data'] = np.ma.masked_where(beyondfilter.gate_excluded, nf['data'])
         self.radar.add_field(fld, nf, replace_existing=True)
-
+    '''
     return self.radar
 
 # ***************************************************************************************
