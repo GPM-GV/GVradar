@@ -552,7 +552,7 @@ def mask_beyond_150(self):
     # Create a pyart gatefilter from radar
     beyondfilter = pyart.filters.GateFilter(self.radar)
     # Apply sector thresholds regardless of temp 
-    beyondfilter.exclude_not_equal('BEYOND', sec)
+    beyondfilter.exclude_equal('BEYOND', sec)
 
     # Apply gate filters to radar
     product_fields = ['FH','RC','RP','MW','MI','DM','NW']
