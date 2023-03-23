@@ -229,6 +229,10 @@ class DP_products:
         
     # Rename fields with GPM, 2-letter IDs (e.g. CZ, DR, KD)
         self.radar, zz = cm.rename_fields_in_radar(self)
+
+    # Set data beyond 150 km to missing
+        if self.do_150_mask == True:
+            self.radar = dp.mask_beyond_150(self)
         
     # If no KDP, calculate field
         if 'KD' not in self.radar.fields.keys():  
