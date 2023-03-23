@@ -545,7 +545,7 @@ def mask_beyond_150(self,fl):
     
     apply_beyond = np.equal(beyond_field,1)
 
-    fl[apply_beyond] = -32767.0
+    fl[apply_beyond] = -777
     
     return fl
 
