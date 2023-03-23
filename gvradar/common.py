@@ -384,7 +384,7 @@ def output_grid(self):
 
     # Outputs xarray gridded file
 
-    out_dir = self.grid_dir + '/' + self.year + '/' + self.month + self.day + '/'
+    out_dir = self.grid_dir
     os.makedirs(out_dir, exist_ok=True)
    
     out_file = out_dir + '/' + self.site + '_' + self.year + '_' + self.month + self.day + '_' + self.hh + self.mm + self.ss + '_' + self.scan_type + '.nc'
@@ -499,7 +499,7 @@ def add_field_to_radar_object(field, radar, field_name='UN', units='',
     Adds a newly created field to the Py-ART radar object. If reflectivity is a 
     masked array, make the new field masked the same as reflectivity.
     """
-    fill_value = -32767
+    fill_value = -32767.0
     masked_field = np.ma.asanyarray(field)
     masked_field.mask = masked_field == fill_value,
     if hasattr(radar.fields[dz_field]['data'], 'mask'):

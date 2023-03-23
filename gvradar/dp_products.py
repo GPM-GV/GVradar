@@ -615,7 +615,7 @@ def set_blockage(self, sector_dict):
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
     
     block_dict = {"data": block_field, "units": "0: False, 1: True",
-                  "long_name": "BLOCK", "_FillValue": -32767,
+                  "long_name": "BLOCK", "_FillValue": -32767.0,
                   "standard_name": "BLOCK",}
     self.radar.add_field("BLOCK", block_dict, replace_existing=False)
     
