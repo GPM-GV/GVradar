@@ -57,7 +57,7 @@ def add_csu_fhc(self):
             azimuths = self.radar.azimuth['data']
             sn = pyart.retrieve.simple_moment_calculations.calculate_snr_from_reflectivity(self.radar,refl_field='CZ',toa=15000.0)
             sndat = sn['data'][:]
-            radar = cm.add_field_to_radar_object(sndat,self.radar,field_name='SN',dz_field='CZ')
+            self.radar = cm.add_field_to_radar_object(sndat,self.radar,field_name='SN',dz_field='CZ')
             sndat = np.ma.masked_array(sndat)
             nsect = 36
         
@@ -171,7 +171,7 @@ def add_polZR_rr(self):
     rp = mask_beyond_150(self,rp)
 
     rp_dict = {"data": rp, "units": "mm/h",
-               "long_name": "Polzr_Rain_Rate", "_FillValue": 0.0,
+               "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
                "standard_name": "Polzr_Rain_Rate",}
     self.radar.add_field("RP", rp_dict, replace_existing=True)
 
@@ -545,6 +545,9 @@ def mask_beyond_150(self,fl):
     apply_beyond = np.equal(beyond_field,1)
 
     fl[apply_beyond] = -32767.0
+
+    apply_zero = np.logical_and(np.equal(beyond_field,0),np.equal(fl,-32767.0))
+    fl[apply_zero] = 0.0
     
     return fl
     '''
