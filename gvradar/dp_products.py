@@ -555,8 +555,7 @@ def mask_beyond_150(self):
     beyondfilter.exclude_equal('BEYOND', sec)
 
     # Apply gate filters to radar
-    product_fields = ['FH','RC','RP','MW','MI','DM','NW']
-    for fld in product_fields:
+    for fld in self.radar.fields:
         nf = deepcopy(self.radar.fields[fld])
         nf['data'] = np.ma.masked_where(beyondfilter.gate_excluded, nf['data'])
         self.radar.add_field(fld, nf, replace_existing=True)
