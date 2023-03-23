@@ -558,7 +558,7 @@ def mask_beyond_150(self):
     product_fields = ['FH','RC','RP','MW','MI','DM','NW']
     for fld in product_fields:
         nf = deepcopy(self.radar.fields[fld])
-        nf['data'] = np.ma.masked_where(secfilter.gate_excluded, nf['data'])
+        nf['data'] = np.ma.masked_where(beyondfilter.gate_excluded, nf['data'])
         self.radar.add_field(fld, nf, replace_existing=True)
 
     return self.radar
