@@ -40,6 +40,8 @@ def add_csu_fhc(self):
         fh = csu_fhc.csu_fhc_summer(dz=self.dz, zdr=self.dr, rho=self.rh, kdp=self.kd, use_temp=True,
                                     T=self.radar_T, band=self.radar_band, verbose=False,
                                     use_trap=False, method='hybrid')
+
+        fh = mask_beyond_150(self,fh)
     
         self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
                                                   units='Unitless', long_name='Summer Hydrometeor ID', 
@@ -75,6 +77,8 @@ def add_csu_fhc(self):
                                     use_temp = True, band=self.radar_band, minRH=minRH,
                                     return_scores=False ,sn_thresh=self.snthresh, sn=sndat)
 
+        fw = mask_beyond_150(self,fw)
+
         self.radar = cm.add_field_to_radar_object(fw, self.radar, field_name = 'FW',
                                                   units='Unitless', long_name='Winter Hydrometeor ID',
                                                   standard_name='Winter Hydrometeor ID',
@@ -92,6 +96,9 @@ def add_csu_liquid_ice_mass(self):
     # HID ice threshold
     mw = remove_ice(mw, self.fh)
     mi = remove_ice(mi, self.fh)
+
+    mw = mask_beyond_150(self,mw)
+    mi = mask_beyond_150(self,mi)
 
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
@@ -121,6 +128,8 @@ def add_csu_blended_rain(self):
     
     # Low dbz to 0
     rain = set_low_dbz(rain, self.zz)
+
+    rain = mask_beyond_150(self,rain)
 
     rc_dict = {"data": rain, "units": "mm/h",
                 "long_name": "HIDRO Rainfall Rate", "_FillValue": 0.0,
@@ -159,6 +168,8 @@ def add_polZR_rr(self):
     # Low dbz to 0
     rp = set_low_dbz(rp, self.zz)
 
+    rp = mask_beyond_150(self,rp)
+
     rp_dict = {"data": rp, "units": "mm/h",
                "long_name": "Polzr_Rain_Rate", "_FillValue": 0.0,
                "standard_name": "Polzr_Rain_Rate",}
@@ -181,6 +192,9 @@ def add_calc_dsd_sband_tokay_2020(self):
     # Low dbz to 0
     dm = set_low_dbz(dm, self.zz)
     nw = set_low_dbz(nw, self.zz)
+
+    dm = mask_beyond_150(self,dm)
+    nw = mask_beyond_150(self,nw)
 
     dm_dict = {"data": dm, "units": "DM [mm]",
                 "long_name": "Mass-weighted mean diameter", "_FillValue": 0.0,
@@ -478,7 +492,7 @@ def set_low_dbz(fl,zz):
 
 # ***************************************************************************************
 
-def mask_beyond_150(self):
+def mask_beyond_150(self,fl):
 
     """
     Filter out any data outside 150 KM set to missing(-32767.0)
@@ -529,7 +543,11 @@ def mask_beyond_150(self):
     beyond_field = beyond_flag
     
     apply_beyond = np.equal(beyond_field,1)
+
+    fl[apply_beyond] = -32767.0
     
+    return fl
+    '''
     fields = []
     product_fields = ['FH','RC','RP','MW','MI','DM','NW']
     for fld in product_fields:
@@ -540,7 +558,7 @@ def mask_beyond_150(self):
         nf[apply_beyond] = -32767.0
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
 
-    '''
+    
     cm.add_field_to_radar_object(beyond_field, self.radar, field_name='BEYOND', 
                                  units='0 = Z < 0, 1 = Z >= 0',
                                  long_name='BEYOND 150km',
@@ -559,8 +577,9 @@ def mask_beyond_150(self):
         nf = deepcopy(self.radar.fields[fld])
         nf['data'] = np.ma.masked_where(beyondfilter.gate_excluded, nf['data'])
         self.radar.add_field(fld, nf, replace_existing=True)
-    '''
+    
     return self.radar
+    '''
 
 # ***************************************************************************************
 
