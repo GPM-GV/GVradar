@@ -168,12 +168,11 @@ def add_polZR_rr(self):
     # Low dbz to 0
     rp = set_low_dbz(rp, self.zz)
 
+    # Mask data beyond 150km to -777
     rp = mask_beyond_150(self,rp)
 
-    np.ma.filled(rp, fill_value=0)
-
     rp_dict = {"data": rp, "units": "mm/h",
-               "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
+               "long_name": "Polzr_Rain_Rate", "_FillValue": 0.0,
                "standard_name": "Polzr_Rain_Rate",}
     self.radar.add_field("RP", rp_dict, replace_existing=True)
 
@@ -497,7 +496,7 @@ def set_low_dbz(fl,zz):
 def mask_beyond_150(self,fl):
 
     """
-    Filter out any data outside 150 KM set to missing(-32767.0)
+    Filter out any data outside 150 KM set to -777
     """
     
     sector = {'hmin': 0, 'hmax': None,
@@ -549,39 +548,6 @@ def mask_beyond_150(self,fl):
     fl[apply_beyond] = -32767.0
     
     return fl
-    '''
-    fields = []
-    product_fields = ['FH','RC','RP','MW','MI','DM','NW']
-    for fld in product_fields:
-        if fld in self.radar.fields.keys():
-            fields.append(fld)
-    for fld in fields:
-        nf = self.radar.fields[fld]['data']
-        nf[apply_beyond] = -32767.0
-        self.radar.add_field_like(fld,fld,nf,replace_existing=True)
-
-    
-    cm.add_field_to_radar_object(beyond_field, self.radar, field_name='BEYOND', 
-                                 units='0 = Z < 0, 1 = Z >= 0',
-                                 long_name='BEYOND 150km',
-                                 standard_name='BEYOND 150km', 
-                                 dz_field=self.ref_field_name)
-    
-    # Declare thresholds for DP fields
-    sec = 1
-    # Create a pyart gatefilter from radar
-    beyondfilter = pyart.filters.GateFilter(self.radar)
-    # Apply sector thresholds regardless of temp 
-    beyondfilter.exclude_equal('BEYOND', sec)
-
-    # Apply gate filters to radar
-    for fld in self.radar.fields:
-        nf = deepcopy(self.radar.fields[fld])
-        nf['data'] = np.ma.masked_where(beyondfilter.gate_excluded, nf['data'])
-        self.radar.add_field(fld, nf, replace_existing=True)
-    
-    return self.radar
-    '''
 
 # ***************************************************************************************
 
