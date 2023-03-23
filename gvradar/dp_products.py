@@ -526,6 +526,7 @@ def mask_beyond_150(self):
         beyond_flag[self.radar.azimuth['data'] > sector['azmax'], :] = 0
 
     beyond_field = beyond_flag
+    '''
     apply_beyond = np.equal(beyond_field,1)
     
     fields = []
@@ -538,11 +539,27 @@ def mask_beyond_150(self):
         nf[apply_beyond] = -32767.0
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
 
-    beyond_dict = {"data": beyond_field, "units": "0: False, 1: True",
-                   "long_name": "BEYOND", "_FillValue": -32767.0,
-                   "standard_name": "BEYOND",}
-    self.radar.add_field("BEYOND", beyond_dict, replace_existing=True)    
+    '''
+    cm.add_field_to_radar_object(beyond_field, self.radar, field_name='BEYOND', 
+                                 units='0 = Z < 0, 1 = Z >= 0',
+                                 long_name='BEYOND 150km',
+                                 standard_name='BEYOND 150km', 
+                                 dz_field=self.ref_field_name)
     
+    # Declare thresholds for DP fields
+    sec = 1
+    # Create a pyart gatefilter from radar
+    beyondfilter = pyart.filters.GateFilter(self.radar)
+    # Apply sector thresholds regardless of temp 
+    beyondfilter.exclude_not_equal('BEYOND', sec)
+
+    # Apply gate filters to radar
+    product_fields = ['FH','RC','RP','MW','MI','DM','NW']
+    for fld in product_fields:
+        nf = deepcopy(self.radar.fields[fld])
+        nf['data'] = np.ma.masked_where(secfilter.gate_excluded, nf['data'])
+        self.radar.add_field(fld, nf, replace_existing=True)
+
     return self.radar
 
 # ***************************************************************************************
