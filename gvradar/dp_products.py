@@ -123,7 +123,7 @@ def add_csu_blended_rain(self):
     rain = set_low_dbz(rain, self.zz)
 
     #np.ma.where(rain == -32767.0, 0, rain)
-    zero_rain = np.ma.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    zero_rain = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
     gzero = np.greater_equal(rain,0)
     zero_rain[gzero] = rain[gzero]
     
