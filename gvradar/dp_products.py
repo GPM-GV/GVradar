@@ -125,7 +125,7 @@ def add_csu_blended_rain(self):
     np.ma.where(rain <= 0, 0, rain)
     
     rc_dict = {"data": rain, "units": "mm/h",
-                "long_name": "HIDRO Rainfall Rate", "_FillValue": 0.0,
+                "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
                 "standard_name": "HIDRO Rainfall Rate",}
     self.radar.add_field("RC", rc_dict, replace_existing=True)
 
