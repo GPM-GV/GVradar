@@ -537,9 +537,14 @@ def mask_beyond_150(self):
         beyond_flag[self.radar.azimuth['data'] > sector['azmax'], :] = 0
 
     beyond_field = beyond_flag
-    
     apply_beyond = np.equal(beyond_field,1)
-    for fld in self.radar.fields:
+
+    fields = []
+    cm_fields = ['FH','FW','RC','RP','MW','MI','DM','NW']
+    for fld in cm_fields:
+        if fld in self.radar.fields.keys():
+            fields.append(fld)
+    for fld in fields:
         nf = self.radar.fields[fld]['data']
         nf[apply_beyond] = -32767.0
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
