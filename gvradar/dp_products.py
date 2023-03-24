@@ -135,7 +135,8 @@ def add_csu_blended_rain(self):
 
 def add_polZR_rr(self):
 
-    rp = np.ma.zeros(self.dz.shape)
+    rp = np.zeros(self.dz.shape)
+    rp = np.ma.filled(rp, fill_value=0.0)
 
     use_nw = False
     if use_nw:
