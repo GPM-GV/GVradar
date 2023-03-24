@@ -531,7 +531,7 @@ def mask_beyond_150(self):
     apply_beyond = np.equal(beyond_field,1)
     for fld in self.radar.fields:
         nf = self.radar.fields[fld]['data']
-        nf[apply_beyond] = -32767.0
+        nf[apply_beyond] = -888
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
 
     return self.radar
