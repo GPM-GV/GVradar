@@ -130,6 +130,8 @@ def add_csu_blended_rain(self):
                                  long_name='HIDRO Rainfall Rate',
                                  standard_name='HIDRO Rainfall Rate',
                                  dz_field='CZ')
+
+    self.radar.fields['RC']['data'].filled(fill_value=0)
     '''
     rc_dict = {"data": rain, "units": "mm/h",
                 "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
