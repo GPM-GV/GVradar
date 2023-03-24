@@ -112,6 +112,7 @@ def add_csu_blended_rain(self):
 
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
+    # Set array to all zeros
     zero_rain = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
     zero_rain = np.ma.filled(zero_rain, fill_value=0.0)
     gzero = np.greater_equal(rain,0)
@@ -123,18 +124,12 @@ def add_csu_blended_rain(self):
 
     # HID ice threshold
     zero_rain = remove_ice(zero_rain, self.fh)
-    
-    self.radar = cm.add_field_to_radar_object(zero_rain, self.radar, field_name='RC', units='mm/h',
-                                 long_name='HIDRO Rainfall Rate',
-                                 standard_name='HIDRO Rainfall Rate',
-                                 dz_field='CZ')
 
-    '''
     rc_dict = {"data": zero_rain, "units": "mm/h",
                 "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
                 "standard_name": "HIDRO Rainfall Rate",}
     self.radar.add_field("RC", rc_dict, replace_existing=True)
-    '''
+    
     return self.radar
 # ***************************************************************************************
 
@@ -153,22 +148,21 @@ def add_polZR_rr(self):
         print('    Calculating PolZR rain rate with computed NW')
         rp, nw = get_bringi_rainrate(rp,self.dz,self.dr,self.kd,self.rh,self.fh)
 
+    # Set array to all zeros
+    zero_rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    zero_rp = np.ma.filled(zero_rp, fill_value=0.0)
+    gzero_rp = np.greater_equal(rp,0)
+    zero_rp[gzero_rp] = rp[gzero_rp]
+
     # Max rain rate test
-    rp_max = np.greater(rp,300)
-    rp[rp_max] = rp[rp_max] * -1.0
+    rc_max = np.greater(zero_rp,300)
+    zero_rp[rc_max] = zero_rp[rc_max] * -1.0
 
     # HID ice threshold
-    rp = remove_ice(rp,self.fh)
-    
-    # Check if Rain rate is not finite!
-    rp_inf = np.isinf(rp)
-    rp[rp_inf] = rp[rp_inf] * -1.0
+    zero_rp = remove_ice(zero_rp, self.fh)
 
-    # Low dbz to 0
-    rp = set_low_dbz(rp, self.zz)
-
-    rp_dict = {"data": rp, "units": "mm/h",
-               "long_name": "Polzr_Rain_Rate", "_FillValue": 0.0,
+    rp_dict = {"data": zero_rp, "units": "mm/h",
+               "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
                "standard_name": "Polzr_Rain_Rate",}
     self.radar.add_field("RP", rp_dict, replace_existing=True)
 
@@ -182,21 +176,28 @@ def add_calc_dsd_sband_tokay_2020(self):
 
     dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc)
 
+    # Set array to all zeros
+    zero_dm = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    zero_dm = np.ma.filled(zero_dm, fill_value=0.0)
+    gzero_dm = np.greater_equal(dm,0)
+    zero_dm[gzero_dm] = dm[gzero_dm]
+
+    zero_nw = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    zero_nw = np.ma.filled(zero_nw, fill_value=0.0)
+    gzero_nw = np.greater_equal(nw,0)
+    zero_nw[gzero_nw] = nw[gzero_nw]
+
     # HID ice threshold
-    dm = remove_ice(dm, self.fh)
-    nw = remove_ice(nw, self.fh)
-    
-    # Low dbz to 0
-    dm = set_low_dbz(dm, self.zz)
-    nw = set_low_dbz(nw, self.zz)
+    zero_dm = remove_ice(zero_dm, self.fh)
+    zero_nw = remove_ice(zero_nw, self.fh)
 
     dm_dict = {"data": dm, "units": "DM [mm]",
-                "long_name": "Mass-weighted mean diameter", "_FillValue": 0.0,
+                "long_name": "Mass-weighted mean diameter", "_FillValue": -32767.0,
                 "standard_name": "Mass-weighted mean diameter",}
     self.radar.add_field("DM", dm_dict, replace_existing=True)
     
     nw_dict = {"data": nw, "units": "Log[Nw, m^-3 mm^-1]",
-                "long_name": "Normalized intercept parameter", "_FillValue": 0.0,
+                "long_name": "Normalized intercept parameter", "_FillValue": -32767.0,
                 "standard_name": "Normalized intercept parameter",}
     self.radar.add_field("NW", nw_dict, replace_existing=True)
 
