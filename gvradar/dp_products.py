@@ -122,7 +122,9 @@ def add_csu_blended_rain(self):
     # Low dbz to 0
     rain = set_low_dbz(rain, self.zz)
 
-    np.ma.where(rain == -32767.0, 0, rain)
+    #np.ma.where(rain == -32767.0, 0, rain)
+    missing = np.equal(rain,-32767.0)
+    rain[missing] = 0
     
     rc_dict = {"data": rain, "units": "mm/h",
                 "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
