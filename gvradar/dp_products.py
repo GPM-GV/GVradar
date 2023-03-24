@@ -125,8 +125,8 @@ def add_csu_blended_rain(self):
     '''
     #np.ma.where(rain == -32767.0, 0, rain)
     zero_rain = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    gzero = np.greater_equal(rain,0)
-    zero_rain[gzero] = rain[gzero]
+    #gzero = np.greater_equal(rain,0)
+    #zero_rain[gzero] = rain[gzero]
     
     self.radar = cm.add_field_to_radar_object(zero_rain, self.radar, field_name='RC', units='mm/h',
                                  long_name='HIDRO Rainfall Rate',
