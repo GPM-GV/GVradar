@@ -155,8 +155,8 @@ def add_polZR_rr(self):
     zero_rp[gzero_rp] = rp[gzero_rp]
 
     # Max rain rate test
-    rc_max = np.greater(zero_rp,300)
-    zero_rp[rc_max] = zero_rp[rc_max] * -1.0
+    rp_max = np.greater(zero_rp,300)
+    zero_rp[rp_max] = zero_rp[rp_max] * -1.0
 
     # HID ice threshold
     zero_rp = remove_ice(zero_rp, self.fh)
@@ -191,12 +191,12 @@ def add_calc_dsd_sband_tokay_2020(self):
     zero_dm = remove_ice(zero_dm, self.fh)
     zero_nw = remove_ice(zero_nw, self.fh)
 
-    dm_dict = {"data": dm, "units": "DM [mm]",
+    dm_dict = {"data": zero_dm, "units": "DM [mm]",
                 "long_name": "Mass-weighted mean diameter", "_FillValue": -32767.0,
                 "standard_name": "Mass-weighted mean diameter",}
     self.radar.add_field("DM", dm_dict, replace_existing=True)
     
-    nw_dict = {"data": nw, "units": "Log[Nw, m^-3 mm^-1]",
+    nw_dict = {"data": zero_nw, "units": "Log[Nw, m^-3 mm^-1]",
                 "long_name": "Normalized intercept parameter", "_FillValue": -32767.0,
                 "standard_name": "Normalized intercept parameter",}
     self.radar.add_field("NW", nw_dict, replace_existing=True)
