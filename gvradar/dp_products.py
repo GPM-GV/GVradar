@@ -126,11 +126,16 @@ def add_csu_blended_rain(self):
     missing = np.equal(rain,-32767.0)
     rain[missing] = 0
     
+    self.radar = cm.add_field_to_radar_object(rain, self.radar, field_name='RC', units='mm/h',
+                                 long_name='HIDRO Rainfall Rate',
+                                 standard_name='HIDRO Rainfall Rate',
+                                 dz_field='CZ')
+    '''
     rc_dict = {"data": rain, "units": "mm/h",
                 "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
                 "standard_name": "HIDRO Rainfall Rate",}
     self.radar.add_field("RC", rc_dict, replace_existing=True)
-
+    '''
     return self.radar
 # ***************************************************************************************
 
