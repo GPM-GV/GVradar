@@ -112,6 +112,7 @@ def add_csu_blended_rain(self):
 
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
+    '''
     # Max rain rate test
     rc_max = np.greater(rain,300)
     rain[rc_max] = rain[rc_max] * -1.0
@@ -121,7 +122,7 @@ def add_csu_blended_rain(self):
     
     # Low dbz to 0
     rain = set_low_dbz(rain, self.zz)
-
+    '''
     #np.ma.where(rain == -32767.0, 0, rain)
     zero_rain = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
     gzero = np.greater_equal(rain,0)
