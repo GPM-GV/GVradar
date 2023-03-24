@@ -125,6 +125,7 @@ def add_csu_blended_rain(self):
     '''
     #np.ma.where(rain == -32767.0, 0, rain)
     zero_rain = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    zero_rain = zero_rain.filled(fill_value=0.0)
     #gzero = np.greater_equal(rain,0)
     #zero_rain[gzero] = rain[gzero]
     
