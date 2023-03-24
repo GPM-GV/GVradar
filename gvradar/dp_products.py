@@ -490,7 +490,7 @@ def set_low_dbz(fl,zz):
 def mask_beyond_150(self):
 
     """
-    Filter out any data outside 150 KM set to -777
+    Filter out any data outside 150 KM set to -32767.0
     """
     
     sector = {'hmin': 0, 'hmax': None,

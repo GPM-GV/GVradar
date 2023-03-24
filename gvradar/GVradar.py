@@ -231,8 +231,8 @@ class DP_products:
         self.radar, zz = cm.rename_fields_in_radar(self)
 
     # Set data beyond 150 km to missing
-        if self.do_150_mask == True:
-            self.radar = dp.mask_beyond_150(self)
+    #    if self.do_150_mask == True:
+    #        self.radar = dp.mask_beyond_150(self)
         
     # If no KDP, calculate field
         if 'KD' not in self.radar.fields.keys():  
@@ -289,6 +289,10 @@ class DP_products:
      
         else:  
             print('', 'Sounding file required to create HID, Ice and Water Mass and RC', '', sep='\n')
+
+        # Set data beyond 150 km to missing
+        if self.do_150_mask == True:
+            self.radar = dp.mask_beyond_150(self)
 
         # Set data blockages to -888
         if self.do_block_mask == True:
