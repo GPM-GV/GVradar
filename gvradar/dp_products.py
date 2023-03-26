@@ -113,7 +113,7 @@ def add_csu_blended_rain(self):
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
     # Set array to all zeros
-    rain = np.ma.filled(rain, fill_value=0.0)
+    #rain = np.ma.filled(rain, fill_value=0.0)
 
     # Max rain rate test
     rc_max = np.greater(rain,300)
