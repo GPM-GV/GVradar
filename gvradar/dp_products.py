@@ -135,7 +135,7 @@ def add_csu_blended_rain(self):
 
 def add_polZR_rr(self):
 
-    rp = np.zeros_like(self.dz)
+    rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
 
     use_nw = False
     if use_nw:
