@@ -113,19 +113,16 @@ def add_csu_blended_rain(self):
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
     # Set array to all zeros
-    #zero_rain = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    zero_rain = np.ma.filled(rain, fill_value=0.0)
-    gzero = np.greater_equal(rain,0)
-    zero_rain[gzero] = rain[gzero]
+    rain = np.ma.filled(rain, fill_value=0.0)
 
     # Max rain rate test
-    rc_max = np.greater(zero_rain,300)
-    zero_rain[rc_max] = zero_rain[rc_max] * -1.0
+    rc_max = np.greater(rain,300)
+    rain[rc_max] = rain[rc_max] * -1.0
 
     # HID ice threshold
-    zero_rain = remove_ice(zero_rain, self.fh)
+    rain = remove_ice(rain, self.fh)
 
-    rc_dict = {"data": zero_rain, "units": "mm/h",
+    rc_dict = {"data": rain, "units": "mm/h",
                 "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
                 "standard_name": "HIDRO Rainfall Rate",}
     self.radar.add_field("RC", rc_dict, replace_existing=True)
