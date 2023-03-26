@@ -150,7 +150,7 @@ def add_polZR_rr(self):
 
     # Set array to all zeros
     zero_rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    zero_rp = np.ma.filled(zero_rp, fill_value=0.0)
+    #zero_rp = np.ma.filled(zero_rp, fill_value=0.0)
     gzero_rp = np.greater_equal(rp,0)
     zero_rp[gzero_rp] = rp[gzero_rp]
 
