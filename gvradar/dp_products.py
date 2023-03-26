@@ -146,11 +146,11 @@ def add_polZR_rr(self):
     else:
         # IF no NW compute with equations
         print('    Calculating PolZR rain rate with computed NW')
-        rp, nw = get_bringi_rainrate(rp,self.dz,self.dr,self.kd,self.rh,self.fh)
+        rp, nw = get_bringi_rainrate(self,rp,self.dz,self.dr,self.kd,self.rh,self.fh)
 
     # Set array to all zeros
     zero_rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    #zero_rp = np.ma.filled(zero_rp, fill_value=0.0)
+    zero_rp = np.ma.filled(zero_rp, fill_value=0.0)
     gzero_rp = np.greater_equal(rp,0)
     zero_rp[gzero_rp] = rp[gzero_rp]
 
@@ -298,7 +298,7 @@ def get_dm(zdr,a,b,c,d):
 
 # ***************************************************************************************
 
-def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
+def get_bringi_rainrate(self,rp,dbz,zdr,kdp,rhv,hid):
 
     #Calculates DSD fields to assign a rain rate.  
 
@@ -315,11 +315,11 @@ def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
 
     zh = 10.**(0.1*dbz)     
     xi_dr = 10.**(0.1*zdr)
-    d0 = np.zeros_like(dbz)
-    dm = np.zeros_like(dbz)
-    nw = np.zeros_like(dbz)
-    logNw = np.zeros_like(dbz)
-    mu = np.ones_like(dbz) * 3.0
+    d0 = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    dm = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    nw = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    logNw = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    mu = np.ones((self.radar.nrays, self.radar.ngates), dtype=float) * 3.0
     beta = 0
 
     # Light rain rates with noisy Zd
