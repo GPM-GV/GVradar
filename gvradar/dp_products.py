@@ -315,11 +315,11 @@ def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
 
     zh = 10.**(0.1*dbz)     
     xi_dr = 10.**(0.1*zdr)
-    d0 = np.zeros_like(self.dz)
-    dm = np.zeros_like(self.dz)
-    nw = np.zeros_like(self.dz)
-    logNw = np.zeros_like(self.dz)
-    mu = np.ones_like(self.dz) * 3.0
+    d0 = np.zeros_like(dbz)
+    dm = np.zeros_like(dbz)
+    nw = np.zeros_like(dbz)
+    logNw = np.zeros_like(dbz)
+    mu = np.ones_like(dbz) * 3.0
     beta = 0
 
     # Light rain rates with noisy Zd
