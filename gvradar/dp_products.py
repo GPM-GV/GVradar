@@ -135,8 +135,7 @@ def add_csu_blended_rain(self):
 
 def add_polZR_rr(self):
 
-    rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    #rp = np.ma.filled(rp, fill_value=0.0)
+    rp = np.zeros_like(self.dz)
 
     use_nw = False
     if use_nw:
@@ -316,11 +315,11 @@ def get_bringi_rainrate(rp,dbz,zdr,kdp,rhv,hid):
 
     zh = 10.**(0.1*dbz)     
     xi_dr = 10.**(0.1*zdr)
-    d0 = np.zeros(dbz.shape)
-    dm = np.zeros(dbz.shape)
-    nw = np.zeros(dbz.shape)
-    logNw = np.zeros(dbz.shape)
-    mu = np.ones(dbz.shape) * 3.0
+    d0 = np.zeros_like(self.dz)
+    dm = np.zeros_like(self.dz)
+    nw = np.zeros_like(self.dz)
+    logNw = np.zeros_like(self.dz)
+    mu = np.ones_like(self.dz) * 3.0
     beta = 0
 
     # Light rain rates with noisy Zd
