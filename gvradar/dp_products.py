@@ -113,7 +113,7 @@ def add_csu_blended_rain(self):
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
     # Set fill to zero
-    #rain = np.ma.filled(rain, fill_value=0.0)
+    rain = np.ma.filled(rain, fill_value=0.0)
 
     # Max rain rate test
     rc_max = np.greater(rain,300)
@@ -132,8 +132,8 @@ def add_csu_blended_rain(self):
 
 def add_polZR_rr(self):
 
-    #rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    rp = 0.0 * self.dz
+    rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    #rp = 0.0 * self.dz
 
     use_nw = False
     if use_nw:
@@ -147,7 +147,7 @@ def add_polZR_rr(self):
         rp, nw = get_bringi_rainrate(self,rp,self.dz,self.dr,self.kd,self.rh,self.fh)
 
     # Set fill to zero
-    #rp = np.ma.filled(rp, fill_value=0.0)
+    rp = np.ma.filled(rp, fill_value=0.0)
 
     # Max rain rate test
     rp_max = np.greater(rp,300)
@@ -169,7 +169,7 @@ def add_calc_dsd_sband_tokay_2020(self):
 
     print('    Calculating Drop-Size Distribution...')
 
-    dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc)
+    dm, nw = calc_dsd_sband_tokay_2020(self, self.dz, self.dr, loc=self.dsd_loc)
 
     # Set fill to zero
     dm = np.ma.filled(dm, fill_value=0.0)
@@ -193,7 +193,7 @@ def add_calc_dsd_sband_tokay_2020(self):
 
 # ***************************************************************************************
 
-def calc_dsd_sband_tokay_2020(dz, zdr, loc='all'):
+def calc_dsd_sband_tokay_2020(self, dz, zdr, loc='all'):
 
     """
     Compute dm and nw or (d0 and n2) following the methodology of Tokay et al. 2020
@@ -213,9 +213,10 @@ def calc_dsd_sband_tokay_2020(dz, zdr, loc='all'):
     -------
     dm and nw (default, numpy array)
     """
-
-    dm = 0.0 * dz
-    nw = 0.0 * dz
+    dm = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    nw = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    #dm = 0.0 * dz
+    #nw = 0.0 * dz
     dz_lin = dbz_to_zlin(dz)
     
     # Force input string to lower case
