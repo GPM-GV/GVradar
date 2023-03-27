@@ -113,7 +113,7 @@ def add_csu_blended_rain(self):
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
     # Set fill to zero
-    rain = np.ma.filled(rain, fill_value=0.0)
+    #rain = np.ma.filled(rain, fill_value=0.0)
 
     # Max rain rate test
     rc_max = np.greater(rain,300)
@@ -147,7 +147,7 @@ def add_polZR_rr(self):
         rp, nw = get_bringi_rainrate(self,rp,self.dz,self.dr,self.kd,self.rh,self.fh)
 
     # Set fill to zero
-    rp = np.ma.filled(rp, fill_value=0.0)
+    #rp = np.ma.filled(rp, fill_value=0.0)
 
     # Max rain rate test
     rp_max = np.greater(rp,300)
