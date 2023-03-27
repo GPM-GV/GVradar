@@ -287,6 +287,9 @@ def rename_fields_in_radar(self):
         old_fields = ['DBZ2', 'VEL2', 'WIDTH2', 'ZDR2', 'KDP2', 'PHIDP2', 'RHOHV2', 'SQI2']
         new_fields = ['DZ',     'VR',    'SW',   'DR',   'KD',   'PH',     'RH',     'SQ']    
     elif 'DBZ' in self.radar.fields.keys():
+        old_fields = ['DBZ', 'VEL', 'WIDTH', 'ZDR', 'KDP', 'PHIDP', 'RHOHV']
+        new_fields = ['DZ',  'VR',   'SW',   'DR',  'KD',   'PH',     'RH']
+    elif 'SQI' in self.radar.fields.keys():
         old_fields = ['DBZ', 'VEL', 'WIDTH', 'ZDR', 'KDP', 'PHIDP', 'SQI', 'RHOHV']
         new_fields = ['DZ',  'VR',   'SW',   'DR',  'KD',   'PH',    'SQ',    'RH']
     elif 'reflectivity' in self.radar.fields.keys():
