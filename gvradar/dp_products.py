@@ -112,7 +112,7 @@ def add_csu_blended_rain(self):
 
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
-    # Set array to all zeros
+    # Set fill to zero
     rain = np.ma.filled(rain, fill_value=0.0)
 
     # Max rain rate test
@@ -146,16 +146,9 @@ def add_polZR_rr(self):
         print('    Calculating PolZR rain rate with computed NW')
         rp, nw = get_bringi_rainrate(self,rp,self.dz,self.dr,self.kd,self.rh,self.fh)
 
-    # Set array to all zeros
+    # Set fill to zero
     rp = np.ma.filled(rp, fill_value=0.0)
 
-    '''
-    # Set array to all zeros
-    zero_rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    zero_rp = np.ma.filled(zero_rp, fill_value=0.0)
-    gzero_rp = np.greater_equal(rp,0)
-    zero_rp[gzero_rp] = rp[gzero_rp]
-    '''
     # Max rain rate test
     rp_max = np.greater(rp,300)
     rp[rp_max] = rp[rp_max] * -1.0
@@ -178,27 +171,20 @@ def add_calc_dsd_sband_tokay_2020(self):
 
     dm, nw = calc_dsd_sband_tokay_2020(self.dz, self.dr, loc=self.dsd_loc)
 
-    # Set array to all zeros
-    zero_dm = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    zero_dm = np.ma.filled(zero_dm, fill_value=0.0)
-    gzero_dm = np.greater_equal(dm,0)
-    zero_dm[gzero_dm] = dm[gzero_dm]
-
-    zero_nw = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
-    zero_nw = np.ma.filled(zero_nw, fill_value=0.0)
-    gzero_nw = np.greater_equal(nw,0)
-    zero_nw[gzero_nw] = nw[gzero_nw]
+    # Set fill to zero
+    dm = np.ma.filled(dm, fill_value=0.0)
+    nw = np.ma.filled(nw, fill_value=0.0)
 
     # HID ice threshold
-    zero_dm = remove_ice(zero_dm, self.fh)
-    zero_nw = remove_ice(zero_nw, self.fh)
+    dm = remove_ice(dm, self.fh)
+    nw = remove_ice(nw, self.fh)
 
-    dm_dict = {"data": zero_dm, "units": "DM [mm]",
+    dm_dict = {"data": dm, "units": "DM [mm]",
                 "long_name": "Mass-weighted mean diameter", "_FillValue": -32767.0,
                 "standard_name": "Mass-weighted mean diameter",}
     self.radar.add_field("DM", dm_dict, replace_existing=True)
     
-    nw_dict = {"data": zero_nw, "units": "Log[Nw, m^-3 mm^-1]",
+    nw_dict = {"data": nw, "units": "Log[Nw, m^-3 mm^-1]",
                 "long_name": "Normalized intercept parameter", "_FillValue": -32767.0,
                 "standard_name": "Normalized intercept parameter",}
     self.radar.add_field("NW", nw_dict, replace_existing=True)
