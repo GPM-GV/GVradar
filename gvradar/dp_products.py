@@ -113,7 +113,7 @@ def add_csu_blended_rain(self):
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
 
     # Set array to all zeros
-    #rain = np.ma.filled(rain, fill_value=0.0)
+    rain = np.ma.filled(rain, fill_value=0.0)
 
     # Max rain rate test
     rc_max = np.greater(rain,300)
@@ -147,19 +147,23 @@ def add_polZR_rr(self):
         rp, nw = get_bringi_rainrate(self,rp,self.dz,self.dr,self.kd,self.rh,self.fh)
 
     # Set array to all zeros
+    rp = np.ma.filled(rp, fill_value=0.0)
+
+    '''
+    # Set array to all zeros
     zero_rp = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
     zero_rp = np.ma.filled(zero_rp, fill_value=0.0)
     gzero_rp = np.greater_equal(rp,0)
     zero_rp[gzero_rp] = rp[gzero_rp]
-
+    '''
     # Max rain rate test
-    rp_max = np.greater(zero_rp,300)
-    zero_rp[rp_max] = zero_rp[rp_max] * -1.0
+    rp_max = np.greater(rp,300)
+    rp[rp_max] = rp[rp_max] * -1.0
 
     # HID ice threshold
-    zero_rp = remove_ice(zero_rp, self.fh)
+    rp = remove_ice(rp, self.fh)
 
-    rp_dict = {"data": zero_rp, "units": "mm/h",
+    rp_dict = {"data": rp, "units": "mm/h",
                "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
                "standard_name": "Polzr_Rain_Rate",}
     self.radar.add_field("RP", rp_dict, replace_existing=True)
