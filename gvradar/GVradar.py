@@ -132,7 +132,7 @@ class QC:
                     try:
                         self.radar = cm.get_ruc_archive(self)
                     except:
-                        self.radar = cm.get_uwy_archive(self)
+                        self.radar = cm.get_uwy_archive3(self)
         if self.use_sounding == False:
             self.radar = cm.get_beam_height(self)        
         
