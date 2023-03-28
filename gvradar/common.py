@@ -341,7 +341,7 @@ def get_uwy_archive(self):
     colspecs = [(1, 9), (11, 15), (16, 22), (23, 30), (36, 38), (40, 42),
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
 
-    sound = pd.read_fwf(self.sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+    sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
     print('',sound,'',sep='\n')
 
     presssure_pa = sound.PRES
