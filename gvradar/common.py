@@ -125,6 +125,7 @@ def get_ruc_archive(self):
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
     
     sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+    print(sound, '', sep='\n')
 
     presssure_pa = sound.PRES
     height_m = sound.HGHT
@@ -193,6 +194,7 @@ def kwaj_sounding(self):
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
 
     sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+    print(sound, '', sep='\n')
 
     presssure_pa = sound.PRES
     height_m = sound.HGHT
@@ -340,6 +342,7 @@ def use_uwy_sounding(self):
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
 
     sound = pd.read_fwf(self.sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+    print(sound, '', sep='\n')
 
     presssure_pa = sound.PRES
     height_m = sound.HGHT
