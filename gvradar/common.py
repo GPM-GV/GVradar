@@ -70,6 +70,7 @@ def get_ruc_sounding(self):
                                  dz_field=self.ref_field_name)
 
     self.expected_ML = retrieve_ML(mydata)
+    print('',sound,'',sep='\n')
 
     return self.radar
 
@@ -147,6 +148,7 @@ def get_ruc_archive(self):
                                  dz_field=self.ref_field_name)
 
     self.expected_ML = retrieve_ML(mydata)
+    print('',sound,'',sep='\n')
 
     return self.radar
 
@@ -215,6 +217,7 @@ def kwaj_sounding(self):
                                  dz_field=self.ref_field_name)
 
     self.expected_ML = retrieve_ML(mydata)
+    print('',sound,'',sep='\n')
 
     return self.radar
 
@@ -274,6 +277,7 @@ def use_ruc_sounding(self):
                                  dz_field=self.ref_field_name)
 
     self.expected_ML = retrieve_ML(mydata)
+    print('',sound,'',sep='\n')
 
     return self.radar
 
@@ -361,6 +365,7 @@ def get_uwy_archive(self):
                                  dz_field=self.ref_field_name)
 
     self.expected_ML = retrieve_ML(mydata)
+    print('',sound,'',sep='\n')
 
     return self.radar
 
