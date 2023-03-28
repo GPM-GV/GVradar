@@ -341,7 +341,10 @@ def get_uwy_archive(self):
     colspecs = [(1, 9), (9, 15), (16, 22), (23, 30), (36, 38), (40, 42),
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
 
-    sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+    try:
+        sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+    except:
+        sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=3)
 
     presssure_pa = sound.PRES
     height_m = sound.HGHT
