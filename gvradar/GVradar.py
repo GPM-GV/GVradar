@@ -133,10 +133,9 @@ class QC:
                         self.radar, sound = cm.get_ruc_archive(self)
                     except:
                         self.radar, sound = cm.get_uwy_archive(self)
+            print('',sound,'',sep='\n')
         if self.use_sounding == False:
             self.radar = cm.get_beam_height(self)        
-        if self.sound:
-            print('',sound,'',sep='\n')
         
     # Apply CSU_RT filters
         self.radar = qc.csu_filters(self)
