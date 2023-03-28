@@ -120,20 +120,19 @@ class QC:
     # Create Temperature and/or Height field
         if self.use_sounding == True:
             if self.sounding_type == 'get_ruc':
-                self.radar, sound = cm.get_ruc_sounding(self)
+                self.radar = cm.get_ruc_sounding(self)
             if self.sounding_type == 'ruc':
                 self.radar = cm.use_ruc_sounding(self)
             if self.sounding_type == 'uwy':
                 self.radar = cm.use_uwy_sounding(self)
             if self.sounding_type == 'ruc_archive':
                 if self.site == 'KWAJ':
-                    self.radar, sound = cm.kwaj_sounding(self)
+                    self.radar = cm.kwaj_sounding(self)
                 else:
                     try:
-                        self.radar, sound = cm.get_ruc_archive(self)
+                        self.radar = cm.get_ruc_archive(self)
                     except:
-                        self.radar, sound = cm.get_uwy_archive(self)
-            print('',sound,'',sep='\n')
+                        self.radar = cm.get_uwy_archive(self)
         if self.use_sounding == False:
             self.radar = cm.get_beam_height(self)        
         

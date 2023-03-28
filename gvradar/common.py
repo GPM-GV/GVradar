@@ -148,7 +148,7 @@ def get_ruc_archive(self):
 
     self.expected_ML = retrieve_ML(mydata)
 
-    return self.radar, sound
+    return self.radar
 
 # ***************************************************************************************
 
@@ -216,7 +216,7 @@ def kwaj_sounding(self):
 
     self.expected_ML = retrieve_ML(mydata)
 
-    return self.radar, sound
+    return self.radar
 
 # ***************************************************************************************                
 def use_ruc_sounding(self):
@@ -362,7 +362,7 @@ def get_uwy_archive(self):
 
     self.expected_ML = retrieve_ML(mydata)
 
-    return self.radar, sound
+    return self.radar
 
 # ***************************************************************************************
 
