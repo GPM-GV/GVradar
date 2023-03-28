@@ -47,7 +47,6 @@ def get_ruc_sounding(self):
     # Create data framne from dictionary
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     sound = pd.DataFrame.from_dict(sound_dict)
-    self.sound = sound
     
     presssure_pa = sound.PRES
     height_m = sound.HGHT
@@ -150,7 +149,7 @@ def get_ruc_archive(self):
 
     self.expected_ML = retrieve_ML(mydata)
 
-    return self.radar
+    return self.radar, sound
 
 # ***************************************************************************************
 
@@ -219,7 +218,7 @@ def kwaj_sounding(self):
 
     self.expected_ML = retrieve_ML(mydata)
 
-    return self.radar
+    return self.radar, sound
 
 # ***************************************************************************************                
 def use_ruc_sounding(self):
@@ -366,7 +365,7 @@ def get_uwy_archive(self):
 
     self.expected_ML = retrieve_ML(mydata)
 
-    return self.radar
+    return self.radar, sound
 
 # ***************************************************************************************
 
