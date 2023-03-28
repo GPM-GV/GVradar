@@ -87,7 +87,12 @@ def add_csu_liquid_ice_mass(self):
 
     print('    Calculating water and ice mass...')
 
-    mw, mi = csu_liquid_ice_mass.calc_liquid_ice_mass(self.dz, self.dr, self.radar_z/1000.0, T=self.radar_T)
+    try:
+        mw, mi = csu_liquid_ice_mass.calc_liquid_ice_mass(self.dz, self.dr, self.radar_z/1000.0, T=self.radar_T)
+    except:
+        print(' ',"No precip MW and MI will be -32767.0", '', sep='\n')
+        mw = radar.fields['CZ']['data'].copy()
+        mi = radar.fields['CZ']['data'].copy()
 
     # HID ice threshold
     mw = remove_ice(mw, self.fh)
@@ -458,7 +463,6 @@ def get_zr_rain(dbz, a, b):
 def remove_ice(fl,hid):
     
     hid_ice = [0, 3, 4, 5, 6, 7, 8, 9]
-    #hid_ice = [0, 3, 4, 6, 7, 8, 9]
     for xice in hid_ice:
         ice = np.equal(hid, xice)
         fl[ice] = -999

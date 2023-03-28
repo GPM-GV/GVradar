@@ -36,7 +36,7 @@ def get_ruc_sounding(self):
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
     """
     
-    print('    Interpolating sounding to radar structure...', sep='\n')
+    print('    Retrieving RUC and Interpolating sounding to radar structure...', sep='\n')
     
     RADAR_SITE = (self.site, str(self.radar.latitude['data'][0]), str(self.radar.longitude['data'][0]))
     timestamp = self.year + self.month + self.day + self.hh
@@ -86,7 +86,7 @@ def get_ruc_archive(self):
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
     """
     
-    print('    Interpolating sounding to radar structure...', sep='\n')
+    print('    Interpolating RUC sounding to radar structure...', sep='\n')
     
     snd_dir = self.sounding_dir
 
@@ -153,7 +153,73 @@ def get_ruc_archive(self):
 
 # ***************************************************************************************
 
+def kwaj_sounding(self):
 
+    """
+    Imports KWAJ sounding data into skewT
+
+    Format:
+
+    PRES   HGHT   TEMP   DWPT   RELH   MIXR   DRCT   SKNT   THTA   THTE   THTV
+    hPa     m      C      C      %    g/kg    deg   knot     K      K      K
+   1010.7      4.0   27.70   21.00 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    977.0    304.8   24.50   19.50 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    943.6    609.6   21.60   19.00 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    911.1    914.4   19.70   15.70 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    879.5   1219.2   18.00   13.00 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+    848.8   1524.0   17.70    9.60 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+
+    Written by: Jason L. Pippitt, NASA/GSFC/SSAI
+    """
+    print('    Interpolating KWAJ sounding to radar structure...', sep='\n')
+
+    snd_dir = self.sounding_dir
+
+    # Retrieve proper sounding for date and time
+    radar_DT = pyart.util.datetime_from_radar(self.radar)
+    month = self.month
+    day = self.day
+    year = self.year
+
+    sounding_dir = snd_dir + year + '/' + month + day + '/' + self.site + '/' + self.site + '_' + year + '_' + month + day + '_00UTC.txt'
+
+    sounding_dir = sounding_dir
+    soundingb = os.path.basename(sounding_dir)
+
+    print('    Sounding file -->  ' + soundingb, sep='\n')
+
+    headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
+    colspecs = [(3, 9), (11, 18), (20, 26), (28, 34), (36, 38), (40, 42),
+                (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
+
+    sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+
+    presssure_pa = sound.PRES
+    height_m = sound.HGHT
+    temperature_c = sound.TEMP
+    dewpoint_c = sound.DWPT
+
+    mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
+
+    sounding=SkewT.Sounding(soundingdata=mydata)
+
+    radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
+
+    add_field_to_radar_object(radar_T, self.radar, field_name='TEMP', units='deg C',
+                                 long_name='Temperature',
+                                 standard_name='Temperature',
+                                 dz_field=self.ref_field_name)
+
+    add_field_to_radar_object(radar_z, self.radar, field_name='HEIGHT', units='km',
+                                 long_name='Height',
+                                 standard_name='Height',
+                                 dz_field=self.ref_field_name)
+
+    self.expected_ML = retrieve_ML(mydata)
+
+    return self.radar
+
+# ***************************************************************************************                
 def use_ruc_sounding(self):
 
     """
@@ -179,7 +245,7 @@ def use_ruc_sounding(self):
     sounding_dir = self.sounding_dir
     soundingb = os.path.basename(sounding_dir)
     
-    print('    Sounding file -->  ' + soundingb, sep='\n')
+    print('    RUC Sounding file -->  ' + soundingb, sep='\n')
 
     headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
     colspecs = [(3, 9), (11, 18), (20, 26), (28, 34), (36, 38), (40, 42),
@@ -236,12 +302,55 @@ def use_uwy_sounding(self):
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
     """
 
-    sounding_dir = self.sounding_dir
+    snd_dir = self.sounding_dir
+
+    # Retrieve proper sounding for date and time    
+    radar_DT = pyart.util.datetime_from_radar(self.radar)   
+    hour =  radar_DT.hour
+    month = self.month
+    day = self.day
+    year = self.year
+    hh = self.hh
+    mm = self.mm
+    mdays = [00,31,28,31,30,31,30,31,31,30,31,30,31]
+                
+    if radar_DT.minute >= 30: hour = radar_DT.hour + 1
+    if hour == 24: 
+        mday = radar_DT.day + 1
+        hour = 0
+        if mday > mdays[radar_DT.month]:
+            cmonth = radar_DT.month + 1
+            mday = 1
+            if(cmonth > 12):
+                cmonth = 1
+                mday = 1
+                cyear = radar_DT.year + 1
+                year = str(cyear).zfill(4)
+            month = str(cmonth).zfill(2)
+        day = str(mday).zfill(2)
+    hh = str(hour).zfill(2)
+    sounding_dir = snd_dir + year + '/' + month + day + '/' + self.site + '/' + self.site + '_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
+    
     soundingb = os.path.basename(sounding_dir)
     
-    print('    Sounding file -->  ' + soundingb, sep='\n')
+    print('    UWY Sounding file -->  ' + soundingb, sep='\n')
 
-    sounding=SkewT.Sounding(sounding_dir)
+    headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
+    colspecs = [(1, 9), (11, 15), (16, 22), (23, 30), (36, 38), (40, 42),
+                (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
+
+    sound = pd.read_fwf(self.sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+
+    presssure_pa = sound.PRES
+    height_m = sound.HGHT
+    temperature_c = sound.TEMP
+    dewpoint_c = sound.DWPT
+
+    print(presssure_pa,height_m,temperature_c,dewpoint_c)
+
+    mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
+
+    sounding=SkewT.Sounding(soundingdata=mydata)
            
     radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
     
