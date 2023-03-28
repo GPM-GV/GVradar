@@ -131,10 +131,12 @@ class QC:
                 else:
                     try:
                         self.radar = cm.get_ruc_archive(self)
+                        try:
+                            self.radar = cm.get_uwy_archive(self)
+                        except:
+                            self.radar = cm.get_uwy_archive3(self)
                     except:
-                        self.radar = cm.get_uwy_archive(self)
-                    else:
-                        self.radar = cm.get_uwy_archive3(self)
+                        print('Invalid sounding!!')
         if self.use_sounding == False:
             self.radar = cm.get_beam_height(self)        
         
