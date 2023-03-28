@@ -129,6 +129,7 @@ class QC:
                 if self.site == 'KWAJ':
                     self.radar = cm.kwaj_sounding(self)
                 else:
+                hihi
                     try:
                         self.radar = cm.get_ruc_archive(self)
                     except:
