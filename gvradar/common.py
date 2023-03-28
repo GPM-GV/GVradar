@@ -47,7 +47,7 @@ def get_ruc_sounding(self):
     # Create data framne from dictionary
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     sound = pd.DataFrame.from_dict(sound_dict)
-    print('',sound,'',sep='\n')
+    self.sound = sound
     
     presssure_pa = sound.PRES
     height_m = sound.HGHT
@@ -125,7 +125,7 @@ def get_ruc_archive(self):
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
     
     sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
-    print('',sound,'',sep='\n')
+    self.sound = sound
 
     presssure_pa = sound.PRES
     height_m = sound.HGHT
@@ -194,7 +194,7 @@ def kwaj_sounding(self):
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
 
     sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
-    print('',sound,'',sep='\n')
+    self.sound = sound
 
     presssure_pa = sound.PRES
     height_m = sound.HGHT
@@ -281,7 +281,6 @@ def use_ruc_sounding(self):
     return self.radar
 
 # ***************************************************************************************
-
 def get_uwy_archive(self):
     
     """
@@ -342,14 +341,12 @@ def get_uwy_archive(self):
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
 
     sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
-    print('',sound,'',sep='\n')
+    self.sound = sound
 
     presssure_pa = sound.PRES
     height_m = sound.HGHT
     temperature_c = sound.TEMP
     dewpoint_c = sound.DWPT
-
-    print(presssure_pa,height_m,temperature_c,dewpoint_c)
 
     mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
 
