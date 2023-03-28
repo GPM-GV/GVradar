@@ -370,7 +370,7 @@ def get_uwy_archive(self):
     return self.radar
 
 # ***************************************************************************************
-def get_uwy_archive3(self):
+def get_uwy_archive_3(self):
     
     """
     Imports UWY sounding data into skewT
