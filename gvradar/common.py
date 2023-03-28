@@ -86,7 +86,7 @@ def get_ruc_archive(self):
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
     """
     
-    print('    Interpolating RUC sounding to radar structure...', sep='\n')
+    print('    Interpolating sounding to radar structure...', sep='\n')
     
     snd_dir = self.sounding_dir
 
