@@ -912,6 +912,7 @@ def get_default_thresh_dict():
                            'plot_single': True,
                            'plot_multi': False,
                            'plot_fast': False,
+                           'mask_outside': True,
                            'fields_to_plot': ['CZ', 'DR', 'KD', 'PH', 'RH', 'VR'],
                            'plot_dir': './plots/', 'add_logos': True,
                            'use_sounding': False, 'sounding_type': 'ruc_archive', 'sounding_dir': './sounding/'}

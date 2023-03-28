@@ -720,6 +720,7 @@ def get_default_product_dict():
                                               'RP', 'FW'],
                             'plot_images': True,
                             'plot_fast': False,
+                            'mask_outside': True,
                             'plot_single': True,
                             'plot_multi': False,
                             'fields_to_plot': ['CZ', 'DR', 'KD', 'RH', 'RC', 'DM', 'NW', 'FH', 'RP'],

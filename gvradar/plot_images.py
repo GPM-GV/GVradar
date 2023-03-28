@@ -65,11 +65,11 @@ def plot_fields(self):
                 if self.plot_fast:
                     plot_fields_PPI_QC(self.radar, sweep=sweep, fields=self.fields_to_plot, 
                                        max_range=self.max_range, png=True, outdir=self.plot_dir, 
-                                       add_logos = self.add_logos)
+                                       add_logos = self.add_logos, mask_outside=self.mask_outside)
                 else:
                     plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, fields=self.fields_to_plot, 
                                     max_range=self.max_range, png=True, outdir=self.plot_dir, 
-                                    add_logos = self.add_logos)
+                                    add_logos = self.add_logos, mask_outside=self.mask_outside)
         if self.plot_single == True:
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
@@ -81,17 +81,18 @@ def plot_fields(self):
                     if self.plot_fast:
                         plot_fields_PPI_QC(self.radar, sweep=sweep, fields=[field], 
                                            max_range=self.max_range, png=True, outdir=plot_dir, 
-                                           add_logos = self.add_logos)
+                                           add_logos = self.add_logos, mask_outside=self.mask_outside)
                     else:
                         plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, fields=[field], 
                                         max_range=self.max_range, png=True, outdir=plot_dir, 
-                                        add_logos = self.add_logos)
+                                        add_logos = self.add_logos, mask_outside=self.mask_outside)
 
     end = time.time()
     print('ploting time:  ', end - start)
 # ****************************************************************************************
 
-def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
+def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=150, mask_outside=True,
+                    png=False, outdir='', add_logos=True):
 
     #
     # *** Get radar elevation, date, time
@@ -185,7 +186,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                      lat_0=radar_lat,
                      lon_0=radar_lon,
                      embellish = False,
-                     mask_outside=True)
+                     mask_outside=mask_outside)
         
         add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES, STATES)
 
@@ -239,7 +240,8 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
 
 # ****************************************************************************************
 
-def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, png=False, outdir='', add_logos=True):
+def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outside=True, 
+                       png=False, outdir='', add_logos=True):
 
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
 
@@ -289,7 +291,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, png=False, 
 
         ax = fig.add_subplot(spec[r_c[index]])
         display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
-                         colorbar_label=units, mask_outside=False, title=title,
+                         colorbar_label=units, mask_outside=mask_outside, title=title,
                          axislabels_flag=False)
         display.set_limits(xlim=[-max_range,max_range], ylim=[-max_range,max_range])
 
