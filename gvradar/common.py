@@ -282,7 +282,7 @@ def use_ruc_sounding(self):
 
 # ***************************************************************************************
 
-def use_uwy_sounding(self):
+def get_uwy_archive(self):
     
     """
     Imports UWY sounding data into skewT
