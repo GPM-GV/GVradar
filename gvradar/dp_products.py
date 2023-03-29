@@ -89,8 +89,8 @@ def add_csu_liquid_ice_mass(self):
         mw, mi = csu_liquid_ice_mass.calc_liquid_ice_mass(self.dz, self.dr, self.radar_z/1000.0, T=self.radar_T)
     except:
         print(' ',"No precip MW and MI will be -32767.0", '', sep='\n')
-        #mw = self.radar.fields['CZ']['data'].copy()
-        #mi = self.radar.fields['CZ']['data'].copy()
+        mw = self.radar.fields['CZ']['data'].copy()
+        mi = self.radar.fields['CZ']['data'].copy()
 
     # HID ice threshold
     mw = remove_ice(mw, self.fh)
