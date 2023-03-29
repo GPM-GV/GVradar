@@ -273,10 +273,7 @@ class DP_products:
                         try:
                             self.radar = cm.get_ruc_archive(self)
                         except:
-                            try:
-                                self.radar = cm.get_uwy_archive(self)
-                            except:    
-                                self.radar = cm.get_uwy_archive_3(self)
+                            self.radar = cm.get_uwy_archive(self)
                 
             self.radar_T = self.radar.fields['TEMP']['data']
             self.radar_z = self.radar.fields['HEIGHT']['data']

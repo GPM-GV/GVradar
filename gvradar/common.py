@@ -341,18 +341,32 @@ def get_uwy_archive(self):
     colspecs = [(1, 9), (9, 15), (16, 22), (23, 30), (36, 38), (40, 42),
                 (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
 
-    sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+    try:
+        sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
 
-    presssure_pa = sound.PRES
-    height_m = sound.HGHT
-    temperature_c = sound.TEMP
-    dewpoint_c = sound.DWPT
+        presssure_pa = sound.PRES
+        height_m = sound.HGHT
+        temperature_c = sound.TEMP
+        dewpoint_c = sound.DWPT
 
-    mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
+        mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
 
-    sounding=SkewT.Sounding(soundingdata=mydata)
+        sounding=SkewT.Sounding(soundingdata=mydata)
            
-    radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
+        radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
+    except:
+        sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=3)
+
+        presssure_pa = sound.PRES
+        height_m = sound.HGHT
+        temperature_c = sound.TEMP
+        dewpoint_c = sound.DWPT
+
+        mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
+
+        sounding=SkewT.Sounding(soundingdata=mydata)
+           
+        radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
     
     add_field_to_radar_object(radar_T, self.radar, field_name='TEMP', units='deg C',
                                  long_name='Temperature',
