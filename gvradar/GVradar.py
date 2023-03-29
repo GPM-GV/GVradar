@@ -133,7 +133,7 @@ class QC:
                         self.radar = cm.get_ruc_archive(self)
                     except:
                         self.radar = cm.get_uwy_archive(self)
-                        
+
         if self.use_sounding == False:
             self.radar = cm.get_beam_height(self)        
         
@@ -281,6 +281,7 @@ class DP_products:
     # Get HID scores and add FH to radar
             if self.do_HID_summer or self.do_HID_winter == True:
                 self.radar = dp.add_csu_fhc(self)
+                self.fh = self.radar.fields['FH']['data']
 
     # Calculate Drop-Size Distribution from Tokay et al. 2020 and add to radar
             if self.do_tokay_DSD == True: 

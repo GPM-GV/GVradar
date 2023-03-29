@@ -43,9 +43,7 @@ def add_csu_fhc(self):
     
         self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
                                                   units='Unitless', long_name='Summer Hydrometeor ID', 
-                                                  standard_name='Summer Hydrometeor ID', dz_field='CZ')
-
-        self.fh = self.radar.fields['FH']['data']  
+                                                  standard_name='Summer Hydrometeor ID', dz_field='CZ') 
 
     # Run Winter HID
     if self.do_HID_winter:
@@ -630,8 +628,6 @@ def get_kdp(self):
     
     DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
     DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-#    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
-#    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
     # Range needs to be supplied as a variable, with same shape as DZ
     rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
