@@ -137,8 +137,8 @@ def get_ruc_archive(self):
 
         sounding=SkewT.Sounding(soundingdata=mydata)
     except:
-        colspecs = [(3, 9), (11, 18), (20, 26), (28, 34), (36, 38), (40, 42),
-                    (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
+        colspecs = [(3, 10), (11, 22), (23, 32), (33, 42), (42, 52), (52, 62),
+                    (62, 72), (72, 82), (82, 92), (92, 102), (102, 112)]
     
         sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
         print(sound)
