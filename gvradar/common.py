@@ -339,7 +339,7 @@ def get_uwy_archive(self):
 
     headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
     colspecs = [(1, 9), (9, 15), (16, 22), (23, 30), (32, 38), (38, 42),
-                (43, 48), (48, 50), (52, 54), (56, 58), (60, 62)]
+                (43, 50), (50, 57), (57, 62), (62, 68), (68, 72)]
 
     try:
         sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
