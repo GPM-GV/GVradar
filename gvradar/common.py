@@ -123,11 +123,9 @@ def get_ruc_archive(self):
     headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
 
     try:
-        #colspecs = [(3, 9), (11, 18), (20, 26), (28, 34), (36, 38), (40, 42),
-        #            (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
+        colspecs = [(3, 9), (11, 18), (20, 26), (28, 34), (36, 38), (40, 42),
+                    (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
     
-        colspecs = [(3, 10), (11, 22), (23, 32), (33, 42), (42, 52), (52, 62),
-                    (62, 72), (72, 82), (82, 92), (92, 102), (102, 112)]
         sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
         
         presssure_pa = sound.PRES
@@ -138,6 +136,8 @@ def get_ruc_archive(self):
         mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
 
         sounding=SkewT.Sounding(soundingdata=mydata)
+
+        radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
     except:
         colspecs = [(3, 10), (11, 22), (23, 32), (33, 42), (42, 52), (52, 62),
                     (62, 72), (72, 82), (82, 92), (92, 102), (102, 112)]
@@ -153,7 +153,7 @@ def get_ruc_archive(self):
 
         sounding=SkewT.Sounding(soundingdata=mydata)
            
-    radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
+        radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
     
     add_field_to_radar_object(radar_T, self.radar, field_name='TEMP', units='deg C',
                                  long_name='Temperature',
