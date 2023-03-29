@@ -338,7 +338,7 @@ def get_uwy_archive(self):
     print('    UWY Sounding file -->  ' + soundingb, sep='\n')
 
     headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
-    colspecs = [(1, 9), (9, 15), (16, 22), (23, 30), (31, 37), (38, 42),
+    colspecs = [(1, 9), (9, 15), (16, 22), (23, 30), (31, 37), (37, 42),
                 (43, 50), (50, 57), (57, 63), (63, 70), (70, 78)]
 
     try:
