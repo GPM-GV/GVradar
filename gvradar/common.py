@@ -338,8 +338,8 @@ def get_uwy_archive(self):
     print('    UWY Sounding file -->  ' + soundingb, sep='\n')
 
     headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
-    colspecs = [(1, 9), (9, 15), (16, 22), (23, 30), (36, 38), (40, 42),
-                (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
+    colspecs = [(1, 9), (9, 15), (16, 22), (23, 30), (32, 38), (38, 42),
+                (43, 48), (48, 50), (52, 54), (56, 58), (60, 62)]
 
     try:
         sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
@@ -384,94 +384,7 @@ def get_uwy_archive(self):
     return self.radar
 
 # ***************************************************************************************
-def get_uwy_archive_3(self):
-    
-    """
-    Imports UWY sounding data into skewT
-    
-    Soundings can be downloaded from following website:  
-    http://weather.uwyo.edu/upperair/sounding.html
 
-    Format:
-    94975 YMHB Hobart Airport Observations at 00Z 02 Jul 2013
-
-    -----------------------------------------------------------------------------
-       PRES   HGHT   TEMP   DWPT   RELH   MIXR   DRCT   SKNT   THTA   THTE   THTV
-       hPa     m      C      C      %    g/kg    deg   knot     K      K      K
-    -----------------------------------------------------------------------------
-     1004.0     27   12.0   10.2     89   7.84    330     14  284.8  306.7  286.2
-     1000.0     56   12.4   10.3     87   7.92    325     16  285.6  307.8  286.9
-      993.0    115   12.8    9.7     81   7.66    311     22  286.5  308.1  287.9    
-
-    Written by: Jason L. Pippitt, NASA/GSFC/SSAI
-    """
-
-    snd_dir = self.sounding_dir
-
-    # Retrieve proper sounding for date and time    
-    radar_DT = pyart.util.datetime_from_radar(self.radar)   
-    hour =  radar_DT.hour
-    month = self.month
-    day = self.day
-    year = self.year
-    hh = self.hh
-    mm = self.mm
-    mdays = [00,31,28,31,30,31,30,31,31,30,31,30,31]
-                
-    if radar_DT.minute >= 30: hour = radar_DT.hour + 1
-    if hour == 24: 
-        mday = radar_DT.day + 1
-        hour = 0
-        if mday > mdays[radar_DT.month]:
-            cmonth = radar_DT.month + 1
-            mday = 1
-            if(cmonth > 12):
-                cmonth = 1
-                mday = 1
-                cyear = radar_DT.year + 1
-                year = str(cyear).zfill(4)
-            month = str(cmonth).zfill(2)
-        day = str(mday).zfill(2)
-    hh = str(hour).zfill(2)
-    sounding_dir = snd_dir + year + '/' + month + day + '/' + self.site + '/' + self.site + '_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
-    
-    soundingb = os.path.basename(sounding_dir)
-    
-    print('    UWY Sounding file -->  ' + soundingb, sep='\n')
-
-    headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
-    colspecs = [(1, 9), (9, 15), (16, 22), (23, 30), (36, 38), (40, 42),
-                (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
-
-    sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=3)
-
-    presssure_pa = sound.PRES
-    height_m = sound.HGHT
-    temperature_c = sound.TEMP
-    dewpoint_c = sound.DWPT
-
-    mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
-
-    sounding=SkewT.Sounding(soundingdata=mydata)
-           
-    radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
-    
-    add_field_to_radar_object(radar_T, self.radar, field_name='TEMP', units='deg C',
-                                 long_name='Temperature',
-                                 standard_name='Temperature',
-                                 dz_field=self.ref_field_name)
-   
-    add_field_to_radar_object(radar_z, self.radar, field_name='HEIGHT', units='km',
-                                 long_name='Height',
-                                 standard_name='Height', 
-                                 dz_field=self.ref_field_name)
-
-    self.expected_ML = retrieve_ML(mydata)
-    print('',sound,'',sep='\n')
-
-    return self.radar
-
-# ***************************************************************************************
 def rename_fields_in_radar(self):
 
     """
