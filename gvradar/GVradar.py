@@ -132,7 +132,8 @@ class QC:
                     try:
                         self.radar = cm.get_ruc_archive(self)
                     except:
-                        self.radar = cm.get_uwy_archive_3(self)
+                        self.radar = cm.get_uwy_archive(self)
+                        
         if self.use_sounding == False:
             self.radar = cm.get_beam_height(self)        
         
@@ -266,14 +267,13 @@ class DP_products:
             if self.sounding_type == 'uwy':
                 self.radar = cm.use_uwy_sounding(self)
             if self.sounding_type == 'ruc_archive':
-                if self.sounding_type == 'ruc_archive':
-                    if self.site == 'KWAJ':
-                        self.radar = cm.kwaj_sounding(self)
-                    else:
-                        try:
-                            self.radar = cm.get_ruc_archive(self)
-                        except:
-                            self.radar = cm.get_uwy_archive(self)
+                if self.site == 'KWAJ':
+                    self.radar = cm.kwaj_sounding(self)
+                else:
+                    try:
+                        self.radar = cm.get_ruc_archive(self)
+                    except:
+                        self.radar = cm.get_uwy_archive(self)
                 
             self.radar_T = self.radar.fields['TEMP']['data']
             self.radar_z = self.radar.fields['HEIGHT']['data']
