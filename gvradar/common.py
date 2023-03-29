@@ -127,7 +127,7 @@ def get_ruc_archive(self):
                     (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
     
         sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
-        print(sound)
+        
         presssure_pa = sound.PRES
         height_m = sound.HGHT
         temperature_c = sound.TEMP
