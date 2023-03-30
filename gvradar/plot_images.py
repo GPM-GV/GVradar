@@ -547,8 +547,8 @@ def get_field_info(radar, field):
     elif field == 'KD':
         units='Kdp [deg/km]'
         vmin=-2
-        vmax=5
-        Nbins = 8
+        vmax=3
+        Nbins = 10
         title = 'Specific Differential Phase [deg/km]'
         cmap='pyart_HomeyerRainbow'
     elif field == 'KDPB':
@@ -576,7 +576,7 @@ def get_field_info(radar, field):
         units='Correlation'
         vmin=0.8
         vmax=1.0
-        Nbins = 9
+        Nbins = 10
         title = 'Correlation Coefficient'
         cmap='pyart_LangRainbow12'
     elif field == 'SD':
