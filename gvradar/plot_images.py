@@ -534,7 +534,7 @@ def get_field_info(radar, field):
         units='Velocity [m/s]'
         vmin=-15
         vmax=15
-        Nbins = 15
+        Nbins = 10
         title = 'Radial Velocity [m/s]'
         cmap='pyart_balance'
     elif field == 'corrected_velocity':
@@ -574,9 +574,9 @@ def get_field_info(radar, field):
         cmap='pyart_Carbone42'
     elif field == 'RH':
         units='Correlation'
-        vmin=0.8
+        vmin=0.7
         vmax=1.0
-        Nbins = 10
+        Nbins = 12
         title = 'Correlation Coefficient'
         cmap='pyart_LangRainbow12'
     elif field == 'SD':
