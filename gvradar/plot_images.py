@@ -320,13 +320,13 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
             png_file='{}_{}_{}_{}_{}_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,field,string_csweep)
             outdir_daily = outdir
             os.makedirs(outdir_daily, exist_ok=True)
-            fig.savefig(outdir_daily + '/' + png_file, dpi=120, bbox_inches='tight')
+            fig.savefig(outdir_daily + '/' + png_file, dpi=180, bbox_inches='tight')
             print('  --> ' + outdir_daily + '/' + png_file, '', sep='\n')
         elif num_fields >1:
             png_file='{}_{}_{}_{}_{}panel_sw{}_PPI.png'.format(site,year,month+day,hh+mm+ss,num_fields,string_csweep)
             outdir_multi = outdir + '/Multi/'
             os.makedirs(outdir_multi, exist_ok=True)
-            fig.savefig(outdir_multi + '/' + png_file, dpi=120, bbox_inches='tight')
+            fig.savefig(outdir_multi + '/' + png_file, dpi=180, bbox_inches='tight')
             print('  --> ' + outdir_multi + '/' + png_file, '', sep='\n')
         if outdir == '':
             outdir = os.getcwd()
