@@ -919,7 +919,10 @@ def merge_split_cuts(self):
     elist = [x.shape[0] for x in self.radar.iter_elevation()]
     n = 0
     while n <= len(elist)-1:
-   
+        
+        vcp_2 = [215, 35, 212, 32, 12, 31]
+        vcp_3 = [112]
+
         if elist[n] == 720 and elist[n+1] == 720:
             sweep_table.append((n, n+1))
             reflectivity.append(n)
