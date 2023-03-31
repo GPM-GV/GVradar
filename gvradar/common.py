@@ -927,9 +927,9 @@ def merge_split_cuts(self):
             sweep_table.append((n, n+1))
             reflectivity.append(n)
             velocity.append(n+1)
-            if vcp == 215 or vcp == 35:
+            if  vcp in vcp_2:
                 n += 2
-            elif vcp == 112:
+            elif vcp in vcp_3:
                 n += 3
            
         if elist[n] == 360:
