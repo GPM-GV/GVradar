@@ -619,7 +619,7 @@ def get_site_date_time(radar):
     if site == 'NPOL1': site = 'NPOL'         
     if site == 'LAVA1': site = 'KWAJ'
     if site == b'AN1-P\x00\x00\x00': site = 'AL1'
-    if site == b'JG1-P\x00\x00\x00': site = 'JG1'
+    if site == b'JG1-P\x00\x00\x00' or site == b'JG1\x00\x00\x00\x00\x00': site = 'JG1'
     if site == b'MC1-P\x00\x00\x00': site = 'MC1'
     if site == b'NT1-P\x00\x00\x00': site = 'NT1'
     if site == b'PE1-P\x00\x00\x00': site = 'PE1'
