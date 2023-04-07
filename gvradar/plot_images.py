@@ -238,6 +238,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
     else:
         plt.show()
 
+    plt.close()
 # ****************************************************************************************
 
 def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outside=True, 
@@ -333,6 +334,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
     else:
         plt.show()
 
+    plt.close()
 # ****************************************************************************************
 
 def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False, outdir='', add_logos=True):
@@ -433,6 +435,7 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
     else:
         plt.show()
 
+    plt.close()
 # ****************************************************************************************
 
 def set_plot_size_parms_rhi(num_fields):
