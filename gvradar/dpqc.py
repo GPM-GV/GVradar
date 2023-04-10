@@ -221,14 +221,14 @@ def threshold_qc_calfields(self):
         gatefilter_cal.include_below('HEIGHT', qc_height)
         if self.do_sd == True: gatefilter_cal.exclude_above('SD', self.sd_thresh)
         if self.do_kdp == True: gatefilter_cal.exclude_outside('KD', self.kdp_min, self.kdp_max)
-        if self.do_ph == True: gatefilter_cal.exclude_below('PH', self.ph_thresh)
+        if self.do_ph == True: gatefilter_cal.exclude_above('PH', self.ph_thresh)
         gatefilter_cal.include_above('HEIGHT', qc_height)
     elif self.use_sounding == True:
         gatefilter_cal.exclude_all()
         gatefilter_cal.include_above('TEMP', 3.0)
         if self.do_sd == True: gatefilter_cal.exclude_above('SD', self.sd_thresh)
         if self.do_kdp == True: gatefilter_cal.exclude_outside('KD', self.kdp_min, self.kdp_max)
-        if self.do_ph == True: gatefilter_cal.exclude_below('PH', self.ph_thresh)
+        if self.do_ph == True: gatefilter_cal.exclude_above('PH', self.ph_thresh)
         gatefilter_cal.include_below('TEMP', 3.1)    
 
     # Apply gate filters to radar
