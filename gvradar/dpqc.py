@@ -801,6 +801,8 @@ def calculate_kdp(self):
 
     if self.site == 'KWAJ':
         window=4
+    elif self.site == 'NPOL':
+        window=5
     else:
         window=4
 
