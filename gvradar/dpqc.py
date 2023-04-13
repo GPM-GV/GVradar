@@ -219,7 +219,7 @@ def threshold_qc_calfields(self):
         qc_height = self.qc_height * 1000
         gatefilter_cal.exclude_all()
         gatefilter_cal.include_below('HEIGHT', qc_height)
-        if self.do_sd == True: gatefilter_cal.exclude_outside('SD', self.sd_thresh,60.0)
+        if self.do_sd == True: gatefilter_cal.include_outside('SD', self.sd_thresh,60.0)
         #if self.do_sd == True: gatefilter_cal.exclude_above('SD', self.sd_thresh)
         if self.do_kdp == True: gatefilter_cal.exclude_outside('KD', self.kdp_min, self.kdp_max)
         if self.do_ph == True: gatefilter_cal.exclude_above('PH', self.ph_thresh)
