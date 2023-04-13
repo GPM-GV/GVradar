@@ -631,7 +631,7 @@ def get_site_date_time(radar):
     radar.metadata['site_name'] = site
     radar.metadata['instrument_name'] = site
 
-    if not radar.metadata['original_container']:
+    if 'original_container' not in radar.metadata.keys():
         radar.metadata['original_container'] = site
     
     scan_type = radar.scan_type.upper()
