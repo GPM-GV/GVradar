@@ -72,6 +72,16 @@ def add_csu_fhc(self):
                                     nsect=nsect, scan_type = self.scan_type, verbose = False, 
                                     use_temp = True, band=self.radar_band, minRH=minRH,
                                     return_scores=False ,sn_thresh=self.snthresh, sn=sndat)
+            if self.no_temp:
+                fnt = csu_fhc.run_winter(dz=self.dz, zdr=self.dr, kdp=self.kd, rho=self.rh, azimuths=azimuths,
+                                    T = None, heights = rheights, 
+                                    nsect=nsect, scan_type = self.scan_type, verbose = False, 
+                                    use_temp = False, band=self.radar_band, minRH=minRH,
+                                    return_scores=False ,sn_thresh=self.snthresh, sn=sndat)
+                self.radar = cm.add_field_to_radar_object(fnt, self.radar, field_name = 'NT',
+                                                  units='Unitless', long_name='No TEMP Winter Hydrometeor ID',
+                                                  standard_name='no TEMP Winter Hydrometeor ID',
+                                                  dz_field='CZ')
 
         self.radar = cm.add_field_to_radar_object(fw, self.radar, field_name = 'FW',
                                                   units='Unitless', long_name='Winter Hydrometeor ID',
@@ -693,6 +703,7 @@ def get_default_product_dict():
     default_product_dict = {'cf_dir': './cf/',
                             'do_HID_summer': True,
                             'do_HID_winter':  False,
+                            'no_temp': False,
                             'radar_band': 'S',
                             'snthresh': -30,
                             'do_mass': True,
