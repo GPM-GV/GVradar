@@ -60,7 +60,7 @@ def csu_filters(self):
     zdr = cm.extract_unmasked_data(self.radar, self.zdr_field_name)
 
     if self.do_insect == True:
-        insect_mask = csu_misc.insect_filter(dz, zdr)
+        insect_mask = csu_misc.insect_filter(dz, zdr, height=self.qc_height, bad = -32767.0)
         bad = -32767.0
 
         for fld in self.radar.fields:
@@ -73,7 +73,7 @@ def csu_filters(self):
                                      dz_field=self.ref_field_name)
     
     if self.do_despeckle == True:
-        mask_ds = csu_misc.despeckle(dz, ngates=4)
+        mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=4)
         bad = -32767.0
 
         for fld in self.radar.fields:
