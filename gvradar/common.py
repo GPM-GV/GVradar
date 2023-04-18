@@ -496,7 +496,7 @@ def rename_fields_in_radar(self):
         print(self.radar.fields.keys(), '', sep='\n')
         return self.radar, zz
     else:
-        zz = deepcopy(self.radar.fields['DZ'])
+        zz = deepcopy(self.radar.fields['ZZ'])
         print(self.radar.fields.keys(), '', sep='\n')
         return self.radar, zz
 
