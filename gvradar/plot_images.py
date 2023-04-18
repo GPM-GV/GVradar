@@ -307,7 +307,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
         ax.set_ylabel("")
 
         if num_fields >= 2:
-            plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(ncols*0.025)))
+            plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(ncols*0.055)))
     
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
