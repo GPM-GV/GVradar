@@ -216,6 +216,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
         if field == 'FS' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'FW' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
+        if field == 'NT' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
         
     #
     # *** save plot
@@ -312,7 +313,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
         if field == 'FS' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'FW' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
-        
+        if field == 'NT' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
     #
     # *** save plot
     #
@@ -617,6 +618,13 @@ def get_field_info(radar, field):
         Nbins = 0
         title = 'Winter Hydrometeor Identification'
         cmap=cmaphidw
+    elif field == 'NT':
+        units='HID'
+        vmin=0
+        vmax=8
+        Nbins = 0
+        title = 'No TEMP Winter Hydrometeor Identification'
+        cmap=cmaphidw    
     elif field == 'MW':
         units='Water Mass [g/m^3]'
         vmin=-1
