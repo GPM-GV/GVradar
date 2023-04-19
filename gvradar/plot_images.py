@@ -6,6 +6,8 @@ import matplotlib.gridspec as gridspec
 import cartopy.crs as ccrs
 import matplotlib.colors as colors
 import pyart
+import datetime
+from cftime import date2num, num2date
 import copy
 import os
 import cartopy
@@ -700,17 +702,6 @@ def get_radar_info(radar, sweep):
     #
     # *** get radar elevation, date, time
     #
-    radar_DT = pyart.util.datetime_from_radar(radar)
-    elv=radar.fixed_angle['data'][sweep]
-    string_csweep = str(sweep).zfill(2)
-    month = str(radar_DT.month).zfill(2)
-    day = str(radar_DT.day).zfill(2)
-    year = str(radar_DT.year).zfill(4)
-    hh = str(radar_DT.hour).zfill(2)
-    mm = str(radar_DT.minute).zfill(2)
-    ss = str(radar_DT.second).zfill(2)
-    mydate = month + '/' + day + '/' + year
-    mytime = hh + ':' + mm + ':' + ss
     if 'site_name' in radar.metadata.keys():
         site = radar.metadata['site_name'].upper()
     elif 'instrument_name' in radar.metadata.keys():
@@ -732,6 +723,26 @@ def get_radar_info(radar, sweep):
     if site == b'ST1-P\x00\x00\x00': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00': site = 'SV1'
     if site == b'TM1-P\x00\x00\x00': site = 'TM1'
+
+    if site == 'NPOL' or site == 'KWAJ':
+        EPOCH_UNITS = "seconds since 1970-01-01T00:00:00Z"
+        dtrad = num2date(0, radar.time["units"])
+        epnum = date2num(dtrad, EPOCH_UNITS)
+        kwargs = {}
+        radar_DT = num2date(epnum, EPOCH_UNITS, **kwargs)
+    else:
+        radar_DT = pyart.util.datetime_from_radar(radar) 
+
+    elv=radar.fixed_angle['data'][sweep]
+    string_csweep = str(sweep).zfill(2)
+    month = str(radar_DT.month).zfill(2)
+    day = str(radar_DT.day).zfill(2)
+    year = str(radar_DT.year).zfill(4)
+    hh = str(radar_DT.hour).zfill(2)
+    mm = str(radar_DT.minute).zfill(2)
+    ss = str(radar_DT.second).zfill(2)
+    mydate = month + '/' + day + '/' + year
+    mytime = hh + ':' + mm + ':' + ss
 
     return site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep
 
