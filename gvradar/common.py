@@ -474,7 +474,7 @@ def rename_fields_in_radar(self):
         i += 1  
 
     # Add Corrected Reflectivity field
-    if ('CZ' or 'DZ') not in self.radar.fields.keys():
+    if ('CZ') not in self.radar.fields.keys():
 #        if self.site == 'NPOL' or self.site == 'KWAJ':
         if self.site == 'KWAJ':
             zz = deepcopy(self.radar.fields['DBT2'])
@@ -496,7 +496,7 @@ def rename_fields_in_radar(self):
         print(self.radar.fields.keys(), '', sep='\n')
         return self.radar, zz
     else:
-        zz = deepcopy(self.radar.fields['ZZ'])
+        zz = deepcopy(self.radar.fields['DZ'])
         print(self.radar.fields.keys(), '', sep='\n')
         return self.radar, zz
 
