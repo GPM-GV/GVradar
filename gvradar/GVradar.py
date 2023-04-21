@@ -254,8 +254,11 @@ class DP_products:
         if 'ZZ' in self.radar.fields.keys():
             self.zz = self.radar.fields['ZZ']['data']
         else:
-            self.zz = self.radar.fields['DZ']['data']
-        
+            try:
+                self.zz = self.radar.fields['DZ']['data']
+            except:
+                self.zz = self.radar.fields['CZ']['data']
+                
         print('', 'Calculating DP products:  ', sep='\n')
        
     # Create Temperature field   
