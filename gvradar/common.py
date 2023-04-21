@@ -468,7 +468,7 @@ def rename_fields_in_radar(self):
         new_fields = ['radar_echo_classification', 'radar_estimated_rain_rate', 'D0', 'NW', 'velocity', 
          'VR', 'total_power', 'CZ', 'RH', 
          'differential_reflectivity', 'DR', 'differential_phase', 
-         'PH', 'KD', 'SW', 
+         'PH', 'corrected_specific_differential_phase', 'SW', 
          'signal_to_noise_ratio']
     elif 'DZ' in self.radar.fields.keys():
         old_fields = []
