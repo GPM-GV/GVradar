@@ -12,7 +12,7 @@ import numpy as np
 import copy
 from copy import deepcopy
 import pyart
-import os
+import os, sys
 import datetime
 from cftime import date2num, num2date
 import gzip
