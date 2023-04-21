@@ -459,6 +459,17 @@ def rename_fields_in_radar(self):
     elif 'REF' in self.radar.fields.keys():
         old_fields = ['SW', 'PHI', 'ZDR', 'REF', 'VEL', 'RHO']
         new_fields = ['SW', 'PH' , 'DR' , 'DZ' , 'VR' , 'RH' ]
+    elif 'radar_echo_classification' in self.radar.fields.keys():
+        old_fields = ['radar_echo_classification', 'radar_estimated_rain_rate', 'D0', 'NW', 'velocity', 
+         'corrected_velocity', 'total_power', 'corrected_reflectivity', 'cross_correlation_ratio', 
+         'differential_reflectivity', 'corrected_differential_reflectivity', 'differential_phase', 
+         'corrected_differential_phase', 'corrected_specific_differential_phase', 'spectrum_width', 
+         'signal_to_noise_ratio']
+        new_fields = ['radar_echo_classification', 'radar_estimated_rain_rate', 'D0', 'NW', 'velocity', 
+         'VR', 'total_power', 'CZ', 'RH', 
+         'differential_reflectivity', 'DR', 'differential_phase', 
+         'PH', 'KD', 'SW', 
+         'signal_to_noise_ratio']
     elif 'DZ' in self.radar.fields.keys():
         old_fields = []
         new_fields = []
@@ -497,7 +508,11 @@ def rename_fields_in_radar(self):
         print(self.radar.fields.keys(), '', sep='\n')
         return self.radar, zz
     else:
-        zz = deepcopy(self.radar.fields['DZ'])
+        if self.site == 'DARW':
+            zz = deepcopy(self.radar.fields['CZ'])
+        else:
+            zz = deepcopy(self.radar.fields['DZ'])
+        
         print(self.radar.fields.keys(), '', sep='\n')
         return self.radar, zz
 
@@ -628,6 +643,8 @@ def get_site_date_time(radar):
     if site == b'ST1-P\x00\x00\x00': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00': site = 'SV1'
     if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
+    if site == 'GUNN_PT': site = 'DARW'
+    if site == 'REUNION': site = 'Reunion'
 
     radar.metadata['site_name'] = site
     radar.metadata['instrument_name'] = site

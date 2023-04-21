@@ -723,6 +723,8 @@ def get_radar_info(radar, sweep):
     if site == b'ST1-P\x00\x00\x00': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00': site = 'SV1'
     if site == b'TM1-P\x00\x00\x00': site = 'TM1'
+    if site == 'GUNN_PT': site = 'DARW'
+    if site == 'REUNION': site = 'Reunion'
 
     if site == 'NPOL' or site == 'KWAJ':
         EPOCH_UNITS = "seconds since 1970-01-01T00:00:00Z"

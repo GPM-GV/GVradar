@@ -103,8 +103,8 @@ def add_csu_liquid_ice_mass(self):
         mi = self.radar.fields['CZ']['data'].copy()
 
     # HID ice threshold
-    mw = remove_ice(mw, self.fh)
-    mi = remove_ice(mi, self.fh)
+    #mw = remove_ice(mw, self.fh)
+    #mi = remove_ice(mi, self.fh)
 
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
