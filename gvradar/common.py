@@ -943,12 +943,14 @@ def merge_split_cuts(self):
                 n += 2
             elif vcp in vcp_3:
                 n += 3
-           
-        if elist[n] == 360:
+        elif elist[n] == 360:
             sweep_table.append((n, n))
             reflectivity.append(n)
             velocity.append(n)
             n += 1
+        elif (elist[n] == 720 or elist[n] == 360)  and (elist[n+1] != 720 or elist[n+1] != 360):
+            print(elist)
+            sys.exit("Bad file")
 
     print(" ","Merging WSR-88D Split Cuts", sep='\n')
     #print("\n Number of reflectivity levels:  %d" % len(reflectivity))
