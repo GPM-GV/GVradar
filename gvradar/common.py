@@ -537,7 +537,7 @@ def remove_undesirable_fields(self):
                      'D0', 'NW', 'velocity', 'VR', 'total_power', 'CZ', 'RH', 
                      'differential_reflectivity', 'DR', 'differential_phase', 
                      'PH', 'corrected_specific_differential_phase', 'SW', 
-                     'signal_to_noise_ratio', 'KD', 'FH', 'MW', 'MI', 'RC']]
+                     'signal_to_noise_ratio', 'KD', 'FH', 'MW', 'MI', 'RC']
     else:
         cf_fields = self.output_fields
         drop_fields = [i for i in self.radar.fields.keys() if i not in cf_fields]
