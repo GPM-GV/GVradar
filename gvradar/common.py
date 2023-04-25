@@ -540,9 +540,10 @@ def remove_undesirable_fields(self):
                      'signal_to_noise_ratio', 'KD', 'FH', 'MW', 'MI', 'RC']
     else:
         cf_fields = self.output_fields
-        drop_fields = [i for i in self.radar.fields.keys() if i not in cf_fields]
-        for field in drop_fields:
-            self.radar.fields.pop(field)
+        
+    drop_fields = [i for i in self.radar.fields.keys() if i not in cf_fields]
+    for field in drop_fields:
+        self.radar.fields.pop(field)
 
     print("CF FIELDS -->  ", self.radar.fields.keys(), '', sep='\n')
   
