@@ -275,6 +275,9 @@ class DP_products:
             if self.sounding_type == 'ruc_archive':
                 if self.site == 'KWAJ':
                     self.radar = cm.kwaj_sounding(self)
+                elif self.site == 'DARW':
+                    self.sounding_dir = '/gpmgv3/raw/Soundings/UWY_Soundings/'
+                    self.radar = cm.use_uwy_sounding(self)
                 else:
                     try:
                         self.radar = cm.get_ruc_archive(self)
