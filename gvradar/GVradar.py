@@ -220,7 +220,6 @@ class DP_products:
         # Check and fix missing user defined kwargs
         default_product = dp.get_default_product_dict()
         kwargs = cm.check_kwargs(kwargs, default_product)
-        if self.site == 'DARW': self.band == 'C'
 
         # Get site name and date time from radar
         site_time = cm.get_site_date_time(self.radar)

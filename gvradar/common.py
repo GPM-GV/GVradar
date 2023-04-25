@@ -687,9 +687,14 @@ def get_site_date_time(radar):
     mm = str(radar_DT.minute).zfill(2)
     ss = str(radar_DT.second).zfill(2)
 
+    if site == 'DARW':
+        band = 'C'
+    else:
+        band = 'S'
+
     site_time = {'site': site, 'scan_type': scan_type, 'month': month, 'day': day,
                  'year': year, 'hh': hh, 'mm': mm, 'ss': ss, 'ref_field_name': 'CZ',
-                 'phi_field_name': 'PH', 'zdr_field_name': 'DR'}
+                 'phi_field_name': 'PH', 'zdr_field_name': 'DR', 'band': band}
 
     return site_time
 
