@@ -123,7 +123,9 @@ def add_csu_blended_rain(self):
 
     print('    Calculating blended rainfall field...')
 
-    rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, kdp=self.kd, fhc=self.fh)
+    rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, 
+                                                   kdp=self.kd, fhc=self.fh,
+                                                   band=self.band)
 
     # Set fill to zero
     rain = np.ma.filled(rain, fill_value=0.0)

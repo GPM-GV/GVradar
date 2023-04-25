@@ -532,10 +532,17 @@ def remove_undesirable_fields(self):
 
     print("Removing unwanted output fields...", '', sep='\n')
 
-    cf_fields = self.output_fields
-    drop_fields = [i for i in self.radar.fields.keys() if i not in cf_fields]
-    for field in drop_fields:
-        self.radar.fields.pop(field)
+    if self.site == 'DARW':
+        cf_fields = ['radar_echo_classification', 'radar_estimated_rain_rate', 
+                     'D0', 'NW', 'velocity', 'VR', 'total_power', 'CZ', 'RH', 
+                     'differential_reflectivity', 'DR', 'differential_phase', 
+                     'PH', 'corrected_specific_differential_phase', 'SW', 
+                     'signal_to_noise_ratio', 'KD', 'FH', 'MW', 'MI', 'RC']]
+    else:
+        cf_fields = self.output_fields
+        drop_fields = [i for i in self.radar.fields.keys() if i not in cf_fields]
+        for field in drop_fields:
+            self.radar.fields.pop(field)
 
     print("CF FIELDS -->  ", self.radar.fields.keys(), '', sep='\n')
   
