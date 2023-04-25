@@ -124,13 +124,13 @@ class QC:
             if self.sounding_type == 'ruc':
                 self.radar = cm.use_ruc_sounding(self)
             if self.sounding_type == 'uwy':
-                self.radar = cm.use_uwy_sounding(self)
+                self.radar = cm.get_uwy_archive(self)
             if self.sounding_type == 'ruc_archive':
                 if self.site == 'KWAJ':
                     self.radar = cm.kwaj_sounding(self)
                 elif self.site == 'DARW':
                     self.sounding_dir = '/gpmgv3/raw/Soundings/UWY_Soundings/'
-                    self.radar = cm.use_uwy_sounding(self)
+                    self.radar = cm.get_uwy_archive(self)
                 else:
                     try:
                         self.radar = cm.get_ruc_archive(self)
@@ -271,13 +271,13 @@ class DP_products:
             if self.sounding_type == 'ruc':
                 self.radar = cm.use_ruc_sounding(self)
             if self.sounding_type == 'uwy':
-                self.radar = cm.use_uwy_sounding(self)
+                self.radar = cm.get_uwy_archive(self)
             if self.sounding_type == 'ruc_archive':
                 if self.site == 'KWAJ':
                     self.radar = cm.kwaj_sounding(self)
                 elif self.site == 'DARW':
                     self.sounding_dir = '/gpmgv3/raw/Soundings/UWY_Soundings/'
-                    self.radar = cm.use_uwy_sounding(self)
+                    self.radar = cm.get_uwy_archive(self)
                 else:
                     try:
                         self.radar = cm.get_ruc_archive(self)
