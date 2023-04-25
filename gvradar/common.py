@@ -350,23 +350,33 @@ def get_uwy_archive(self):
     hh = self.hh
     mm = self.mm
     mdays = [00,31,28,31,30,31,30,31,31,30,31,30,31]
-                
-    if radar_DT.minute >= 30: hour = radar_DT.hour + 1
-    if hour == 24: 
-        mday = radar_DT.day + 1
-        hour = 0
-        if mday > mdays[radar_DT.month]:
-            cmonth = radar_DT.month + 1
-            mday = 1
-            if(cmonth > 12):
-                cmonth = 1
+
+    if self.site == 'DARW':
+        if radar_DT.hour <= 6:
+            sounding_dir = snd_dir + year + '/' + month + '/' + site + '/' + site + '_YPDN_' + year + '_' + month + day + '_00UTC.txt'
+        if radar_DT.hour > 6 and radar_DT.hour <= 18:
+            sounding_dir = snd_dir + year + '/' + month + '/' + site + '/' + site + '_YPDN_' + year + '_' + month + day + '_12UTC.txt'
+        if radar_DT.hour > 18:
+            mday = radar_DT.day + 1
+            day = str(mday).zfill(2)
+            sounding_dir = snd_dir + year + '/' + month + '/' + site + '/' + site + '_YPDN_' + year + '_' + month + day + '_00UTC.txt'
+    else:
+        if radar_DT.minute >= 30: hour = radar_DT.hour + 1
+        if hour == 24: 
+            mday = radar_DT.day + 1
+            hour = 0
+            if mday > mdays[radar_DT.month]:
+                cmonth = radar_DT.month + 1
                 mday = 1
-                cyear = radar_DT.year + 1
-                year = str(cyear).zfill(4)
-            month = str(cmonth).zfill(2)
-        day = str(mday).zfill(2)
-    hh = str(hour).zfill(2)
-    sounding_dir = snd_dir + year + '/' + month + day + '/' + self.site + '/' + self.site + '_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
+                if(cmonth > 12):
+                    cmonth = 1
+                    mday = 1
+                    cyear = radar_DT.year + 1
+                    year = str(cyear).zfill(4)
+                month = str(cmonth).zfill(2)
+            day = str(mday).zfill(2)
+        hh = str(hour).zfill(2)
+        sounding_dir = snd_dir + year + '/' + month + day + '/' + self.site + '/' + self.site + '_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
     
     soundingb = os.path.basename(sounding_dir)
     
