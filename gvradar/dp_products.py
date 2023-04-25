@@ -125,7 +125,7 @@ def add_csu_blended_rain(self):
 
     rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, 
                                                    kdp=self.kd, fhc=self.fh,
-                                                   band=self.band)
+                                                   band=self.radar_band)
 
     # Set fill to zero
     rain = np.ma.filled(rain, fill_value=0.0)
@@ -706,7 +706,6 @@ def get_default_product_dict():
                             'do_HID_summer': True,
                             'do_HID_winter':  False,
                             'no_temp': False,
-                            'radar_band': 'S',
                             'snthresh': -30,
                             'do_mass': True,
                             'do_RC': True,

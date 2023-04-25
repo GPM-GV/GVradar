@@ -694,7 +694,7 @@ def get_site_date_time(radar):
 
     site_time = {'site': site, 'scan_type': scan_type, 'month': month, 'day': day,
                  'year': year, 'hh': hh, 'mm': mm, 'ss': ss, 'ref_field_name': 'CZ',
-                 'phi_field_name': 'PH', 'zdr_field_name': 'DR', 'band': band}
+                 'phi_field_name': 'PH', 'zdr_field_name': 'DR', 'radar_band': band}
 
     return site_time
 
