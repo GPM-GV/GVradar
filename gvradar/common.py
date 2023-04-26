@@ -351,15 +351,15 @@ def get_uwy_archive(self):
     mm = self.mm
     mdays = [00,31,28,31,30,31,30,31,31,30,31,30,31]
 
-    if self.site == 'DARW':
+    if self.site == 'CPOL':
         if radar_DT.hour <= 6:
-            sounding_dir = snd_dir + year + '/' + month + '/' + self.site + '/' + self.site + '_YPDN_' + year + '_' + month + day + '_00UTC.txt'
+            sounding_dir = snd_dir + year + '/' + month + '/DARW/DARW_YPDN_' + year + '_' + month + day + '_00UTC.txt'
         if radar_DT.hour > 6 and radar_DT.hour <= 18:
-            sounding_dir = snd_dir + year + '/' + month + '/' + self.site + '/' + self.site + '_YPDN_' + year + '_' + month + day + '_12UTC.txt'
+            sounding_dir = snd_dir + year + '/' + month + '/DARW/DARW_YPDN_' + year + '_' + month + day + '_12UTC.txt'
         if radar_DT.hour > 18:
             mday = radar_DT.day + 1
             day = str(mday).zfill(2)
-            sounding_dir = snd_dir + year + '/' + month + '/' + self.site + '/' + self.site + '_YPDN_' + year + '_' + month + day + '_00UTC.txt'
+            sounding_dir = snd_dir + year + '/' + month + '/DARW/DARW_YPDN_' + year + '_' + month + day + '_00UTC.txt'
     else:
         if radar_DT.minute >= 30: hour = radar_DT.hour + 1
         if hour == 24: 
