@@ -643,14 +643,14 @@ def get_field_info(radar, field):
         cmap='pyart_BlueBrown10'
     elif field == 'RC':
         units='HIDRO Rain Rate [mm/hr]'
-        vmin=0
+        vmin=1
         vmax=160
         Nbins = 30
         title ='HIDRO Rain Rate [mm/hr]'
         cmap='pyart_NWSRef'
     elif field == 'RP':
         units='PolZR Rain Rate [mm/hr]'
-        vmin=0
+        vmin=1
         vmax=160
         Nbins = 30
         title ='PolZR Rain Rate [mm/hr]'
