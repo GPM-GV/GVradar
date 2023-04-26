@@ -532,7 +532,7 @@ def remove_undesirable_fields(self):
 
     print("Removing unwanted output fields...", '', sep='\n')
 
-    if self.site == 'DARW':
+    if self.site == 'CPOL':
         cf_fields = ['radar_echo_classification', 'radar_estimated_rain_rate', 
                      'D0', 'NW', 'velocity', 'VR', 'total_power', 'CZ', 'RH', 
                      'differential_reflectivity', 'DR', 'differential_phase', 
@@ -661,7 +661,7 @@ def get_site_date_time(radar):
     if site == b'ST1-P\x00\x00\x00': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00': site = 'SV1'
     if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
-    if site == 'GUNN_PT': site = 'DARW'
+    if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
 
     radar.metadata['site_name'] = site
@@ -691,7 +691,7 @@ def get_site_date_time(radar):
     mm = str(radar_DT.minute).zfill(2)
     ss = str(radar_DT.second).zfill(2)
 
-    if site == 'DARW':
+    if site == 'CPOL':
         band = 'C'
     else:
         band = 'S'

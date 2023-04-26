@@ -723,7 +723,7 @@ def get_radar_info(radar, sweep):
     if site == b'ST1-P\x00\x00\x00': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00': site = 'SV1'
     if site == b'TM1-P\x00\x00\x00': site = 'TM1'
-    if site == 'GUNN_PT': site = 'DARW'
+    if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
 
     radar_DT = pyart.util.datetime_from_radar(radar)
