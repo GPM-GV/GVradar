@@ -672,6 +672,7 @@ def get_site_date_time(radar):
     
     scan_type = radar.scan_type.upper()
     
+    '''
     if site == 'NPOL' or site == 'KWAJ':
         EPOCH_UNITS = "seconds since 1970-01-01T00:00:00Z"
         dtrad = num2date(0, radar.time["units"])
@@ -680,7 +681,9 @@ def get_site_date_time(radar):
         radar_DT = num2date(epnum, EPOCH_UNITS, **kwargs)
     else:
         radar_DT = pyart.util.datetime_from_radar(radar)   
-    
+    '''
+    radar_DT = pyart.util.datetime_from_radar(radar)
+
     month = str(radar_DT.month).zfill(2)
     day = str(radar_DT.day).zfill(2)
     year = str(radar_DT.year).zfill(4)

@@ -726,6 +726,7 @@ def get_radar_info(radar, sweep):
     if site == 'GUNN_PT': site = 'DARW'
     if site == 'REUNION': site = 'Reunion'
 
+    '''
     if site == 'NPOL' or site == 'KWAJ':
         EPOCH_UNITS = "seconds since 1970-01-01T00:00:00Z"
         dtrad = num2date(0, radar.time["units"])
@@ -734,6 +735,8 @@ def get_radar_info(radar, sweep):
         radar_DT = num2date(epnum, EPOCH_UNITS, **kwargs)
     else:
         radar_DT = pyart.util.datetime_from_radar(radar) 
+    '''
+    radar_DT = pyart.util.datetime_from_radar(radar)
 
     elv=radar.fixed_angle['data'][sweep]
     string_csweep = str(sweep).zfill(2)
