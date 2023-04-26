@@ -518,7 +518,7 @@ def rename_fields_in_radar(self):
         print(self.radar.fields.keys(), '', sep='\n')
         return self.radar, zz
     else:
-        if self.site == 'DARW':
+        if self.site == 'CPOL':
             zz = deepcopy(self.radar.fields['CZ'])
         else:
             zz = deepcopy(self.radar.fields['DZ'])
