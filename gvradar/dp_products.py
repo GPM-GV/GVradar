@@ -11,6 +11,7 @@ V1.0 - 11/01/2022 - update by Jason Pippitt NASA/GSFC/SSAI
 from __future__ import print_function
 import numpy as np
 import pyart
+import datetime
 from copy import deepcopy
 from scipy.special import gamma
 from gvradar import (common as cm, plot_images as pi)
@@ -184,6 +185,19 @@ def add_calc_dsd_sband_tokay_2020(self):
 
     print('    Calculating Drop-Size Distribution...')
 
+    if self.site == 'NPOL':
+        radar_DT = pyart.util.datetime_from_radar(self.radar)
+        DT_beg_IPHEX = datetime.datetime(*map(int, 2014 04 01 0 0 0))
+        DT_end_IPHEX = datetime.datetime(*map(int, 2014 06 30 23 59 59))
+        DT_beg_OLYMPEX = datetime.datetime(*map(int, 2015 11 01 0 0 0))
+        DT_end_OLYMPEX = datetime.datetime(*map(int, 2016 01 31 23 59 59))
+        if (radar_DT >= DT_beg_IPHEX) & (radar_DT <= DT_end_IPHEX):  
+            self.dsd_loc = 'iphex'
+        elif (radar_DT >= DT_beg_OLYMPEX) & (radar_DT <= DT_end_OLYMPEX): 
+            self.dsd_loc = 'iphex'
+        else:
+            self.dsd_loc = 'wff'
+
     dm, nw = calc_dsd_sband_tokay_2020(self, self.dz, self.dr, loc=self.dsd_loc)
 
     # Set fill to zero
@@ -238,7 +252,7 @@ def calc_dsd_sband_tokay_2020(self, dz, zdr, loc='all'):
     loc = loc.lower()
     
     # Compute dm for valid ZDR
-    #print('    DSD equation:  ',loc)
+    print('    DSD equation:  ',loc)
     if loc == 'wff':
         high = np.logical_and(zdr > 3.5, zdr <= 4.0)
         dm[high] = get_dm(zdr[high],0.0138,0.1696,1.1592,0.7215)
