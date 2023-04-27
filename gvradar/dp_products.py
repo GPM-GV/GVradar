@@ -187,10 +187,10 @@ def add_calc_dsd_sband_tokay_2020(self):
 
     if self.site == 'NPOL':
         radar_DT = pyart.util.datetime_from_radar(self.radar)
-        DT_beg_IPHEX = datetime.datetime(*map(int, [2014 4 01 0 0 0]))
-        DT_end_IPHEX = datetime.datetime(*map(int, [2014 6 30 23 59 59]))
-        DT_beg_OLYMPEX = datetime.datetime(*map(int, [2015 11 1 0 0 0]))
-        DT_end_OLYMPEX = datetime.datetime(*map(int, [2016 1 31 23 59 59]))
+        DT_beg_IPHEX = datetime.datetime(*map(int, ['2014','04','01','0','0','0']))
+        DT_end_IPHEX = datetime.datetime(*map(int, ['2014','06','30','23','59','59']))
+        DT_beg_OLYMPEX = datetime.datetime(*map(int, ['2015','11','01','0','0','0']))
+        DT_end_OLYMPEX = datetime.datetime(*map(int, ['2016','01','31','23','59','59']))
         if (radar_DT >= DT_beg_IPHEX) & (radar_DT <= DT_end_IPHEX):  
             self.dsd_loc = 'iphex'
         elif (radar_DT >= DT_beg_OLYMPEX) & (radar_DT <= DT_end_OLYMPEX): 
