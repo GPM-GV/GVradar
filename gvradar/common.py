@@ -360,6 +360,15 @@ def get_uwy_archive(self):
             mday = radar_DT.day + 1
             day = str(mday).zfill(2)
             sounding_dir = snd_dir + year + '/' + month + '/DARW/DARW_YPDN_' + year + '_' + month + day + '_00UTC.txt'
+    elif self.site == 'Reunion':
+        if radar_DT.hour <= 6:
+            sounding_dir = snd_dir + year + '/' + month + '/Reunion/Reunion_FMEE_' + year + '_' + month + day + '_00UTC.txt'
+        if radar_DT.hour > 6 and radar_DT.hour <= 18:
+            sounding_dir = snd_dir + year + '/' + month + '/Reunion/Reunion_FMEE_' + year + '_' + month + day + '_12UTC.txt'
+        if radar_DT.hour > 18:
+            mday = radar_DT.day + 1
+            day = str(mday).zfill(2)
+            sounding_dir = snd_dir + year + '/' + month + '/Reunion/Reunion_FMEE_' + year + '_' + month + day + '_00UTC.txt'        
     else:
         if radar_DT.minute >= 30: hour = radar_DT.hour + 1
         if hour == 24: 
