@@ -693,6 +693,13 @@ def get_site_date_time(radar):
             radar_DT = num2date(epnum, EPOCH_UNITS, **kwargs)
         else:
             radar_DT = pyart.util.datetime_from_radar(radar)
+    else:
+        if site == 'Reunion':
+            EPOCH_UNITS = "seconds since 1970-01-01T00:00:00Z"
+            dtrad = num2date(0, radar.time["units"])
+            epnum = date2num(dtrad, EPOCH_UNITS)
+            kwargs = {}
+            radar_DT = num2date(epnum, EPOCH_UNITS, **kwargs)
 
     month = str(radar_DT.month).zfill(2)
     day = str(radar_DT.day).zfill(2)
