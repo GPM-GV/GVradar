@@ -709,7 +709,7 @@ def get_site_date_time(radar):
     if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
     if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
-    if site == 'CP2Radar': site = 'CP2'
+    if site == 'CP2RADAR': site = 'CP2'
 
     radar.metadata['site_name'] = site
     radar.metadata['instrument_name'] = site

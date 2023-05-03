@@ -725,7 +725,7 @@ def get_radar_info(radar, sweep):
     if site == b'TM1-P\x00\x00\x00': site = 'TM1'
     if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
-    if site == 'CP2Radar': site = 'CP2'
+    if site == 'CP2RADAR': site = 'CP2'
 
     radar_DT = pyart.util.datetime_from_radar(radar)
 
