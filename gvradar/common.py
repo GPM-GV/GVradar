@@ -510,6 +510,9 @@ def rename_fields_in_radar(self):
     elif 'CZ' in self.radar.fields.keys():
         old_fields = []
         new_fields = []
+    elif 'ZZ' in self.radar.fields.keys():
+        old_fields = ['ZZ']
+        new_fields = ['DZ']    
 
     # Change names of old fields to new fields using pop
     nl = len(old_fields)
