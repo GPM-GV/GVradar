@@ -369,6 +369,15 @@ def get_uwy_archive(self):
             mday = radar_DT.day + 1
             day = str(mday).zfill(2)
             sounding_dir = snd_dir + year + '/' + month + '/Reunion/Reunion_FMEE_' + year + '_' + month + day + '_00UTC.txt'        
+    elif self.site == 'CP2':
+        if radar_DT.hour <= 6:
+            sounding_dir = snd_dir + year + '/' + month + '/CP2/CP2_YBBN_' + year + '_' + month + day + '_00UTC.txt'
+        if radar_DT.hour > 6 and radar_DT.hour <= 18:
+            sounding_dir = snd_dir + year + '/' + month + '/CP2/CP2_YBBN_' + year + '_' + month + day + '_12UTC.txt'
+        if radar_DT.hour > 18:
+            mday = radar_DT.day + 1
+            day = str(mday).zfill(2)
+            sounding_dir = snd_dir + year + '/' + month + '/CP2/CP2_YBBN_' + year + '_' + month + day + '_00UTC.txt'        
     else:
         if radar_DT.minute >= 30: hour = radar_DT.hour + 1
         if hour == 24: 
@@ -489,6 +498,9 @@ def rename_fields_in_radar(self):
          'differential_reflectivity', 'DR', 'differential_phase', 
          'PH', 'corrected_specific_differential_phase', 'SW', 
          'signal_to_noise_ratio']
+    elif 'ZC' in self.radar.fields.keys():
+        old_fields = ['SN', 'ZH', 'ZD', 'RH', 'PH', 'KD', 'VE', 'ZC', 'ZB', 'DO', 'NW', 'RR', 'CM', 'HC']
+        new_fields = ['SN', 'DZ', 'ZDR', 'RH', 'PH', 'KD', 'VR', 'CZ', 'DR', 'DO', 'NW', 'RR', 'CM', 'HC']
     elif 'DZ' in self.radar.fields.keys():
         old_fields = []
         new_fields = []
@@ -697,6 +709,7 @@ def get_site_date_time(radar):
     if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
     if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
+    if site == 'CP2Radar': site = 'CP2'
 
     radar.metadata['site_name'] = site
     radar.metadata['instrument_name'] = site
