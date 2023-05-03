@@ -484,7 +484,7 @@ def rename_fields_in_radar(self):
          'differential_reflectivity', 'corrected_differential_reflectivity', 'differential_phase', 
          'corrected_differential_phase', 'corrected_specific_differential_phase', 'spectrum_width', 
          'signal_to_noise_ratio']
-        new_fields = ['radar_echo_classification', 'radar_estimated_rain_rate', 'D0', 'NW', 'velocity', 
+        new_fields = ['radar_echo_classification', 'RR', 'D0', 'NW', 'velocity', 
          'VR', 'total_power', 'CZ', 'RH', 
          'differential_reflectivity', 'DR', 'differential_phase', 
          'PH', 'corrected_specific_differential_phase', 'SW', 
@@ -542,7 +542,7 @@ def remove_undesirable_fields(self):
     print("Removing unwanted output fields...", '', sep='\n')
 
     if self.site == 'CPOL':
-        cf_fields = ['radar_echo_classification', 'radar_estimated_rain_rate', 
+        cf_fields = ['radar_echo_classification', 'RR', 'DM',
                      'D0', 'NW', 'velocity', 'VR', 'total_power', 'CZ', 'RH', 
                      'differential_reflectivity', 'DR', 'differential_phase', 
                      'PH', 'corrected_specific_differential_phase', 'SW', 
@@ -558,7 +558,23 @@ def remove_undesirable_fields(self):
   
     return self.radar
 
-# ***************************************************************************************       
+# ***************************************************************************************
+
+def update_metadata(self):
+
+    self.radar.metadata['version'] = 'VN V2.0'
+    self.radar.metadata['Description'] = "Quality Controlled Dual Pol Products"
+    self.radar.metadata['Release_Date'] = str(datetime.utcnow())
+    self.radar.metadata['institution'] = "NASA GSFC"
+    self.radar.metadata['project'] = "Global Precipitation Measurement (GPM)"
+    self.radar.metadata['source'] = 'GVradar V1.0'
+    self.radar.metadata['references'] = 'https://github.com/GPM-GV/GVradar'      
+
+    print(self.radar.metadata) 
+
+    return self.radar
+
+# ***************************************************************************************
 
 def output_cf(self):
 
@@ -574,6 +590,8 @@ def output_cf(self):
     else: 
         out_file = out_dir + '/' + self.site + '_' + self.year + '_' + self.month + self.day + '_' + self.hh + self.mm + self.ss + '.cf'
     
+    self.radar = update_metadata(self)
+
     pyart.io.write_cfradial(out_file,self.radar)
     
     #Gzip cf file

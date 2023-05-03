@@ -181,6 +181,32 @@ def add_polZR_rr(self):
 
 # ***************************************************************************************
 
+def get_gatlin_DM(self):
+
+    print('    Calculating Gatlin C Band DM...')
+
+    dm = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
+    
+    # Compute dm for valid ZDR
+    bad_zdr = np.logical_or(self.dr < -0.2, self.dr > 4.7)
+    dm = 0.5969 +  1.7953 * self.dr - 1.1111 * self.dr**2 + 0.5171 * self.dr**3 - 0.1360 * self.dr**4 + 0.0142 * self.dr**5
+    dm[bad_zdr] = dm[bad_zdr] * -1
+            
+    # Set fill to zero
+    dm = np.ma.filled(dm, fill_value=0.0)
+
+    # HID ice threshold
+    dm = remove_ice(dm, self.fh)
+
+    dm_dict = {"data": dm, "units": "DM [mm]",
+                "long_name": "Gatlin Mass-weighted mean diameter", "_FillValue": -32767.0,
+                "standard_name": "Gatlin Mass-weighted mean diameter",}
+    self.radar.add_field("DM", dm_dict, replace_existing=True)
+
+    return self.radar
+
+# ***************************************************************************************
+
 def add_calc_dsd_sband_tokay_2020(self):
 
     print('    Calculating Drop-Size Distribution...')

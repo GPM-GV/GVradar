@@ -289,8 +289,11 @@ class DP_products:
                 self.fh = self.radar.fields['FH']['data']
 
     # Calculate Drop-Size Distribution from Tokay et al. 2020 and add to radar
-            if self.do_tokay_DSD == True: 
-                self.radar = dp.add_calc_dsd_sband_tokay_2020(self)
+            if self.do_tokay_DSD == True:
+                if self.site == 'CPOL':
+                    self.radar = dp.get_gatlin_DM(self)
+                else:     
+                    self.radar = dp.add_calc_dsd_sband_tokay_2020(self)
 
     # Calculate Cifelli et al. 2011 ice and water mass fields and add to radar.
     # Function expects, reflectivity, differential reflectivity, 
