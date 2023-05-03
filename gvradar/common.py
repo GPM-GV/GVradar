@@ -568,9 +568,10 @@ def update_metadata(self):
     self.radar.metadata['institution'] = "NASA GSFC"
     self.radar.metadata['project'] = "Global Precipitation Measurement (GPM)"
     self.radar.metadata['source'] = 'GVradar V1.0'
-    self.radar.metadata['references'] = 'https://github.com/GPM-GV/GVradar'      
+    self.radar.metadata['references'] = 'https://github.com/GPM-GV/GVradar'
+    self.radar.metadata['field_names'] = self.radar.fields.keys()      
 
-    print(self.radar.metadata) 
+    print('', self.radar.metadata, '',sep='\n') 
 
     return self.radar
 
