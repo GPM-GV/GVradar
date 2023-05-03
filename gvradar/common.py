@@ -569,7 +569,12 @@ def update_metadata(self):
     self.radar.metadata['project'] = "Global Precipitation Measurement (GPM)"
     self.radar.metadata['source'] = 'GVradar V1.0'
     self.radar.metadata['references'] = 'https://github.com/GPM-GV/GVradar'
-    self.radar.metadata['field_names'] = self.radar.fields.keys()      
+
+    new_fields = []
+    for key in self.radar.fields.keys():
+            new_fields.append(key)
+
+    self.radar.metadata['field_names'] = new_fields     
 
     print('', self.radar.metadata, '',sep='\n') 
 
