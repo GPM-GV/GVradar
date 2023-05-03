@@ -13,7 +13,6 @@ import copy
 from copy import deepcopy
 import pyart
 import os, sys
-from datetime import datetime
 import datetime
 from cftime import date2num, num2date
 import gzip
@@ -565,7 +564,7 @@ def update_metadata(self):
 
     self.radar.metadata['version'] = 'VN V2.0'
     self.radar.metadata['Description'] = "Quality Controlled Dual Pol Products"
-    self.radar.metadata['Release_Date'] = str(datetime.utcnow())
+    self.radar.metadata['Release_Date'] = str(datetime.datetime.utcnow())
     self.radar.metadata['institution'] = "NASA GSFC"
     self.radar.metadata['project'] = "Global Precipitation Measurement (GPM)"
     self.radar.metadata['source'] = 'GVradar V1.0'
