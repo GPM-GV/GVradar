@@ -116,7 +116,10 @@ def get_ruc_archive(self):
             month = str(cmonth).zfill(2)
         day = str(mday).zfill(2)
     hh = str(hour).zfill(2)
-    sounding_dir = snd_dir + year + '/' + month + day + '/' + self.site + '/' + self.site + '_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
+    if self.site == 'XPOL':
+        sounding_dir = snd_dir + year + '/' + month + day + '/TM1/TM1_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
+    else:
+        sounding_dir = snd_dir + year + '/' + month + day + '/' + self.site + '/' + self.site + '_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
     
     soundingb = os.path.basename(sounding_dir)
     print('    Sounding file -->  ' + soundingb, sep='\n')
@@ -559,6 +562,9 @@ def remove_undesirable_fields(self):
                      'differential_reflectivity', 'DR', 'differential_phase', 
                      'PH', 'corrected_specific_differential_phase', 'SW', 
                      'signal_to_noise_ratio', 'KD', 'FH', 'MW', 'MI', 'RC']
+    elif self.site == 'XPOL':
+        cf_fields = ['DZ', 'DR', 'PH', 'RH', 'VR', 'SW', 'SD', 'KD', 
+                     'CZ', 'FH', 'MW', 'MI', 'RC']
     else:
         cf_fields = self.output_fields
         
@@ -747,6 +753,8 @@ def get_site_date_time(radar):
 
     if site == 'CPOL':
         band = 'C'
+    elif site == 'XPOL':
+        band = 'X'
     else:
         band = 'S'
 
