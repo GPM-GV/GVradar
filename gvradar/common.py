@@ -597,7 +597,7 @@ def update_metadata(self):
 
     self.radar.metadata['field_names'] = new_fields     
 
-    print('', self.radar.metadata, '',sep='\n') 
+    #print('', self.radar.metadata, '',sep='\n') 
 
     return self.radar
 
