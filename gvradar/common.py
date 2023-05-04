@@ -705,7 +705,7 @@ def get_site_date_time(radar):
     else:
         site=''
 
-    if site == 'NPOL1': site = 'NPOL'         
+    if site == 'NPOL1' or site == 'NPOL2': site = 'NPOL'         
     if site == 'LAVA1': site = 'KWAJ'
     if site == b'AN1-P\x00\x00\x00': site = 'AL1'
     if site == b'JG1-P\x00\x00\x00' or site == b'JG1\x00\x00\x00\x00\x00': site = 'JG1'

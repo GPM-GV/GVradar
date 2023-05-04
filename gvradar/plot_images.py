@@ -712,7 +712,7 @@ def get_radar_info(radar, sweep):
     else:
         site=''
 
-    if site == 'NPOL1': site = 'NPOL'         
+    if site == 'NPOL1' or site == 'NPOL2': site = 'NPOL'         
     if site == 'LAVA1': site = 'KWAJ'
     if site == b'AN1-P\x00\x00\x00': site = 'AL1'
     if site == b'JG1-P\x00\x00\x00' or site == b'JG1\x00\x00\x00\x00\x00': site = 'JG1'
@@ -722,7 +722,7 @@ def get_radar_info(radar, sweep):
     if site == b'SF1-P\x00\x00\x00': site = 'SF1'
     if site == b'ST1-P\x00\x00\x00': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00': site = 'SV1'
-    if site == b'TM1-P\x00\x00\x00': site = 'TM1'
+    if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
     if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
     if site == 'CP2RADAR': site = 'CP2'
