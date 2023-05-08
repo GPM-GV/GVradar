@@ -362,6 +362,16 @@ def get_uwy_archive(self):
         if radar_DT.hour > 18:
             mday = radar_DT.day + 1
             day = str(mday).zfill(2)
+            if mday > mdays[radar_DT.month]:
+                cmonth = radar_DT.month + 1
+                mday = 1
+                if(cmonth > 12):
+                    cmonth = 1
+                    mday = 1
+                    cyear = radar_DT.year + 1
+                    year = str(cyear).zfill(4)
+                month = str(cmonth).zfill(2)
+                day = str(mday).zfill(2)
             sounding_dir = snd_dir + year + '/' + month + '/DARW/DARW_YPDN_' + year + '_' + month + day + '_00UTC.txt'
     elif self.site == 'Reunion':
         if radar_DT.hour <= 6:
@@ -371,6 +381,16 @@ def get_uwy_archive(self):
         if radar_DT.hour > 18:
             mday = radar_DT.day + 1
             day = str(mday).zfill(2)
+            if mday > mdays[radar_DT.month]:
+                cmonth = radar_DT.month + 1
+                mday = 1
+                if(cmonth > 12):
+                    cmonth = 1
+                    mday = 1
+                    cyear = radar_DT.year + 1
+                    year = str(cyear).zfill(4)
+                month = str(cmonth).zfill(2)
+                day = str(mday).zfill(2)
             sounding_dir = snd_dir + year + '/' + month + '/Reunion/Reunion_FMEE_' + year + '_' + month + day + '_00UTC.txt'        
     elif self.site == 'CP2':
         if radar_DT.hour <= 6:
@@ -380,7 +400,18 @@ def get_uwy_archive(self):
         if radar_DT.hour > 18:
             mday = radar_DT.day + 1
             day = str(mday).zfill(2)
+            if mday > mdays[radar_DT.month]:
+                cmonth = radar_DT.month + 1
+                mday = 1
+                if(cmonth > 12):
+                    cmonth = 1
+                    mday = 1
+                    cyear = radar_DT.year + 1
+                    year = str(cyear).zfill(4)
+                month = str(cmonth).zfill(2)
+                day = str(mday).zfill(2)
             sounding_dir = snd_dir + year + '/' + month + '/CP2/CP2_YBBN_' + year + '_' + month + day + '_00UTC.txt'        
+        
     else:
         if radar_DT.minute >= 30: hour = radar_DT.hour + 1
         if hour == 24: 
