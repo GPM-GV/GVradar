@@ -720,7 +720,7 @@ def get_radar_info(radar, sweep):
     if site == b'NT1-P\x00\x00\x00': site = 'NT1'
     if site == b'PE1-P\x00\x00\x00' or site == 'PE1-P': site = 'PE1'
     if site == b'SF1-P\x00\x00\x00': site = 'SF1'
-    if site == b'ST1-P\x00\x00\x00': site = 'ST1'
+    if site == b'ST1-P\x00\x00\x00' or site == 'ST1-P':: site = 'ST1'
     if site == b'SV1-P\x00\x00\x00': site = 'SV1'
     if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
     if site == 'GUNN_PT': site = 'CPOL'
