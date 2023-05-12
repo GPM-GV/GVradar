@@ -42,13 +42,13 @@ def add_csu_fhc(self):
                                     T=self.radar_T, band=self.radar_band, verbose=False,
                                     use_trap=False, method='hybrid')
     
-        fh_dict = {"data": fh, "units": "Unitless",
-                "long_name": "Summer Hydrometeor ID", "_FillValue": -32767.0,
-                "standard_name": "Summer Hydrometeor ID",}
-        self.radar.add_field("FH", fh_dict, replace_existing=True)
-        #self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
-        #                                          units='Unitless', long_name='Summer Hydrometeor ID', 
-        #                                          standard_name='Summer Hydrometeor ID', dz_field='CZ') 
+        #fh_dict = {"data": fh, "units": "Unitless",
+        #        "long_name": "Summer Hydrometeor ID", "_FillValue": -32767.0,
+        #        "standard_name": "Summer Hydrometeor ID",}
+        #self.radar.add_field("FH", fh_dict, replace_existing=True)
+        self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
+                                                  units='Unitless', long_name='Summer Hydrometeor ID', 
+                                                  standard_name='Summer Hydrometeor ID', dz_field='CZ') 
 
     # Run Winter HID
     if self.do_HID_winter:
@@ -83,24 +83,24 @@ def add_csu_fhc(self):
                                     nsect=nsect, scan_type = self.scan_type, verbose = False, 
                                     use_temp = False, band=self.radar_band, minRH=minRH,
                                     return_scores=False ,sn_thresh=self.snthresh, sn=sndat)
-                nt_dict = {"data": fnt, "units": "Unitless",
-                "long_name": "No TEMP Winter Hydrometeor ID", "_FillValue": -32767.0,
-                "standard_name": "No TEMP Winter Hydrometeor ID",}
-                self.radar.add_field("NT", nt_dict, replace_existing=True)
-                #self.radar = cm.add_field_to_radar_object(fnt, self.radar, field_name = 'NT',
-                #                                  units='Unitless', long_name='No TEMP Winter Hydrometeor ID',
-                #                                  standard_name='no TEMP Winter Hydrometeor ID',
-                #                                  dz_field='CZ')
+                #nt_dict = {"data": fnt, "units": "Unitless",
+                #"long_name": "No TEMP Winter Hydrometeor ID", "_FillValue": -32767.0,
+                #"standard_name": "No TEMP Winter Hydrometeor ID",}
+                #self.radar.add_field("NT", nt_dict, replace_existing=True)
+                self.radar = cm.add_field_to_radar_object(fnt, self.radar, field_name = 'NT',
+                                                  units='Unitless', long_name='No TEMP Winter Hydrometeor ID',
+                                                  standard_name='no TEMP Winter Hydrometeor ID',
+                                                  dz_field='CZ')
 
-        fw_dict = {"data": fw, "units": "Unitless",
-                "long_name": "Winter Hydrometeor ID", "_FillValue": -32767.0,
-                "standard_name": "Winter Hydrometeor ID",}
-        self.radar.add_field("FW", fw_dict, replace_existing=True)
+        #fw_dict = {"data": fw, "units": "Unitless",
+        #        "long_name": "Winter Hydrometeor ID", "_FillValue": -32767.0,
+        #        "standard_name": "Winter Hydrometeor ID",}
+        #self.radar.add_field("FW", fw_dict, replace_existing=True)
 
-        #self.radar = cm.add_field_to_radar_object(fw, self.radar, field_name = 'FW',
-        #                                          units='Unitless', long_name='Winter Hydrometeor ID',
-        #                                          standard_name='Winter Hydrometeor ID',
-        #                                          dz_field='CZ')                            
+        self.radar = cm.add_field_to_radar_object(fw, self.radar, field_name = 'FW',
+                                                  units='Unitless', long_name='Winter Hydrometeor ID',
+                                                  standard_name='Winter Hydrometeor ID',
+                                                  dz_field='CZ')                            
 
     return self.radar
 # ***************************************************************************************
@@ -563,7 +563,7 @@ def mask_beyond_150(self):
     sector = {'hmin': 0, 'hmax': None,
               'rmin': 150 * 1000, 'rmax':  400 * 1000,
               'azmin': 0, 'azmax': 360,
-              'elmin': 0, 'elmax': None}
+              'elmin': None, 'elmax': None}
     
     beyond_flag = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
     
