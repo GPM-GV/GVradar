@@ -107,10 +107,15 @@ def add_csu_liquid_ice_mass(self):
     #mw = remove_ice(mw, self.fh)
     #mi = remove_ice(mi, self.fh)
 
-    self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
-                                 long_name='Liquid Water Mass',
-                                 standard_name='Liquid Water Mass',
-                                 dz_field='CZ')
+    mw_dict = {"data": mw, "units": "g m-3",
+                "long_name": "Liquid Water Mass", "_FillValue": -32767.0,
+                "standard_name": "Liquid Water Mass",}
+    self.radar.add_field("MW", mw_dict, replace_existing=True)
+
+    #self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
+    #                             long_name='Liquid Water Mass',
+    #                             standard_name='Liquid Water Mass',
+    #                             dz_field='CZ')
 
     self.radar = cm.add_field_to_radar_object(mi, self.radar, field_name='MI', units='g m-3',
                                  long_name='Ice Water Mass',
