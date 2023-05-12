@@ -42,10 +42,6 @@ def add_csu_fhc(self):
                                     T=self.radar_T, band=self.radar_band, verbose=False,
                                     use_trap=False, method='hybrid')
     
-        #fh_dict = {"data": fh, "units": "Unitless",
-        #        "long_name": "Summer Hydrometeor ID", "_FillValue": -32767.0,
-        #        "standard_name": "Summer Hydrometeor ID",}
-        #self.radar.add_field("FH", fh_dict, replace_existing=True)
         self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
                                                   units='Unitless', long_name='Summer Hydrometeor ID', 
                                                   standard_name='Summer Hydrometeor ID', dz_field='CZ') 
@@ -83,19 +79,10 @@ def add_csu_fhc(self):
                                     nsect=nsect, scan_type = self.scan_type, verbose = False, 
                                     use_temp = False, band=self.radar_band, minRH=minRH,
                                     return_scores=False ,sn_thresh=self.snthresh, sn=sndat)
-                #nt_dict = {"data": fnt, "units": "Unitless",
-                #"long_name": "No TEMP Winter Hydrometeor ID", "_FillValue": -32767.0,
-                #"standard_name": "No TEMP Winter Hydrometeor ID",}
-                #self.radar.add_field("NT", nt_dict, replace_existing=True)
                 self.radar = cm.add_field_to_radar_object(fnt, self.radar, field_name = 'NT',
                                                   units='Unitless', long_name='No TEMP Winter Hydrometeor ID',
                                                   standard_name='no TEMP Winter Hydrometeor ID',
                                                   dz_field='CZ')
-
-        #fw_dict = {"data": fw, "units": "Unitless",
-        #        "long_name": "Winter Hydrometeor ID", "_FillValue": -32767.0,
-        #        "standard_name": "Winter Hydrometeor ID",}
-        #self.radar.add_field("FW", fw_dict, replace_existing=True)
 
         self.radar = cm.add_field_to_radar_object(fw, self.radar, field_name = 'FW',
                                                   units='Unitless', long_name='Winter Hydrometeor ID',
@@ -119,18 +106,6 @@ def add_csu_liquid_ice_mass(self):
     # HID ice threshold
     #mw = remove_ice(mw, self.fh)
     #mi = remove_ice(mi, self.fh)
-
-    '''
-    mw_dict = {"data": mw, "units": "g m-3",
-                "long_name": "Liquid Water Mass", "_FillValue": -32767.0,
-                "standard_name": "Liquid Water Mass",}
-    self.radar.add_field("MW", mw_dict, replace_existing=True)
-
-    mi_dict = {"data": mi, "units": "g m-3",
-                "long_name": "Ice Water Mass", "_FillValue": -32767.0,
-                "standard_name": "Ice Water Mass",}
-    self.radar.add_field("MI", mi_dict, replace_existing=True)
-    '''
 
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
