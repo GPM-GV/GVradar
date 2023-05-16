@@ -41,7 +41,10 @@ def add_csu_fhc(self):
         fh = csu_fhc.csu_fhc_summer(dz=self.dz, zdr=self.dr, rho=self.rh, kdp=self.kd, use_temp=True,
                                     T=self.radar_T, band=self.radar_band, verbose=False,
                                     use_trap=False, method='hybrid')
-    
+        
+        # Set fill to -32767.0
+        fh = np.ma.filled(fh, fill_value=-32767.0)
+        
         self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
                                                   units='Unitless', long_name='Summer Hydrometeor ID', 
                                                   standard_name='Summer Hydrometeor ID', dz_field='CZ') 
@@ -79,10 +82,17 @@ def add_csu_fhc(self):
                                     nsect=nsect, scan_type = self.scan_type, verbose = False, 
                                     use_temp = False, band=self.radar_band, minRH=minRH,
                                     return_scores=False ,sn_thresh=self.snthresh, sn=sndat)
+
+                # Set fill to -32767.0
+                fnt = np.ma.filled(fnt, fill_value=-32767.0)
+
                 self.radar = cm.add_field_to_radar_object(fnt, self.radar, field_name = 'NT',
                                                   units='Unitless', long_name='No TEMP Winter Hydrometeor ID',
                                                   standard_name='no TEMP Winter Hydrometeor ID',
                                                   dz_field='CZ')
+
+        # Set fill to -32767.0
+        fw = np.ma.filled(fw, fill_value=-32767.0)
 
         self.radar = cm.add_field_to_radar_object(fw, self.radar, field_name = 'FW',
                                                   units='Unitless', long_name='Winter Hydrometeor ID',
@@ -103,9 +113,9 @@ def add_csu_liquid_ice_mass(self):
         mw = self.radar.fields['CZ']['data'].copy()
         mi = self.radar.fields['CZ']['data'].copy()
 
-    # HID ice threshold
-    #mw = remove_ice(mw, self.fh)
-    #mi = remove_ice(mi, self.fh)
+    # Set fill to -32767.0
+    mw = np.ma.filled(mw, fill_value=-32767.0)
+    mi = np.ma.filled(mi, fill_value=-32767.0)
 
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
