@@ -42,9 +42,6 @@ def add_csu_fhc(self):
                                     T=self.radar_T, band=self.radar_band, verbose=False,
                                     use_trap=False, method='hybrid')
         
-        # Set fill to -32767.0
-        fh = np.ma.filled(fh, fill_value=-32767.0)
-        
         self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
                                                   units='Unitless', long_name='Summer Hydrometeor ID', 
                                                   standard_name='Summer Hydrometeor ID', dz_field='CZ') 
@@ -83,16 +80,10 @@ def add_csu_fhc(self):
                                     use_temp = False, band=self.radar_band, minRH=minRH,
                                     return_scores=False ,sn_thresh=self.snthresh, sn=sndat)
 
-                # Set fill to -32767.0
-                fnt = np.ma.filled(fnt, fill_value=-32767.0)
-
                 self.radar = cm.add_field_to_radar_object(fnt, self.radar, field_name = 'NT',
                                                   units='Unitless', long_name='No TEMP Winter Hydrometeor ID',
                                                   standard_name='no TEMP Winter Hydrometeor ID',
                                                   dz_field='CZ')
-
-        # Set fill to -32767.0
-        fw = np.ma.filled(fw, fill_value=-32767.0)
 
         self.radar = cm.add_field_to_radar_object(fw, self.radar, field_name = 'FW',
                                                   units='Unitless', long_name='Winter Hydrometeor ID',
@@ -112,10 +103,6 @@ def add_csu_liquid_ice_mass(self):
         print(' ',"No precip MW and MI will be -32767.0", '', sep='\n')
         mw = self.radar.fields['CZ']['data'].copy()
         mi = self.radar.fields['CZ']['data'].copy()
-
-    # Set fill to -32767.0
-    mw = np.ma.filled(mw, fill_value=-32767.0)
-    mi = np.ma.filled(mi, fill_value=-32767.0)
 
     self.radar = cm.add_field_to_radar_object(mw, self.radar, field_name='MW', units='g m-3',
                                  long_name='Liquid Water Mass',
@@ -149,7 +136,7 @@ def add_csu_blended_rain(self):
     rain = remove_ice(rain, self.fh)
 
     rc_dict = {"data": rain, "units": "mm/h",
-                "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
+                "long_name": "HIDRO Rainfall Rate", "_FillValue": -9999.0,
                 "standard_name": "HIDRO Rainfall Rate",}
     self.radar.add_field("RC", rc_dict, replace_existing=True)
     
@@ -183,7 +170,7 @@ def add_polZR_rr(self):
     rp = remove_ice(rp, self.fh)
 
     rp_dict = {"data": rp, "units": "mm/h",
-               "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
+               "long_name": "Polzr_Rain_Rate", "_FillValue": -9999.0,
                "standard_name": "Polzr_Rain_Rate",}
     self.radar.add_field("RP", rp_dict, replace_existing=True)
 
@@ -209,7 +196,7 @@ def get_gatlin_DM(self):
     dm = remove_ice(dm, self.fh)
 
     dm_dict = {"data": dm, "units": "DM [mm]",
-                "long_name": "Gatlin Mass-weighted mean diameter", "_FillValue": -32767.0,
+                "long_name": "Gatlin Mass-weighted mean diameter", "_FillValue": -9999.0,
                 "standard_name": "Gatlin Mass-weighted mean diameter",}
     self.radar.add_field("DM", dm_dict, replace_existing=True)
 
@@ -245,12 +232,12 @@ def add_calc_dsd_sband_tokay_2020(self):
     nw = remove_ice(nw, self.fh)
 
     dm_dict = {"data": dm, "units": "DM [mm]",
-                "long_name": "Mass-weighted mean diameter", "_FillValue": -32767.0,
+                "long_name": "Mass-weighted mean diameter", "_FillValue": -9999.0,
                 "standard_name": "Mass-weighted mean diameter",}
     self.radar.add_field("DM", dm_dict, replace_existing=True)
     
     nw_dict = {"data": nw, "units": "Log[Nw, m^-3 mm^-1]",
-                "long_name": "Normalized intercept parameter", "_FillValue": -32767.0,
+                "long_name": "Normalized intercept parameter", "_FillValue": -9999.0,
                 "standard_name": "Normalized intercept parameter",}
     self.radar.add_field("NW", nw_dict, replace_existing=True)
 
@@ -601,7 +588,7 @@ def mask_beyond_150(self):
     for fld in fields:
         nf = self.radar.fields[fld]['data']
         nf[apply_beyond] = -32767.0
-        if fld in sfields: nf = np.ma.filled(nf, fill_value=-32767.0)
+        #if fld in sfields: nf = np.ma.filled(nf, fill_value=-32767.0)
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
 
     return self.radar
