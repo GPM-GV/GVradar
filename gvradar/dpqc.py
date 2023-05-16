@@ -341,7 +341,7 @@ def mask_88D_200(self):
     sector = {'hmin': 0, 'hmax': None,
               'rmin': 200 * 1000, 'rmax':  300 * 1000,
               'azmin': 0, 'azmax': 360,
-              'elmin': 0, 'elmax': None}
+              'elmin': None, 'elmax': None}
     
     WSR_flag = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
 
