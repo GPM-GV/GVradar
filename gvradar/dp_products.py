@@ -672,7 +672,7 @@ def set_blockage(self, sector_dict):
 
 def set_missing(self):
 
-    for fld in self.radar.fields.keys():
+    for fld in self.radar.fields:
         nf = deepcopy(self.radar.fields[fld])
         nf = np.ma.filled(nf, fill_value= -32767.0)
         self.radar.add_field(fld, nf, replace_existing=True)
