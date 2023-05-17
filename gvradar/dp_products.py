@@ -674,8 +674,14 @@ def set_missing(self):
 
     for fld in self.radar.fields:
         nf = self.radar.fields[fld]['data']
-        nf = np.ma.filled(nf, fill_value= -32767.0)
-        self.radar.add_field_like(fld,fld,nf,replace_existing=True)
+        fill_value = -32767.0
+        #nf = np.ma.filled(nf, fill_value= -32767.0)
+        field_dict = {'data': nf,
+                  'units': units,
+                  'long_name': long_name,
+                  'standard_name': standard_name,
+                  '_FillValue': fill_value}
+        self.radar.add_field(fld,field_dict,replace_existing=True)
 
     return self.radar
 
