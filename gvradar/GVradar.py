@@ -341,6 +341,7 @@ class DP_products:
     # Remove unwanted fields from radar and write cfRadial
         if self.output_cf == True:
             self.radar = cm.remove_undesirable_fields(self)
+            self.radar = dp.set_missing(self)
         # Write cfRadial file
             cm.output_cf(self)
 

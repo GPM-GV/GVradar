@@ -668,7 +668,18 @@ def set_blockage(self, sector_dict):
     
     return self.radar
 
-# *************************************************************************************** 
+# ***************************************************************************************
+
+def set_missing(self):
+
+    for fld in self.radar.fields.keys():
+        nf = self.radar.fields[fld]['data']
+        nf = np.ma.filled(nf, fill_value= -32767.0)
+        self.radar.add_field_like(fld,fld,nf,replace_existing=True)
+
+    return self.radar
+
+# ***************************************************************************************
 
 def get_kdp(self):
 
