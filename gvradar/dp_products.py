@@ -681,7 +681,6 @@ def set_missing(self):
         if 'standard_name' not in self.radar.fields[fld].keys():
             self.radar.fields[fld]['standard_name'] = ''    
         fill_value = -32767.0
-        #nf = np.ma.filled(nf, fill_value= -32767.0)
         field_dict = {'data': nf,
                   'units': self.radar.fields[fld]['units'],
                   'long_name': self.radar.fields[fld]['long_name'],
