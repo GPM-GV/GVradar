@@ -679,7 +679,7 @@ def set_missing(self):
         field_dict = {'data': nf,
                   'units': self.radar.fields[fld]['units'],
                   'long_name': self.radar.fields[fld]['long_name'],
-                  'standard_name': self.radar.fields[fld]['standard_name']
+                  'standard_name': self.radar.fields[fld]['standard_name'],
                   '_FillValue': fill_value}
         self.radar.add_field(fld,field_dict,replace_existing=True)
 
