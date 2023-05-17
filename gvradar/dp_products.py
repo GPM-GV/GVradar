@@ -136,7 +136,7 @@ def add_csu_blended_rain(self):
     rain = remove_ice(rain, self.fh)
 
     rc_dict = {"data": rain, "units": "mm/h",
-                "long_name": "HIDRO Rainfall Rate", "_FillValue": -9999.0,
+                "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
                 "standard_name": "HIDRO Rainfall Rate",}
     self.radar.add_field("RC", rc_dict, replace_existing=True)
     
@@ -170,7 +170,7 @@ def add_polZR_rr(self):
     rp = remove_ice(rp, self.fh)
 
     rp_dict = {"data": rp, "units": "mm/h",
-               "long_name": "Polzr_Rain_Rate", "_FillValue": -9999.0,
+               "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
                "standard_name": "Polzr_Rain_Rate",}
     self.radar.add_field("RP", rp_dict, replace_existing=True)
 
@@ -196,7 +196,7 @@ def get_gatlin_DM(self):
     dm = remove_ice(dm, self.fh)
 
     dm_dict = {"data": dm, "units": "DM [mm]",
-                "long_name": "Gatlin Mass-weighted mean diameter", "_FillValue": -9999.0,
+                "long_name": "Gatlin Mass-weighted mean diameter", "_FillValue": -32767.0,
                 "standard_name": "Gatlin Mass-weighted mean diameter",}
     self.radar.add_field("DM", dm_dict, replace_existing=True)
 
@@ -232,12 +232,12 @@ def add_calc_dsd_sband_tokay_2020(self):
     nw = remove_ice(nw, self.fh)
 
     dm_dict = {"data": dm, "units": "DM [mm]",
-                "long_name": "Mass-weighted mean diameter", "_FillValue": -9999.0,
+                "long_name": "Mass-weighted mean diameter", "_FillValue": -32767.0,
                 "standard_name": "Mass-weighted mean diameter",}
     self.radar.add_field("DM", dm_dict, replace_existing=True)
     
     nw_dict = {"data": nw, "units": "Log[Nw, m^-3 mm^-1]",
-                "long_name": "Normalized intercept parameter", "_FillValue": -9999.0,
+                "long_name": "Normalized intercept parameter", "_FillValue": -32767.0,
                 "standard_name": "Normalized intercept parameter",}
     self.radar.add_field("NW", nw_dict, replace_existing=True)
 
@@ -587,7 +587,7 @@ def mask_beyond_150(self):
             fields.append(fld)
     for fld in fields:
         nf = self.radar.fields[fld]['data']
-        nf[apply_beyond] = -9999.0
+        nf[apply_beyond] = -32767.0
         self.radar.add_field_like(fld,fld,nf,replace_existing=True)
 
     return self.radar
