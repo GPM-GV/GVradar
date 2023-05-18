@@ -528,6 +528,7 @@ def rename_fields_in_radar(self):
         old_fields = []
         new_fields = []
 
+    print(self.radar.info())
     # Change names of old fields to new fields using pop
     nl = len(old_fields)
     for i in range(0,nl):
@@ -539,7 +540,7 @@ def rename_fields_in_radar(self):
             self.radar.fields.pop(old_field)
         #self.radar.fields[new_field] = self.radar.fields.pop(old_field)
         #i += 1  
-
+    print(self.radar.info())
     # Add Corrected Reflectivity field
     if ('CZ') not in self.radar.fields.keys():
 #        if self.site == 'NPOL' or self.site == 'KWAJ':
