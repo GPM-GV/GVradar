@@ -528,26 +528,21 @@ def rename_fields_in_radar(self):
         old_fields = []
         new_fields = []
 
-    print(self.radar.info())
     # Change names of old fields to new fields using pop
     nl = len(old_fields)
     for i in range(0,nl):
         old_field = old_fields[i]
         new_field = new_fields[i]
-        if new_field != old_field:
-            nf = self.radar.fields[old_field]['data']
-            self.radar.add_field_like(old_field,new_field,nf,replace_existing=True)
-            self.radar.fields.pop(old_field)
-        #self.radar.fields[new_field] = self.radar.fields.pop(old_field)
-        #i += 1  
-    print(self.radar.info())
+        self.radar.fields[new_field] = self.radar.fields.pop(old_field)
+        i += 1  
+
     # Add Corrected Reflectivity field
     if ('CZ') not in self.radar.fields.keys():
 #        if self.site == 'NPOL' or self.site == 'KWAJ':
         if self.site == 'KWAJ':
             zz = deepcopy(self.radar.fields['DBT2'])
             cz = self.radar.fields['DBT2']['data'].copy()
-            add_field_to_radar_object(cz, self.radar, field_name='CZ', 
+            self.radar = add_field_to_radar_object(cz, self.radar, field_name='CZ', 
                                          units='dBZ',
                                          long_name='Corrected Reflectivity', 
                                          standard_name='Corrected Reflectivity', 
@@ -555,7 +550,7 @@ def rename_fields_in_radar(self):
         else: 
             zz = deepcopy(self.radar.fields['DZ'])
             cz = self.radar.fields['DZ']['data'].copy()
-            add_field_to_radar_object(cz, self.radar, field_name='CZ', 
+            self.radar = add_field_to_radar_object(cz, self.radar, field_name='CZ', 
                                          units='dBZ',
                                          long_name='Corrected Reflectivity', 
                                          standard_name='Corrected Reflectivity', 
@@ -616,7 +611,21 @@ def update_metadata(self):
 
     self.radar.metadata['field_names'] = new_fields
 
+    if self.radar.fields['CZ']:
+        cz = self.radar.fields['CZ']['data'].copy()
+        self.radar = add_field_to_radar_object(cz, self.radar, field_name='CZ', 
+                                         units='dBZ',
+                                         long_name='Corrected Reflectivity', 
+                                         standard_name='Corrected Reflectivity', 
+                                         dz_field='CZ')
 
+    if self.radar.fields['DR']:
+        dr = self.radar.fields['DR']['data'].copy()
+        self.radar = add_field_to_radar_object(dr, self.radar, field_name='DR', 
+                                         units='dB',
+                                         long_name='Differential Reflectivity', 
+                                         standard_name='log_differential_reflectivity_hv', 
+                                         dz_field='CZ')                                     
 
     #print('', self.radar.metadata, '',sep='\n') 
 
