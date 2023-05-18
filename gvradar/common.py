@@ -619,13 +619,46 @@ def update_metadata(self):
                                          standard_name='Corrected Reflectivity', 
                                          dz_field='CZ')
 
+    if self.radar.fields['DZ']:
+        dz = self.radar.fields['DZ']['data'].copy()
+        self.radar = add_field_to_radar_object(dz, self.radar, field_name='DZ', 
+                                         units='dBZ',
+                                         long_name='RAW Reflectivity', 
+                                         standard_name='RAW Reflectivity', 
+                                         dz_field='CZ')                                     
+
     if self.radar.fields['DR']:
         dr = self.radar.fields['DR']['data'].copy()
         self.radar = add_field_to_radar_object(dr, self.radar, field_name='DR', 
                                          units='dB',
                                          long_name='Differential Reflectivity', 
                                          standard_name='log_differential_reflectivity_hv', 
-                                         dz_field='CZ')                                     
+                                         dz_field='CZ')     
+
+    if self.radar.fields['RH']:
+        rh = self.radar.fields['RH']['data'].copy()
+        self.radar = add_field_to_radar_object(rh, self.radar, field_name='RH', 
+                                         units='none',
+                                         long_name='Correlation Coefficient', 
+                                         standard_name='cross_correlation_ratio_hv', 
+                                         dz_field='CZ')      
+
+    if self.radar.fields['VR']:
+        vr = self.radar.fields['VR']['data'].copy()
+        self.radar = add_field_to_radar_object(vr, self.radar, field_name='VR', 
+                                         units='m/s',
+                                         long_name='Radial Velocity', 
+                                         standard_name='radial_velocity_of_scatterers_away_from_instrument', 
+                                         dz_field='CZ')  
+
+    if self.radar.fields['SW']:
+        sw = self.radar.fields['SW']['data'].copy()
+        self.radar = add_field_to_radar_object(sw, self.radar, field_name='SW', 
+                                         units='m/s',
+                                         long_name='Spectrum Width', 
+                                         standard_name='doppler_spectrum_width', 
+                                         dz_field='CZ')                                                                     
+
 
     #print('', self.radar.metadata, '',sep='\n') 
 
