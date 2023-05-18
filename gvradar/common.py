@@ -533,8 +533,15 @@ def rename_fields_in_radar(self):
     for i in range(0,nl):
         old_field = old_fields[i]
         new_field = new_fields[i]
-        self.radar.fields[new_field] = self.radar.fields.pop(old_field)
-        i += 1  
+        if new_field != old_field:
+            nf = self.radar.fields[old_field]['data']
+            self.radar.add_field_like(old_field,new_field,nf,replace_existing=True)
+            self.radar.fields.pop(old_field)
+        #self.radar.fields[new_field] = self.radar.fields.pop(old_field)
+        #i += 1  
+
+    for field in old_fields:
+        self.radar.fields.pop(field)
 
     # Add Corrected Reflectivity field
     if ('CZ') not in self.radar.fields.keys():
@@ -543,7 +550,7 @@ def rename_fields_in_radar(self):
             zz = deepcopy(self.radar.fields['DBT2'])
             cz = self.radar.fields['DBT2']['data'].copy()
             add_field_to_radar_object(cz, self.radar, field_name='CZ', 
-                                         units=' ',
+                                         units='dBZ',
                                          long_name='Corrected Reflectivity', 
                                          standard_name='Corrected Reflectivity', 
                                          dz_field='DZ')
@@ -551,7 +558,7 @@ def rename_fields_in_radar(self):
             zz = deepcopy(self.radar.fields['DZ'])
             cz = self.radar.fields['DZ']['data'].copy()
             add_field_to_radar_object(cz, self.radar, field_name='CZ', 
-                                         units=' ',
+                                         units='dBZ',
                                          long_name='Corrected Reflectivity', 
                                          standard_name='Corrected Reflectivity', 
                                          dz_field='DZ')
@@ -609,7 +616,9 @@ def update_metadata(self):
     for key in self.radar.fields.keys():
             new_fields.append(key)
 
-    self.radar.metadata['field_names'] = new_fields     
+    self.radar.metadata['field_names'] = new_fields
+
+
 
     #print('', self.radar.metadata, '',sep='\n') 
 

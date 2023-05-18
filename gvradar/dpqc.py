@@ -770,8 +770,8 @@ def unfold_phidp(self):
     # Create new field for corrected PH -- name it phm
     self.radar = cm.add_field_to_radar_object(phm_field, self.radar, field_name='PH', 
 		units='deg',
-		long_name=' Differential Phase (Marks)',
-		standard_name='Specific Differential Phase (Marks)',
+		long_name='Unfolded Differential Phase (Marks)',
+		standard_name='Differential Phase',
 		dz_field=self.ref_field_name)
     
     return self.radar
