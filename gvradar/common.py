@@ -611,7 +611,7 @@ def update_metadata(self):
 
     self.radar.metadata['field_names'] = new_fields
 
-    if self.radar.fields['CZ']:
+    if 'CZ' in self.radar.fields:
         cz = self.radar.fields['CZ']['data'].copy()
         self.radar = add_field_to_radar_object(cz, self.radar, field_name='CZ', 
                                          units='dBZ',
@@ -619,7 +619,7 @@ def update_metadata(self):
                                          standard_name='Corrected Reflectivity', 
                                          dz_field='CZ')
 
-    if self.radar.fields['DZ']:
+    if 'DZ' in self.radar.fields:
         dz = self.radar.fields['DZ']['data'].copy()
         self.radar = add_field_to_radar_object(dz, self.radar, field_name='DZ', 
                                          units='dBZ',
@@ -627,7 +627,7 @@ def update_metadata(self):
                                          standard_name='RAW Reflectivity', 
                                          dz_field='CZ')                                     
 
-    if self.radar.fields['DR']:
+    if 'DR' in self.radar.fields:
         dr = self.radar.fields['DR']['data'].copy()
         self.radar = add_field_to_radar_object(dr, self.radar, field_name='DR', 
                                          units='dB',
@@ -635,7 +635,7 @@ def update_metadata(self):
                                          standard_name='log_differential_reflectivity_hv', 
                                          dz_field='CZ')     
 
-    if self.radar.fields['RH']:
+    if 'RH' in self.radar.fields:
         rh = self.radar.fields['RH']['data'].copy()
         self.radar = add_field_to_radar_object(rh, self.radar, field_name='RH', 
                                          units='none',
@@ -643,7 +643,7 @@ def update_metadata(self):
                                          standard_name='cross_correlation_ratio_hv', 
                                          dz_field='CZ')      
 
-    if self.radar.fields['VR']:
+    if 'VR' in self.radar.fields:
         vr = self.radar.fields['VR']['data'].copy()
         self.radar = add_field_to_radar_object(vr, self.radar, field_name='VR', 
                                          units='m/s',
@@ -651,14 +651,13 @@ def update_metadata(self):
                                          standard_name='radial_velocity_of_scatterers_away_from_instrument', 
                                          dz_field='CZ')  
 
-    if self.radar.fields['SW']:
+    if 'SW' in self.radar.fields:
         sw = self.radar.fields['SW']['data'].copy()
         self.radar = add_field_to_radar_object(sw, self.radar, field_name='SW', 
                                          units='m/s',
                                          long_name='Spectrum Width', 
                                          standard_name='doppler_spectrum_width', 
                                          dz_field='CZ')                                                                     
-
 
     #print('', self.radar.metadata, '',sep='\n') 
 
