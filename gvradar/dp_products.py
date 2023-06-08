@@ -672,6 +672,8 @@ def set_blockage(self, sector_dict):
 
 def set_missing(self):
 
+    zero_list = ['DM','NW','RC','RP']
+
     for fld in self.radar.fields:
         nf = self.radar.fields[fld]['data']
         if 'units' not in self.radar.fields[fld].keys():
@@ -680,7 +682,10 @@ def set_missing(self):
             self.radar.fields[fld]['long_name'] = ''    
         if 'standard_name' not in self.radar.fields[fld].keys():
             self.radar.fields[fld]['standard_name'] = ''    
-        fill_value = -32767.0
+        if fld in zero_list:
+            fill_value = 0.0
+        else:
+            fill_value = -32767.0
         field_dict = {'data': nf,
                   'units': self.radar.fields[fld]['units'],
                   'long_name': self.radar.fields[fld]['long_name'],
