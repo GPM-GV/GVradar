@@ -338,7 +338,7 @@ def mask_88D_200(self):
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
     """
 
-    sector = {'hmin': 0, 'hmax': None,
+    sector = {'hmin': None, 'hmax': None,
               'rmin': 200 * 1000, 'rmax':  300 * 1000,
               'azmin': 0, 'azmax': 360,
               'elmin': None, 'elmax': None}
