@@ -125,8 +125,8 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
     lon_grid = np.arange(min_lon_rn - 1.00 , max_lon_rn + 1.00, 1.0)
     lat_grid = np.arange(min_lat_rn - 1.00 , max_lat_rn + 1.00, 1.0)
     
-    #projection = ccrs.LambertConformal(radar_lon, radar_lat)
-    projection = ccrs.Mercator(radar_lon)
+    projection = ccrs.LambertConformal(radar_lon, radar_lat)
+    #projection = ccrs.Mercator(radar_lon)
     #projection = ccrs.Orthographic(radar_lon, radar_lat)
     display = pyart.graph.RadarMapDisplay(radar)
 
