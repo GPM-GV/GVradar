@@ -792,7 +792,7 @@ def get_site_date_time(radar):
     
     radar_DT = pyart.util.datetime_from_radar(radar)
 
-    if radar_DT.year > 2022:
+    if radar_DT.year > 2000:
         if site == 'NPOL' or site == 'KWAJ':
             EPOCH_UNITS = "seconds since 1970-01-01T00:00:00Z"
             dtrad = num2date(0, radar.time["units"])
