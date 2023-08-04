@@ -45,7 +45,8 @@ def plot_fields(self):
                 sweep = sweepn[isweeps]
                 os.makedirs(self.plot_dir, exist_ok=True)
                 plot_fields_RHI(self.radar, sweep=sweep, fields=self.fields_to_plot , ymax=self.max_height,
-                                xmax=self.max_range, png=True, outdir=self.plot_dir, add_logos = self.add_logos)
+                                xmax=self.max_range, png=True, outdir=self.plot_dir, 
+                                add_logos = self.add_logos, mask_outside=self.mask_outside)
         if self.plot_single == True:
             for ifld in range(len(self.fields_to_plot)):
                 print(self.fields_to_plot[ifld])
@@ -55,7 +56,8 @@ def plot_fields(self):
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     plot_fields_RHI(self.radar, sweep=sweep, fields=[field] , ymax=self.max_height, 
-	                            xmax=self.max_range, png=True, outdir=plot_dir, add_logos = self.add_logos)
+	                            xmax=self.max_range, png=True, outdir=plot_dir, add_logos = self.add_logos,
+                                mask_outside=self.mask_outside)
 
     if self.scan_type == 'PPI':
         print('Plotting PPI images...')
@@ -341,7 +343,8 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
     plt.close()
 # ****************************************************************************************
 
-def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False, outdir='', add_logos=True):
+def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False, outdir='', 
+                    add_logos=True, mask_outside=True):
 
     #
     # *** Get radar elevation, date, time
@@ -401,7 +404,7 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
         ax = fig.add_subplot(spec[r_c[index]])
  
         display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
-                         title=title,
+                         title=title, mask_outside=mask_outside,
                          colorbar_label=units)
         display.set_limits(xlim, ylim, ax=ax)
         display.plot_grid_lines()
