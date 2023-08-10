@@ -216,7 +216,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         if index == num_fields-1:
             add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols)
             if num_fields >= 2:
-                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(nrows*0.055)))
+                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+((nrows/1.5)*0.055)))
                 
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
@@ -404,6 +404,7 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
             mytitle = '{} {} {} UTC RHI {:2.1f} Azi'.format(site,mydate,mytime,azi)
      
         ax = fig.add_subplot(spec[r_c[index]])
+        ax.set_facecolor('black')
         zero_list = ['RC','RP','DM','NW']
         if field in zero_list: mask_outside = True
         display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
