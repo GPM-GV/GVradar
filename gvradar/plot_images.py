@@ -140,9 +140,9 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         height = float((nrows)*4.5)
         ncols=num_fields 
     elif num_fields > 4:
-        width=24
         height = float((nrows)*4.5)
         ncols=round((num_fields)/2)
+        width = ncols*6
 
     r_c = []
     for x in range(nrows):
@@ -178,6 +178,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         kwargs = {}
         kwargs.update({'transform_first': True})
         ax = fig.add_subplot(spec[r_c[index]], projection=projection)
+        ax.set_facecolor('black')
         display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                      resolution='10m',
                      title = title,
@@ -201,16 +202,16 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
             reader = shpreader.Reader(reef_dir + '/shape_files/ne_10m_reefs.shp')
             reef = list(reader.geometries())
             REEF = cfeature.ShapelyFeature(reef, ccrs.PlateCarree())
-            ax.add_feature(REEF, facecolor='none', edgecolor='black', lw=0.25)
+            ax.add_feature(REEF, facecolor='none', edgecolor='white', lw=0.25)
         if site == 'RODN': 
             island_dir = os.path.dirname(__file__)
             reader = shpreader.Reader(island_dir + '/shape_files/ne_10m_minor_islands.shp')
             island = list(reader.geometries())
             ISLAND = cfeature.ShapelyFeature(island, ccrs.PlateCarree())
-            ax.add_feature(ISLAND, facecolor='none', edgecolor='black', lw=0.25)
-            ax.coastlines(edgecolor='black', lw=0.25)
+            ax.add_feature(ISLAND, facecolor='none', edgecolor='white', lw=0.25)
+            ax.coastlines(edgecolor='white', lw=0.25)
         if site in Brazil_list:
-            ax.coastlines(edgecolor='black', lw=0.5)
+            ax.coastlines(edgecolor='white', lw=0.5)
 
         if index == num_fields-1:
             add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols)
@@ -260,9 +261,9 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
         height = float((nrows)*4.5)
         ncols=num_fields 
     elif num_fields > 4:
-        width=24
         height = float((nrows)*4.5)
         ncols=round((num_fields)/2)
+        width = ncols*6
 
     r_c = []
     for x in range(nrows):
@@ -297,14 +298,15 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
             cmap=discrete_cmap(Nbins, base_cmap=cmap)
 
         ax = fig.add_subplot(spec[r_c[index]])
+        ax.set_facecolor('black')
         display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
                          colorbar_label=units, mask_outside=mask_outside, title=title,
                          axislabels_flag=False)
         display.set_limits(xlim=[-max_range,max_range], ylim=[-max_range,max_range])
 
         for rng in range(50,max_range+50,50):
-            display.plot_range_ring(rng, col = 'k', ls='-', lw=0.5)
-        display.plot_grid_lines(col="k", ls=":")
+            display.plot_range_ring(rng, col = 'white', ls='-', lw=0.5)
+        display.plot_grid_lines(col="white", ls=":")
         display.set_aspect_ratio(aspect_ratio=1.0)
         ax.set_xticklabels("", rotation = 0)
         ax.set_yticklabels("", rotation = 90)
@@ -402,12 +404,13 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
             mytitle = '{} {} {} UTC RHI {:2.1f} Azi'.format(site,mydate,mytime,azi)
      
         ax = fig.add_subplot(spec[r_c[index]])
- 
+        zero_list = ['RC','RP','DM','NW']
+        if field in zero_list: mask_outside = True
         display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
                          title=title, mask_outside=mask_outside,
                          colorbar_label=units)
         display.set_limits(xlim, ylim, ax=ax)
-        display.plot_grid_lines()
+        display.plot_grid_lines(col='white')
         
         if add_logos:  annotate_plot_rhi(ax,fig,num_fields,nrows)
         
@@ -417,7 +420,7 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
         if field == 'FW' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
 
     if num_fields >= 2:
-        plt.suptitle(mytitle,fontsize = 36, weight ='bold')
+        plt.suptitle(mytitle,fontsize = 28, weight ='bold')
     
     #
     # *** save plot
@@ -781,16 +784,39 @@ def add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, n
             ax.add_artist(abnasa)
             ax.add_artist(abgpm)
         else:
-            imageboxnasa = OffsetImage(nasalogo, zoom=0.035*ncols)
-            imageboxgpm = OffsetImage(gpmlogo, zoom=0.018*ncols)
-            imageboxnasa.image.axes = fig
-            imageboxgpm.image.axes = fig
-            abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[ncols/100, 1.0+(ncols*0.025)],
-                                    xycoords= 'figure pixels', boxcoords='figure fraction',
-                                    pad=0.0, frameon=False)
-            abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[3.8/ncols, 1.0+(ncols*0.03)],                               
-                                   xycoords= 'figure pixels', boxcoords='figure fraction',
-                                   pad=0.0, frameon=False)
+            if ncols == 2:
+                imageboxnasa = OffsetImage(nasalogo, zoom=0.035*ncols)
+                imageboxgpm = OffsetImage(gpmlogo, zoom=0.018*ncols)
+                imageboxnasa.image.axes = fig
+                imageboxgpm.image.axes = fig
+                abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[0.045, 1+0.061],
+                                        xycoords= 'figure pixels', boxcoords='figure fraction',
+                                        pad=0.0, frameon=False)
+                abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[1-.08, 1+0.061],                               
+                                       xycoords= 'figure pixels', boxcoords='figure fraction',
+                                       pad=0.0, frameon=False)
+            if ncols == 3:
+                imageboxnasa = OffsetImage(nasalogo, zoom=0.035*ncols)
+                imageboxgpm = OffsetImage(gpmlogo, zoom=0.0185*ncols)
+                imageboxnasa.image.axes = fig
+                imageboxgpm.image.axes = fig
+                abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[0.045, 1+0.061],
+                                        xycoords= 'figure pixels', boxcoords='figure fraction',
+                                        pad=0.0, frameon=False)
+                abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[1-.055, 1+0.061],                               
+                                       xycoords= 'figure pixels', boxcoords='figure fraction',
+                                       pad=0.0, frameon=False)
+            if ncols == 4:
+                imageboxnasa = OffsetImage(nasalogo, zoom=0.030*ncols)
+                imageboxgpm = OffsetImage(gpmlogo, zoom=0.015*ncols)
+                imageboxnasa.image.axes = fig
+                imageboxgpm.image.axes = fig
+                abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[0.04, 1+0.066],
+                                        xycoords= 'figure pixels', boxcoords='figure fraction',
+                                        pad=0.0, frameon=False)
+                abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[1-.04, 1+0.061],                               
+                                       xycoords= 'figure pixels', boxcoords='figure fraction',
+                                       pad=0.0, frameon=False)
             fig.add_artist(abnasa)
             fig.add_artist(abgpm)
     
@@ -814,7 +840,7 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
     #for rng in range(20,max_range+20,20):
     #    display.plot_range_ring(rng, line_style='k--', lw=0.5)
     for rng in range(50,max_range+50,50):
-        display.plot_range_ring(rng, line_style='k--', lw=0.5)
+        display.plot_range_ring(rng, line_style='--', lw=0.5,color='white')
 
     for azi in range(0,360,30):
         azimuth = 90. - azi
@@ -822,18 +848,16 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
         lon_maxrange = radar_lon + math.cos(dazimuth) * meters_to_lon * maxrange_meters
         lat_maxrange = radar_lat + math.sin(dazimuth) * meters_to_lat * maxrange_meters
         display.plot_line_geo([radar_lon, lon_maxrange], [radar_lat, lat_maxrange],
-                              line_style='k--',lw=0.5)
+                              line_style='--',lw=0.5,color='white')
     
-    display.plot_point(Pad_lon, Pad_lat, symbol = 'kv', markersize=5)
-    display.plot_point(PCMK_lon, PCMK_lat, symbol = 'kv', markersize=5)
+    display.plot_point(Pad_lon, Pad_lat, symbol = 'v', markersize=5, color='white')
+    display.plot_point(PCMK_lon, PCMK_lat, symbol = 'v', markersize=5, color='white')
 
     # Add state and countines to map
-    ax.add_feature(STATES, edgecolor='black', lw=0.5)
-    ax.add_feature(COUNTIES, facecolor='none', edgecolor='black', lw=0.25)
-    ax.add_feature(cfeature.OCEAN.with_scale('10m'),facecolor=("lightcyan"))
-    ax.add_feature(cfeature.LAND.with_scale('10m'), facecolor=("wheat"), edgecolor=None, alpha=1)
-    ax.add_feature(cfeature.LAKES.with_scale('10m'),facecolor=("lightcyan"), edgecolor='black',  lw=0.25, zorder=0)
-    #ax.add_feature(cfeature.RIVERS,facecolor=("lightcyan"), edgecolor="lightcyan", zorder=0)
+    ax.add_feature(STATES, edgecolor='white', lw=0.5)
+    ax.add_feature(COUNTIES, facecolor='none', edgecolor='white', lw=0.25)
+    ax.add_feature(cfeature.OCEAN.with_scale('10m'),facecolor=("#414141"))
+    ax.add_feature(cfeature.LAKES.with_scale('10m'),facecolor=("#414141"), edgecolor='white',  lw=0.25, zorder=0)
 
     # Add cartopy grid lines
     grid_lines = ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', x_inline=False)
@@ -869,14 +893,14 @@ def annotate_plot_rhi(ax,fig,num_fields,nrows):
         ax.add_artist(abnasa)
         ax.add_artist(abgpm)
     else:
-        imageboxnasa = OffsetImage(nasalogo, zoom=0.15)
-        imageboxgpm = OffsetImage(gpmlogo, zoom=0.08)
+        imageboxnasa = OffsetImage(nasalogo, zoom=0.12)
+        imageboxgpm = OffsetImage(gpmlogo, zoom=0.06)
         imageboxnasa.image.axes = fig
         imageboxgpm.image.axes = fig
-        abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[140,250*nrows],
+        abnasa = AnnotationBbox(imageboxnasa,[0,0], xybox=[140,245*nrows],
                                 xycoords= 'figure points', boxcoords='figure points',
                                 pad=0.0, frameon=False)
-        abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[1550,250*nrows],
+        abgpm = AnnotationBbox(imageboxgpm,[0,0], xybox=[1550,245*nrows],
                                xycoords= 'figure points', boxcoords='figure points',
                                pad=0.0, frameon=False)
         fig.add_artist(abnasa)
