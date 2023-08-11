@@ -194,7 +194,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                      embellish = False,
                      mask_outside=mask_outside)
         
-        add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES, STATES)
+        add_rings_radials(site, display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES, STATES)
 
         Brazil_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1']
         if site == 'KWAJ': 
@@ -825,13 +825,17 @@ def add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, n
 
 # ****************************************************************************************
 
-def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES, STATES):
+def add_rings_radials(site, display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols, COUNTIES, STATES):
 
     # NASA WFF instrument pad locations
     Pad_lon = -75.471
     Pad_lat =  37.934
     PCMK_lon = -75.515
     PCMK_lat =  38.078
+    IMPACTS_lat1 = 41.8182
+    IMPACTS_lon1 = -72.2577
+    IMPACTS_lat2 = 41.8077
+    IMPACTS_lon2 = -72.2941
     dtor = math.pi/180.0
 
     maxrange_meters = max_range * 1000.
@@ -851,8 +855,14 @@ def add_rings_radials(display, radar_lat, radar_lon, max_range, ax, add_logos, f
         display.plot_line_geo([radar_lon, lon_maxrange], [radar_lat, lat_maxrange],
                               line_style='--',lw=0.5,color='white')
     
-    display.plot_point(Pad_lon, Pad_lat, symbol = 'v', markersize=5, color='white')
-    display.plot_point(PCMK_lon, PCMK_lat, symbol = 'v', markersize=5, color='white')
+    wff_list = ['KDOX','KAKQ','NPOL']
+    IMPACTS_list = ['KOKX','KBOX']
+    if site in wff_list:
+        display.plot_point(Pad_lon, Pad_lat, symbol = 'v', markersize=5, color='white')
+        display.plot_point(PCMK_lon, PCMK_lat, symbol = 'v', markersize=5, color='white')
+    if site in IMPACTS_list:
+        display.plot_point(IMPACTS_lon1, IMPACTS_lat1, symbol = 'v', markersize=5, color='white')
+        display.plot_point(IMPACTS_lon2, IMPACTS_lat2, symbol = 'v', markersize=5, color='white')
 
     # Add state and countines to map
     ax.add_feature(STATES, edgecolor='white', lw=0.5)
