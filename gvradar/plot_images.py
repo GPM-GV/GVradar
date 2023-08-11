@@ -861,8 +861,8 @@ def add_rings_radials(site, display, radar_lat, radar_lon, max_range, ax, add_lo
         display.plot_point(Pad_lon, Pad_lat, symbol = 'v', markersize=5, color='white')
         display.plot_point(PCMK_lon, PCMK_lat, symbol = 'v', markersize=5, color='white')
     if site in IMPACTS_list:
-        display.plot_point(IMPACTS_lon1, IMPACTS_lat1, symbol = 'v', markersize=5, color='white')
-        display.plot_point(IMPACTS_lon2, IMPACTS_lat2, symbol = 'v', markersize=5, color='white')
+        display.plot_point(IMPACTS_lon1, IMPACTS_lat1, symbol = 'v', markersize=3, color='white')
+        display.plot_point(IMPACTS_lon2, IMPACTS_lat2, symbol = 'v', markersize=3, color='white')
 
     # Add state and countines to map
     ax.add_feature(STATES, edgecolor='white', lw=0.5)
