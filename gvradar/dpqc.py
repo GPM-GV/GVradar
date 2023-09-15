@@ -220,8 +220,8 @@ def threshold_qc_calfields(self):
         gatefilter_cal.exclude_all()
         gatefilter_cal.include_below('HEIGHT', qc_height)
         if self.site == 'NPOL':
-            #if self.do_sd == True: gatefilter_cal.include_outside('SD', self.sd_thresh,60.0)
-            if self.do_sd == True: gatefilter_cal.exclude_above('SD', self.sd_thresh)
+            if self.do_sd == True: gatefilter_cal.include_outside('SD', self.sd_thresh,self.sd_thresh_max)
+            #if self.do_sd == True: gatefilter_cal.exclude_above('SD', self.sd_thresh)
         else:
             if self.do_sd == True: gatefilter_cal.exclude_above('SD', self.sd_thresh)
         if self.do_kdp == True: gatefilter_cal.exclude_outside('KD', self.kdp_min, self.kdp_max)
@@ -877,7 +877,7 @@ def get_default_thresh_dict():
                            'do_zdr': True, 'dr_min': -6.0, 'dr_max': 4.0, 
                            'do_kdp': False, 'kdp_min': -2.0, 'kdp_max': 7.0, 
                            'do_sq': False, 'sq_thresh': 0.45, 
-                           'do_sd': True, 'sd_thresh': 18.0, 
+                           'do_sd': True, 'sd_thresh': 18.0, 'sd_thresh_max': 60,
                            'do_ph': False, 'ph_thresh': 80.0, 
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
                            'dealias_velocity': False,
