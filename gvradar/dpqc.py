@@ -800,10 +800,10 @@ def calculate_kdp(self):
     """
     print('    Getting new Kdp...')
 
-    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-#    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
-#    DP = self.radar.fields[self.phi_field_name]['data'].copy()
+#    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+#    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
+    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
     if self.site == 'KWAJ':
         window=4
