@@ -85,6 +85,14 @@ def csu_filters(self):
                                          standard_name=fld, 
                                          dz_field=self.ref_field_name)
 
+    speckle = pyart.correct.despeckle_field(self.radar, 'CZ', label_dict=None, threshold=10, size=5, gatefilter=None, delta=0.0)
+
+    # Apply gate filters to radar
+    for fld in self.radar.fields:
+        nf = deepcopy(self.radar.fields[fld])
+        nf['data'] = np.ma.masked_where(speckle.gate_excluded, nf['data'])
+        self.radar.add_field(fld, nf, replace_existing=True)
+
     return self.radar  
 
 # ***************************************************************************************
