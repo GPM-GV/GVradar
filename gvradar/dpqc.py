@@ -800,10 +800,10 @@ def calculate_kdp(self):
     """
     print('    Getting new Kdp...')
 
-#    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-#    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
-    DP = self.radar.fields[self.phi_field_name]['data'].copy()
+    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+#    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
+#    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
     if self.site == 'KWAJ':
         window=4
@@ -816,7 +816,7 @@ def calculate_kdp(self):
 
     KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                     thsd=25, gs=gate_spacing, 
-                                                    window=window, nfilter=1, std_gate=15)
+                                                    window=window, nfilter=1, std_gate=11)
 
     self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
 		units='deg/km',
