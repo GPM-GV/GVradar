@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import cartopy.crs as ccrs
 import matplotlib.colors as colors
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import Normalize
 import pyart
 import datetime
 from cftime import date2num, num2date
@@ -179,7 +181,59 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         kwargs.update({'transform_first': True})
         ax = fig.add_subplot(spec[r_c[index]], projection=projection)
         ax.set_facecolor('black')
-        display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
+
+        if field == 'RC':
+            rc = radar.fields['RC']['data'].copy()
+            rc[rc < 0.01] = np.nan
+            rc_dict = {"data": rc, "units": "mm/h",
+                       "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
+                       "standard_name": "HIDRO Rainfall Rate",}
+            radar.add_field("RC_plot", rc_dict, replace_existing=True)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
+            display.plot_ppi_map("RC_plot", sweep,vmin=vmin, vmax=vmax,
+                     resolution='10m',
+                     title = title,
+                     projection=projection, ax=ax,
+                     cmap=cmap,
+                     norm = midnorm,
+                     ticks = levels,
+                     colorbar_label=units,
+                     min_lon=min_lon, max_lon=max_lon,
+                     min_lat=min_lat, max_lat=max_lat,
+                     lon_lines=lon_grid,lat_lines=lat_grid,
+                     add_grid_lines=False,
+                     lat_0=radar_lat,
+                     lon_0=radar_lon,
+                     embellish = False,
+                     mask_outside=mask_outside)
+        elif field == 'RP':
+            rp = radar.fields['RP']['data'].copy()
+            rp[rp < 0.01] = np.nan
+            rp_dict = {"data": rp, "units": "mm/h",
+                       "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
+                       "standard_name": "Polzr_Rain_Rate",}
+            radar.add_field("RP_plot", rp_dict, replace_existing=True)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
+            display.plot_ppi_map("RP_plot", sweep,vmin=vmin, vmax=vmax,
+                     resolution='10m',
+                     title = title,
+                     projection=projection, ax=ax,
+                     cmap=cmap,
+                     norm = midnorm,
+                     ticks = levels,
+                     colorbar_label=units,
+                     min_lon=min_lon, max_lon=max_lon,
+                     min_lat=min_lat, max_lat=max_lat,
+                     lon_lines=lon_grid,lat_lines=lat_grid,
+                     add_grid_lines=False,
+                     lat_0=radar_lat,
+                     lon_0=radar_lon,
+                     embellish = False,
+                     mask_outside=mask_outside)
+        else:
+            display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                      resolution='10m',
                      title = title,
                      projection=projection, ax=ax,
@@ -407,7 +461,32 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
         ax.set_facecolor('black')
         zero_list = ['RC','RP','DM','NW']
         if field in zero_list: mask_outside = True
-        display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+        if field == 'RC':
+            rc = radar.fields['RC']['data'].copy()
+            rc[rc < 0.01] = np.nan
+            rc_dict = {"data": rc, "units": "mm/h",
+                       "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
+                       "standard_name": "HIDRO Rainfall Rate",}
+            radar.add_field("RC_plot", rc_dict, replace_existing=True)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
+            display.plot_rhi("RC_plot", sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+                         title=title, mask_outside=mask_outside,
+                         colorbar_label=units,norm=midnorm,ticks=levels)
+        elif field == 'RP':
+            rp = radar.fields['RP']['data'].copy()
+            rp[rp < 0.01] = np.nan
+            rp_dict = {"data": rp, "units": "mm/h",
+                       "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
+                       "standard_name": "Polzr_Rain_Rate",}
+            radar.add_field("RP_plot", rp_dict, replace_existing=True)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
+            display.plot_rhi("RP_plot", sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+                         title=title, mask_outside=mask_outside,
+                         colorbar_label=units,norm=midnorm,ticks=levels)
+        else:        
+            display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
                          title=title, mask_outside=mask_outside,
                          colorbar_label=units)
         display.set_limits(xlim, ylim, ax=ax)
@@ -653,14 +732,16 @@ def get_field_info(radar, field):
         units='HIDRO Rain Rate [mm/hr]'
         vmin=1e-2
         vmax=3e2
-        Nbins = 30
+        #Nbins = 30
+        Nbins = 0
         title ='HIDRO Rain Rate [mm/hr]'
         cmap='pyart_NWSRef'
     elif field == 'RP':
         units='PolZR Rain Rate [mm/hr]'
         vmin=1e-2
         vmax=3e2
-        Nbins = 30
+        #Nbins = 30
+        Nbins = 0
         title ='PolZR Rain Rate [mm/hr]'
         cmap='pyart_NWSRef'    
     elif field == 'MRC':
@@ -1000,6 +1081,25 @@ def discrete_cmap(N, base_cmap=None):
     color_list = base(np.linspace(0, 1, N, 0))
     cmap_name = base.name + str(N)
     return plt.cm.colors.ListedColormap(color_list, color_list, N)
+
+# ****************************************************************************************
+
+class MidpointNormalize(colors.Normalize):
+    def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
+        self.vcenter = vcenter
+        super().__init__(vmin, vmax, clip)
+
+    def __call__(self, value, clip=None):
+        # I'm ignoring masked values and all kinds of edge cases to make a
+        # simple example...
+        # Note also that we must extrapolate beyond vmin/vmax
+        x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1.]
+        return np.ma.masked_array(np.interp(value, x, y,
+                                            left=-np.inf, right=np.inf))
+
+    def inverse(self, value):
+        y, x = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
+        return np.interp(value, x, y, left=-np.inf, right=np.inf)
 
 # ****************************************************************************************
 
