@@ -805,10 +805,13 @@ def calculate_kdp(self):
 #    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
 #    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
-    if self.site == 'KWAJ':
+    std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL']
+    if self.site in std_list:
         window=4
+        std_gate=7
     else:
         window=4
+        std_gate=15
 
     # Range needs to be supplied as a variable, with same shape as DZ
     rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
@@ -816,7 +819,7 @@ def calculate_kdp(self):
 
     KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                     thsd=25, gs=gate_spacing, 
-                                                    window=window, nfilter=1, std_gate=7)
+                                                    window=window, nfilter=1, std_gate=std_gate)
 
     self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
 		units='deg/km',
