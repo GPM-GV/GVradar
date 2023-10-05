@@ -816,7 +816,7 @@ def calculate_kdp(self):
 
     KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                     thsd=25, gs=gate_spacing, 
-                                                    window=window, nfilter=1, std_gate=15)
+                                                    window=window, nfilter=1, std_gate=11)
 
     self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
 		units='deg/km',
