@@ -816,8 +816,8 @@ def calculate_kdp(self):
 
     std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL']
     if self.site in std_list:
-        window=5
-        std_gate=12
+        window=3
+        std_gate=11
         nfilter=1
     else:
         window=4
