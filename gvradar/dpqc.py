@@ -866,7 +866,7 @@ def remove_fields_from_radar(self):
     drop_fields = []
     if 'TEMP' in self.radar.fields.keys(): drop_fields.extend(['TEMP'])
     if 'HEIGHT' in self.radar.fields.keys(): drop_fields.extend(['HEIGHT'])
-    if 'PHIDPB' in self.radar.fields.keys(): drop_fields.extend(['PHIDPB'])
+    #if 'PHIDPB' in self.radar.fields.keys(): drop_fields.extend(['PHIDPB'])
     if 'DBTV16' in self.radar.fields.keys(): drop_fields.extend(['DBTV16'])
     if 'DBZV16' in self.radar.fields.keys(): drop_fields.extend(['DBZV16'])
     if 'SNR16' in self.radar.fields.keys(): drop_fields.extend(['SNR16'])
