@@ -147,7 +147,8 @@ class QC:
         self.radar = qc.threshold_qc_dpfields(self)
         
     # Get PhiDP
-        self.radar = qc.unfold_phidp(self)
+        if unfold_phidp == True:
+            self.radar = qc.unfold_phidp(self)
         
     # Get KDP and Std(PhiDP)
         if self.site != 'D3R':

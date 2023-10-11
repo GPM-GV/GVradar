@@ -897,6 +897,7 @@ def get_default_thresh_dict():
                            'do_sd': True, 'sd_thresh': 18.0, 'sd_thresh_max': 60,
                            'do_ph': False, 'ph_thresh': 80.0, 
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
+                           'unfold_phidp': True,
                            'dealias_velocity': False,
                            'do_insect': False, 
                            'do_despeckle': True, 
