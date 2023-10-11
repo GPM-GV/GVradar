@@ -665,6 +665,13 @@ def get_field_info(radar, field):
         Nbins = 36
         title ='Differential Phase [deg] Marks' 
         cmap='pyart_Carbone42'
+    elif field == 'PHIDPB':
+        units='PhiDP [deg]'
+        vmin=0
+        vmax=360
+        Nbins = 36
+        title ='Differential Phase [deg] Bringi' 
+        cmap='pyart_Carbone42'    
     elif field == 'RH':
         units='Correlation'
         vmin=0.7
