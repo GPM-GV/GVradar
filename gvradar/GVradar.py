@@ -147,7 +147,7 @@ class QC:
         self.radar = qc.threshold_qc_dpfields(self)
         
     # Get PhiDP
-        if unfold_phidp == True:
+        if self.unfold_phidp == True:
             self.radar = qc.unfold_phidp(self)
         
     # Get KDP and Std(PhiDP)
