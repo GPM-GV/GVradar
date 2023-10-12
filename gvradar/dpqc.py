@@ -242,6 +242,7 @@ def threshold_qc_calfields(self):
         if self.do_kdp == True: gatefilter_cal.exclude_outside('KD', self.kdp_min, self.kdp_max)
         if self.do_ph == True: gatefilter_cal.exclude_above('PH', self.ph_thresh)
         gatefilter_cal.include_above('HEIGHT', qc_height)
+        gatefilter_sd.include_above('HEIGHT', sd_height)
     elif self.use_sounding == True:
         gatefilter_cal.exclude_all()
         gatefilter_cal.include_above('TEMP', 3.0)
