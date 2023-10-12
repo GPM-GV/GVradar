@@ -816,10 +816,10 @@ def calculate_kdp(self):
 
     std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL']
     if self.site in std_list:
-        DZ = self.radar.fields[self.ref_field_name]['data'].copy()
-        DP = self.radar.fields[self.phi_field_name]['data'].copy()
+        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
         window=4
-        std_gate=7
+        std_gate=11
         nfilter=1
     else:
         DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
