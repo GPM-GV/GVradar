@@ -212,6 +212,7 @@ def threshold_qc_calfields(self):
     # Create a pyart gatefilter from radar
     secfilter = pyart.filters.GateFilter(self.radar)
     gatefilter_cal = pyart.filters.GateFilter(self.radar)
+    gatefilter_sd = pyart.filters.GateFilter(self.radar)
 
     # Apply sector thresholds regardless of temp 
     if self.do_sd_sector == True: secfilter.exclude_not_equal('SECSD', sec)
