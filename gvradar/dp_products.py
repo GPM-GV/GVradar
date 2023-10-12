@@ -493,12 +493,12 @@ def get_polzr_rainrate(dbz,nw,mu):
 # ***************************************************************************************
 
 def get_zr_rain(dbz, a, b):
-    
+    '''
     # Set max_dbz dB as maximum reasonable reflectivity
     max_dbz = 55
     dbz_max = np.greater_equal(dbz,max_dbz)
     dbz[dbz_max] = max_dbz
-
+    '''
     # Now calculate the rain rate from the pass dBZ value
     zh = 10**(dbz/10.0)
     rp = (zh/a)**(1.0/b)
