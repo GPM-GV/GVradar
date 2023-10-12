@@ -248,7 +248,7 @@ class DP_products:
         elif self.get_Bringi_kdp:
             self.radar = dp.get_kdp(self)
 
-        self.dz = self.radar.fields['CZ']['data'].copy()
+        self.dz = self.radar.fields['CZ']['data']
         self.dr = self.radar.fields['DR']['data']
         self.kd = self.radar.fields['KD']['data']
         self.rh = self.radar.fields['RH']['data']
