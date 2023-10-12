@@ -229,6 +229,7 @@ def threshold_qc_calfields(self):
         qc_height = self.qc_height * 1000
         sd_height = self.sd_height * 1000
         gatefilter_cal.exclude_all()
+        gatefilter_sd.exclude_all()
         gatefilter_cal.include_below('HEIGHT', qc_height)
         gatefilter_sd.include_below('HEIGHT', sd_height)
         if self.site == 'NPOL':
