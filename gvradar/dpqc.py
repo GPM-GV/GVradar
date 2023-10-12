@@ -228,13 +228,14 @@ def threshold_qc_calfields(self):
         qc_height = self.qc_height * 1000
         gatefilter_cal.exclude_all()
         gatefilter_cal.include_below('HEIGHT', qc_height)
+        gatefilter_sd.include_below('HEIGHT', sd_height)
         if self.site == 'NPOL':
             if self.sd_thresh_max == 0:
-                if self.do_sd == True: gatefilter_cal.exclude_above('SD', self.sd_thresh)
+                if self.do_sd == True: gatefilter_sd.exclude_above('SD', self.sd_thresh)
             else:
-                if self.do_sd == True: gatefilter_cal.include_outside('SD', self.sd_thresh,self.sd_thresh_max)
+                if self.do_sd == True: gatefilter_sd.include_outside('SD', self.sd_thresh,self.sd_thresh_max)
         else:
-            if self.do_sd == True: gatefilter_cal.exclude_above('SD', self.sd_thresh)
+            if self.do_sd == True: gatefilter_sd.exclude_above('SD', self.sd_thresh)
         if self.do_kdp == True: gatefilter_cal.exclude_outside('KD', self.kdp_min, self.kdp_max)
         if self.do_ph == True: gatefilter_cal.exclude_above('PH', self.ph_thresh)
         gatefilter_cal.include_above('HEIGHT', qc_height)
@@ -251,6 +252,11 @@ def threshold_qc_calfields(self):
         nf = deepcopy(self.radar.fields[fld])
         nf['data'] = np.ma.masked_where(gatefilter_cal.gate_excluded, nf['data'])
         self.radar.add_field(fld, nf, replace_existing=True)
+    if self.use_qc_height == True or self.use_sounding == False:
+        for fld in self.radar.fields:
+            nf = deepcopy(self.radar.fields[fld])
+            nf['data'] = np.ma.masked_where(gatefilter_sd.gate_excluded, nf['data'])
+            self.radar.add_field(fld, nf, replace_existing=True)
 
     print("QC Complete.", '', sep='\n')
 
@@ -927,6 +933,7 @@ def get_default_thresh_dict():
                            'phelmin': 0, 'phelmax': 20.0, 'ph_sec': 80.0, 
                            'apply_cal': False, 'ref_cal': 0.1, 'zdr_cal': 0.0, 
                            'use_qc_height': True, 'qc_height': 4.4,
+                           'sd_height': 4.4,
                            'output_cf': False,
                            'output_grid': False,
                            'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD'],
