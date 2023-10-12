@@ -248,17 +248,17 @@ class DP_products:
         elif self.get_Bringi_kdp:
             self.radar = dp.get_kdp(self)
 
-        self.dz = self.radar.fields['CZ']['data']
-        self.dr = self.radar.fields['DR']['data']
-        self.kd = self.radar.fields['KD']['data']
-        self.rh = self.radar.fields['RH']['data']
+        self.dz = self.radar.fields['CZ']['data'].copy()
+        self.dr = self.radar.fields['DR']['data'].copy()
+        self.kd = self.radar.fields['KD']['data'].copy()
+        self.rh = self.radar.fields['RH']['data'].copy()
         if 'ZZ' in self.radar.fields.keys():
-            self.zz = self.radar.fields['ZZ']['data']
+            self.zz = self.radar.fields['ZZ']['data'].copy()
         else:
             try:
-                self.zz = self.radar.fields['DZ']['data']
+                self.zz = self.radar.fields['DZ']['data'].copy()
             except:
-                self.zz = self.radar.fields['CZ']['data']
+                self.zz = self.radar.fields['CZ']['data'].copy()
 
         print('', 'Calculating DP products:  ', sep='\n')
        
