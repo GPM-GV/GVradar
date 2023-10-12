@@ -227,6 +227,7 @@ def threshold_qc_calfields(self):
     # Call gatefliters for calculated fields based on temperature or beam height
     if self.use_qc_height == True or self.use_sounding == False:
         qc_height = self.qc_height * 1000
+        sd_height = self.sd_height * 1000
         gatefilter_cal.exclude_all()
         gatefilter_cal.include_below('HEIGHT', qc_height)
         gatefilter_sd.include_below('HEIGHT', sd_height)
