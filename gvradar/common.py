@@ -597,12 +597,12 @@ def remove_undesirable_fields(self):
 
 def update_metadata(self):
 
-    self.radar.metadata['version'] = 'VN V2.0'
+    self.radar.metadata['version'] = 'VN V2.1'
     self.radar.metadata['Description'] = "Quality Controlled Dual Pol Products"
     self.radar.metadata['Release_Date'] = str(datetime.datetime.utcnow())
     self.radar.metadata['institution'] = "NASA GSFC"
     self.radar.metadata['project'] = "Global Precipitation Measurement (GPM)"
-    self.radar.metadata['source'] = 'GVradar V1.0'
+    self.radar.metadata['source'] = 'GVradar V1.1'
     self.radar.metadata['references'] = 'https://github.com/GPM-GV/GVradar'
 
     new_fields = []
