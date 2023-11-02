@@ -48,6 +48,7 @@ class QC:
                 radar = pyart.io.read(self.file, file_field_names=True)
             if cfy == '.h5':
                 radar = pyart.aux_io.read_odim_h5(file, file_field_names=True)
+                radar = cm.reorder_sweeps(radar)
             else:
                 radar = pyart.io.read(self.file, file_field_names=True)
         
@@ -95,7 +96,8 @@ class QC:
         
     # Create a filter to remove data beyond 200km
         if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
-           self.radar.metadata['original_container'] == 'UF':
+           self.radar.metadata['original_container'] == 'UF' or\
+           self.radar.metadata['original_container'] == 'odim_h5':
             self.radar = qc.mask_88D_200(self)
 
     # Plotting raw images

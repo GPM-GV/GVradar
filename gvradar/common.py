@@ -767,10 +767,11 @@ def get_site_date_time(radar):
             site = radar.metadata['instrument_name'].decode().upper()
         else:
             site = radar.metadata['instrument_name'].upper()
-    elif radar.metadata['original_container'] == 'odim_h5':
-        site = radar.metadata['source'].replace(',', ':').split(':')[1].upper()
     else:
         site=''
+
+    if radar.metadata['original_container'] == 'odim_h5':
+        site = radar.metadata['source'].replace(',', ':').split(':')[1].upper()
 
     if site == 'NPOL1' or site == 'NPOL2': site = 'NPOL'         
     if site == 'LAVA1': site = 'KWAJ'
@@ -1187,6 +1188,26 @@ def remove_mrle(self):
     final_radar = self.radar.extract_sweeps(sweep_index)
 
     print("With the following elevations:  ", final_radar.fixed_angle['data'][:], sep='\n')
+
+    return final_radar
+
+# ***************************************************************************************
+
+def reorder_sweeps(radar):
+
+    #Get list of elevations
+    elev_list = radar.fixed_angle['data'][:]
+
+    sw = 0
+    sweep_index = []
+    for x in elev_list[:]:
+       sweep_index.append(sw)
+    sw = sw+1
+
+    sweep_index.sort(reverse=True)
+
+    final_radar = radar.extract_sweeps(sweep_index)
+    final_radar.fixed_angle['data'][:]
 
     return final_radar
 
