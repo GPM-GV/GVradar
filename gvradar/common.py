@@ -518,6 +518,9 @@ def rename_fields_in_radar(self):
     elif 'ZC' in self.radar.fields.keys():
         old_fields = ['SN', 'ZH', 'ZD', 'RH', 'PH', 'KD', 'VE', 'ZC', 'ZB', 'DO', 'NW', 'RR', 'CM', 'HC']
         new_fields = ['SN', 'DZ', 'ZDR', 'RH', 'PH', 'KD', 'VR', 'CZ', 'DR', 'DO', 'NW', 'RR', 'CM', 'HC']
+    elif 'DBZH' in self.radar.fields.keys():
+        old_fields = ['DBZH', 'TH', 'RHOHV', 'UPHIDP', 'WRADH', 'PHIDP', 'ZDR', 'KDP', 'SQIH', 'VRADH']
+        new_fields = ['DZ',   'TH', 'RH',    'UPHIDP', 'WRADH', 'PH',    'DR',  'KD',  'SQ', 'VR'] 
     elif 'ZZ' in self.radar.fields.keys():
         old_fields = ['ZZ']
         new_fields = ['DZ']    
@@ -764,6 +767,8 @@ def get_site_date_time(radar):
             site = radar.metadata['instrument_name'].decode().upper()
         else:
             site = radar.metadata['instrument_name'].upper()
+    elif radar.metadata['original_container'] == 'odim_h5':
+        site = radar.metadata['source'].replace(',', ':').split(':')[1].upper()
     else:
         site=''
 
