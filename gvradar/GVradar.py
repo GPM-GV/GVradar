@@ -46,8 +46,8 @@ class QC:
                 self.file = cm.unzip_file(self.file)
                 file_unzip = self.file
                 radar = pyart.io.read(self.file, file_field_names=True)
-            if cfy == '.h5':
-                radar = pyart.aux_io.read_odim_h5(file, file_field_names=True)
+            elif cfy == '.h5':
+                radar = pyart.aux_io.read_odim_h5(self.file, file_field_names=True)
                 radar = cm.reorder_sweeps(radar)
             else:
                 radar = pyart.io.read(self.file, file_field_names=True)
