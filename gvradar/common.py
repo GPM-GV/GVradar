@@ -1197,19 +1197,16 @@ def reorder_sweeps(radar):
 
     #Get list of elevations
     elev_list = radar.fixed_angle['data'][:]
-    print(elev_list)
 
     sw = 0
     sweep_index = []
     for x in elev_list[:]:
        sweep_index.append(sw)
-    sw = sw+1
+       sw = sw+1
 
     sweep_index.sort(reverse=True)
-    print(sweep_index)
 
     final_radar = radar.extract_sweeps(sweep_index)
-    print(final_radar.fixed_angle['data'][:])
 
     return final_radar
 
