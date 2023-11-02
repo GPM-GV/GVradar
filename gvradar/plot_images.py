@@ -306,7 +306,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
                        png=False, outdir='', add_logos=True):
 
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
-    print(sweep)
+    
     num_fields = len(fields)
     nrows = math.ceil((num_fields)/4)
     if nrows < 1 : nrows = 1
@@ -353,6 +353,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
 
         ax = fig.add_subplot(spec[r_c[index]])
         ax.set_facecolor('black')
+        print(sweep)
         display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
                          colorbar_label=units, mask_outside=mask_outside, title=title,
                          axislabels_flag=False)
