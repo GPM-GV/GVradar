@@ -1205,6 +1205,7 @@ def reorder_sweeps(radar):
        sw = sw+1
 
     sweep_index.sort(reverse=True)
+    print(sweep_index)
 
     final_radar = radar.extract_sweeps(sweep_index)
 
