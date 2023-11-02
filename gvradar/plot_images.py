@@ -805,6 +805,8 @@ def get_radar_info(radar, sweep):
             site = radar.metadata['instrument_name'].decode().upper()
         else:
             site = radar.metadata['instrument_name'].upper()
+    elif radar.metadata['original_container'] == 'odim_h5':
+        site = radar.metadata['source'].replace(',', ':').split(':')[1].upper()
     else:
         site=''
 
