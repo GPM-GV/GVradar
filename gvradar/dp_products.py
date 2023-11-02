@@ -534,8 +534,8 @@ def mask_beyond_150(self):
     Filter out any data outside 150 KM set to -32767.0
     """
     
-    sector = {'hmin': 0, 'hmax': None,
-              'rmin': 150 * 1000, 'rmax':  400 * 1000,
+    sector = {'hmin': None, 'hmax': None,
+              'rmin': 150 * 1000, 'rmax':  None,
               'azmin': 0, 'azmax': 360,
               'elmin': None, 'elmax': None}
     
