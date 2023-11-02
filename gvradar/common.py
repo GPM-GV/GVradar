@@ -1208,6 +1208,7 @@ def reorder_sweeps(radar):
     print(sweep_index)
 
     final_radar = radar.extract_sweeps(sweep_index)
+    print(final_radar.fixed_angle['data'][:])
 
     return final_radar
 
