@@ -135,7 +135,8 @@ def threshold_qc_dpfields(self):
     if self.do_cos == True: dbzfilter.exclude_not_equal('COS', cos)
     if self.do_sq == True: dbzfilter.exclude_below('SQ', self.sq_thresh)
     if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
-       self.radar.metadata['original_container'] == 'UF': dbzfilter.exclude_not_equal('WSR', cos)
+       self.radar.metadata['original_container'] == 'UF' or\
+       self.radar.metadata['original_container'] == 'odim_h5': dbzfilter.exclude_not_equal('WSR', cos)
     
     # Apply gate filters to radar
     for fld in self.radar.fields:
@@ -362,7 +363,7 @@ def mask_88D_200(self):
 
     sector = {'hmin': None, 'hmax': None,
               'rmin': 200 * 1000, 'rmax':  None,
-              'azmin': 0, 'azmax': 360,
+              'azmin': None, 'azmax': None,
               'elmin': None, 'elmax': None}
     
     WSR_flag = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
