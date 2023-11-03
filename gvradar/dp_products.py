@@ -536,7 +536,7 @@ def mask_beyond_150(self):
     
     sector = {'hmin': None, 'hmax': None,
               'rmin': 150 * 1000, 'rmax':  None,
-              'azmin': 0, 'azmax': 360,
+              'azmin': None, 'azmax': None,
               'elmin': None, 'elmax': None}
     
     beyond_flag = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)

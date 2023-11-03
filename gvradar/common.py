@@ -1197,24 +1197,10 @@ def remove_mrle(self):
 # ***************************************************************************************
 
 def reorder_sweeps(radar):
-    '''
-    #Get list of elevations
-    elev_list = radar.fixed_angle['data'][:]
 
-    sw = 0
-    sweep_index = []
-    for x in elev_list[:]:
-       sweep_index.append(sw)
-       sw = sw+1
-
-    sweep_index.sort(reverse=True)
-    print(sweep_index)
-
+    # Reorder sweeps in accending order
+    sweep_index = np.argsort(radar.elevation['data'][radar.sweep_start_ray_index['data']])
     final_radar = radar.extract_sweeps(sweep_index)
-    print(final_radar.fixed_angle['data'][:])
-    '''
-    sweep_num = np.argsort(radar.elevation['data'][radar.sweep_start_ray_index['data']])
-    final_radar = radar.extract_sweeps(sweep_num)
 
     return final_radar
 
