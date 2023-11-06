@@ -246,7 +246,11 @@ class DP_products:
         
     # Rename fields with GPM, 2-letter IDs (e.g. CZ, DR, KD)
         self.radar, zz = cm.rename_fields_in_radar(self)
-        
+
+    # Apply calibration numbers to Reflectivity and ZDR fields
+        if self.apply_cal == True:
+             self.radar = qc.calibrate(self)
+
     # If no KDP, calculate field
         if 'KD' not in self.radar.fields.keys():  
             self.radar = dp.get_kdp(self)

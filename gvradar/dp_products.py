@@ -768,8 +768,9 @@ def get_conv_strat(self):
 def get_default_product_dict():
 
     default_product_dict = {'cf_dir': './cf/',
+                            'apply_cal': False, 'ref_cal': 0.0, 'zdr_cal': 0.0, 
                             'do_HID_summer': True,
-                            'do_HID_winter':  False,
+                            'do_HID_winter': False,
                             'no_temp': False,
                             'snthresh': -30,
                             'do_mass': True,
