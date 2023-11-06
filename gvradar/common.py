@@ -770,11 +770,12 @@ def get_site_date_time(radar):
     else:
         site=''
 
-    if radar.metadata['original_container'] == 'odim_h5':
-        try:
-            site = radar.metadata['source'].replace(',', ':').split(':')[1].upper()
-        except:
-            site = radar.metadata['site_name'].upper()
+    if 'original_container' in radar.metadata.keys():
+        if radar.metadata['original_container'] == 'odim_h5':
+            try:
+                site = radar.metadata['source'].replace(',', ':').split(':')[1].upper()
+            except:
+                site = radar.metadata['site_name'].upper()
 
     if site == 'NPOL1' or site == 'NPOL2': site = 'NPOL'         
     if site == 'LAVA1': site = 'KWAJ'
