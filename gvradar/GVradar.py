@@ -108,7 +108,9 @@ class QC:
 
     # Apply calibration numbers to Reflectivity and ZDR fields
         if self.apply_cal == True:
-             self.radar = qc.calibrate(self)    
+            if self.get_cal_file == True:
+                cm.get_cal_numbers(self)
+            self.radar = qc.calibrate(self)    
                         
     # Create a filter to remove data close to radar location (e.g. cone of silence)
         if self.do_cos == True:

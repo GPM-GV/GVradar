@@ -31,6 +31,7 @@ def calibrate(self):
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
     """
     print('', 'Calibrating Reflectivity and ZDR...', sep='\n')
+    print('Zcal:  ',self.ref_cal, 'ZDRcal:  ',self.zdr_cal)
 
     ref_cal = self.ref_cal
     zdr_cal = self.zdr_cal
@@ -935,7 +936,8 @@ def get_default_thresh_dict():
                            'do_ph_sector': False, 'phhmin': 0, 'phhmax': None,
                            'phrmin': 0, 'phrmax': 150, 
                            'phazmin': 160, 'phazmax': 165, 
-                           'phelmin': 0, 'phelmax': 20.0, 'ph_sec': 80.0, 
+                           'phelmin': 0, 'phelmax': 20.0, 'ph_sec': 80.0,
+                           'get_cal_file': False, 'cal_dir': './cal_files/', 
                            'apply_cal': False, 'ref_cal': 0.1, 'zdr_cal': 0.0, 
                            'use_qc_height': True, 'qc_height': 4.4,
                            'sd_height': 4.4,

@@ -1207,6 +1207,23 @@ def reorder_sweeps(radar):
 
 # ***************************************************************************************
 
+def get_cal_numbers(self):
+
+    radar_DT = pyart.util.datetime_from_radar(self.radar)
+    cal_file = self.cal_dir + self.site + '_' + self.year + '-' + self.month + '_cal.txt'
+
+    headings = ["date","p1","p2","Zcal","ZDRcal"]
+    cal = pd.read_csv(cal_file, header=None, delimiter=r"\s+", names=headings)
+
+    self.ref_cal = cal.Zcal[radar_DT.day-1]
+    self.zdr_cal = cal.ZDRcal[radar_DT.day-1]
+
+    print(" ", headings, sep='\n')
+    print(cal.date[radar_DT.day-1], cal.p1[radar_DT.day-1], cal.p2[radar_DT.day-1],
+          cal.Zcal[radar_DT.day-1], cal.ZDRcal[radar_DT.day-1])
+
+# ***************************************************************************************
+
 def retrieve_ML(mydata):
 
     # Retrieve expected ML for winter HID
