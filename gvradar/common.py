@@ -1209,13 +1209,20 @@ def reorder_sweeps(radar):
 
 def get_cal_numbers(self):
 
+    # Grabs calibration data from text file
+    DT = datetime.datetime(2023, 4, 1, 0, 0, 0)
     radar_DT = pyart.util.datetime_from_radar(self.radar)
     cal_file = self.cal_dir + self.site + '_' + self.year + '-' + self.month + '_cal.txt'
 
     headings = ["date","p1","p2","Zcal","ZDRcal"]
     cal = pd.read_csv(cal_file, header=None, delimiter=r"\s+", names=headings)
 
-    self.ref_cal = cal.Zcal[radar_DT.day-1]
+    # Account for IDL vs pyART calbration code
+    if radar_DT < DT:
+        self.ref_cal = cal.Zcal[radar_DT.day-1] * -1.0
+    else:  
+        self.ref_cal = cal.Zcal[radar_DT.day-1]
+    
     self.zdr_cal = cal.ZDRcal[radar_DT.day-1]
 
     print(" ", headings, sep='\n')
