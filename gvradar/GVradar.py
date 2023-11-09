@@ -251,7 +251,9 @@ class DP_products:
 
     # Apply calibration numbers to Reflectivity and ZDR fields
         if self.apply_cal == True:
-             self.radar = qc.calibrate(self)
+            if self.get_cal_file == True:
+                cm.get_cal_numbers(self)
+            self.radar = qc.calibrate(self)
 
     # If no KDP, calculate field
         if 'KD' not in self.radar.fields.keys():  
