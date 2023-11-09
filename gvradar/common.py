@@ -1213,6 +1213,7 @@ def get_cal_numbers(self):
     DT = datetime.datetime(2023, 4, 1, 0, 0, 0)
     radar_DT = pyart.util.datetime_from_radar(self.radar)
     cal_file = self.cal_dir + self.site + '_' + self.year + '-' + self.month + '_cal.txt'
+    print(cal_file)
 
     headings = ["date","p1","p2","Zcal","ZDRcal"]
     cal = pd.read_csv(cal_file, header=None, delimiter=r"\s+", names=headings)
