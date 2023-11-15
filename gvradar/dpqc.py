@@ -849,11 +849,12 @@ def calculate_kdp(self):
                                                     window=window, nfilter=nfilter, 
                                                     std_gate=std_gate)
 
-    self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
-		units='deg/km',
-		long_name='Specific Differential Phase (Bringi)',
-		standard_name='Specific Differential Phase (Bringi)',
-		dz_field=self.ref_field_name)
+    if self.site != 'CASMB':
+        self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
+		    units='deg/km',
+		    long_name='Specific Differential Phase (Bringi)',
+		    standard_name='Specific Differential Phase (Bringi)',
+		    dz_field=self.ref_field_name)
 
     self.radar = cm.add_field_to_radar_object(PHIDPB, self.radar, 
 		field_name='PHIDPB', units='deg',
