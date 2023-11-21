@@ -776,7 +776,7 @@ def get_default_product_dict():
     return default_product_dict
 
 # ***************************************************************************************
-def calculate_kdp(self):
+def get_kdp(self):
 
     """
     Wrapper for calculating Kdp using csu_kdp.calc_kdp_bringi from CSU_RadarTools
