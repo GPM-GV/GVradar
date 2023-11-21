@@ -880,9 +880,9 @@ def get_SD(self):
     FIRST_GATE     = 0
 
     # Copy current PhiDP field to phm_field
-    ph_field = self.radar.fields['PHIDP2']['data'].copy()
-    sd_field = self.radar.fields['PHIDP2']['data'].copy() * 0
-    dz_field = self.radar.fields['DBZ2']['data'].copy()
+    ph_field = self.radar.fields['PH']['data'].copy()
+    sd_field = self.radar.fields['PH']['data'].copy() * 0
+    dz_field = self.radar.fields['CZ']['data'].copy()
     gate_spacing = self.radar.range['meters_between_gates']
     start_gate = int(FIRST_GATE / gate_spacing)
     nsweeps = self.radar.nsweeps
