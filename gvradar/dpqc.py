@@ -861,16 +861,81 @@ def calculate_kdp(self):
 		long_name='Differential Phase (Bringi)',
 		standard_name='Differential Phase (Bringi)',
 		dz_field=self.ref_field_name)
-
+    '''    s
     self.radar = cm.add_field_to_radar_object(STDPHIB, self.radar, 
 		field_name='SD', units='deg',
 		long_name='STD Differential Phase (Bringi)',
 		standard_name='STD Differential Phase (Bringi)',
 		dz_field=self.ref_field_name)
+    '''
+    self.radar = get_SD(self)
 
     return self.radar
 
 # ***************************************************************************************
+
+def get_SD(self):
+    
+    BAD_DATA       = -32767.0
+    FIRST_GATE     = 0
+
+    # Copy current PhiDP field to phm_field
+    ph_field = self.radar.fields['PHIDP2']['data'].copy()
+    sd_field = self.radar.fields['PHIDP2']['data'].copy() * 0
+    dz_field = self.radar.fields['DBZ2']['data'].copy()
+    gate_spacing = self.radar.range['meters_between_gates']
+    start_gate = int(FIRST_GATE / gate_spacing)
+    nsweeps = self.radar.nsweeps
+    nrays = ph_field.data.shape[0]
+    gate_data = ph_field.data[0]
+    ngates = gate_data.shape[0]
+
+    for iray in range(0, nrays-1):
+        ph_gate_data = ph_field.data[iray]
+        sd_gate_data = sd_field.data[iray]
+        dz_gate_data = dz_field.data[iray]
+    
+        for igate in range(0, 6):
+            phbox=ph_gate_data[0:14]
+            dzbox=dz_gate_data[0:14]
+            x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
+            if sum(x) >= 5:
+                sd_gate_data[igate] = np.std(phbox[x])
+                #sd_gate_data[igate] = quick_std(phbox, x)
+            else:
+                sd_gate_data[igate] = BAD_DATA
+            
+        for igate in range(7,ngates-8):
+            phbox=ph_gate_data[igate-7:igate+7]
+            dzbox=dz_gate_data[igate-7:igate+7]
+            x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
+            if sum(x) >= 5:
+                sd_gate_data[igate] = np.std(phbox[x])
+                #sd_gate_data[igate] = quick_std(phbox, x)
+            else:
+                sd_gate_data[igate] = BAD_DATA
+         
+        for igate in range(ngates-7,ngates-1):
+            phbox=ph_gate_data[igate-15:igate-1]
+            dzbox=dz_gate_data[igate-15:igate-1]
+            x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
+            if sum(x) >= 5:
+                sd_gate_data[igate] = np.std(phbox[x])
+                #sd_gate_data[igate] = quick_std(phbox, x)
+            else:
+                sd_gate_data[igate] = BAD_DATA
+         
+        sd_field.data[iray] = sd_gate_data
+    
+    sd_dict = {"data": sd_field, "units": "Std(PhiDP)",
+               "long_name": "Standard Deviation of PhiDP", "_FillValue": -32767.0,
+               "standard_name": "Standard Deviation of PhiDP",}
+    self.radar.add_field("SD", sd_dict, replace_existing=True)
+
+    return self.radar
+
+# ***************************************************************************************
+
 
 def remove_fields_from_radar(self):
 
