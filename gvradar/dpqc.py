@@ -831,7 +831,7 @@ def calculate_kdp(self):
         DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
         DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
         window=4
-        std_gate=11
+        std_gate=15
         nfilter=1
     else:
         DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
@@ -861,7 +861,7 @@ def calculate_kdp(self):
 		long_name='Differential Phase (Bringi)',
 		standard_name='Differential Phase (Bringi)',
 		dz_field=self.ref_field_name)
-    '''    s
+    '''
     self.radar = cm.add_field_to_radar_object(STDPHIB, self.radar, 
 		field_name='SD', units='deg',
 		long_name='STD Differential Phase (Bringi)',
@@ -877,15 +877,11 @@ def calculate_kdp(self):
 def get_SD(self):
     
     BAD_DATA       = -32767.0
-    FIRST_GATE     = 0
 
     # Copy current PhiDP field to phm_field
     ph_field = self.radar.fields['PH']['data'].copy()
     sd_field = self.radar.fields['PH']['data'].copy() * 0
     dz_field = self.radar.fields['CZ']['data'].copy()
-    gate_spacing = self.radar.range['meters_between_gates']
-    start_gate = int(FIRST_GATE / gate_spacing)
-    nsweeps = self.radar.nsweeps
     nrays = ph_field.data.shape[0]
     gate_data = ph_field.data[0]
     ngates = gate_data.shape[0]
@@ -901,7 +897,6 @@ def get_SD(self):
             x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
             if sum(x) >= 5:
                 sd_gate_data[igate] = np.std(phbox[x])
-                #sd_gate_data[igate] = quick_std(phbox, x)
             else:
                 sd_gate_data[igate] = BAD_DATA
             
@@ -911,7 +906,6 @@ def get_SD(self):
             x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
             if sum(x) >= 5:
                 sd_gate_data[igate] = np.std(phbox[x])
-                #sd_gate_data[igate] = quick_std(phbox, x)
             else:
                 sd_gate_data[igate] = BAD_DATA
          
@@ -921,7 +915,6 @@ def get_SD(self):
             x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
             if sum(x) >= 5:
                 sd_gate_data[igate] = np.std(phbox[x])
-                #sd_gate_data[igate] = quick_std(phbox, x)
             else:
                 sd_gate_data[igate] = BAD_DATA
          

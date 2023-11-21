@@ -697,37 +697,6 @@ def set_missing(self):
 
 # ***************************************************************************************
 
-def get_kdp(self):
-
-    '''If no KDP field, we need to calculate one.'''
-    
-    print('', '    Calculating Kdp...', '', sep='\n')
-    
-    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-
-    # Range needs to be supplied as a variable, with same shape as DZ
-    rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
-    gate_spacing = self.radar.range['meters_between_gates']
-
-    if self.site == 'KWAJ':
-        window=4
-    else:
-        window=4
-
-    KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
-                                                    thsd=25, gs=gate_spacing, 
-                                                    window=window, nfilter=1, std_gate=15)
-
-    self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
-		units='deg/km',
-		long_name='Specific Differential Phase (Bringi)',
-		standard_name='Specific Differential Phase (Bringi)',
-		dz_field=self.ref_field_name)
-
-    return self.radar
-# ***************************************************************************************  
-
 def get_conv_strat(self):
     
     # interpolate to grid
@@ -805,5 +774,61 @@ def get_default_product_dict():
                             'sounding_dir': './sounding/'}
 
     return default_product_dict
+
+# ***************************************************************************************
+def calculate_kdp(self):
+
+    """
+    Wrapper for calculating Kdp using csu_kdp.calc_kdp_bringi from CSU_RadarTools
+    Thank Timothy Lang et al.
+    Parameters:
+    -----------
+    radar: pyart radar object
+    ref_field_name: name of reflectivty field (should be QC'd)
+    phi_field_name: name of PhiDP field (should be unfolded)
+
+    Return
+    ------
+    radar: radar object with KDPB, PHIDPB and STDPHIDP added to original
+
+    NOTE: KDPB: Bringi Kdp, PHIDPB: Bringi-filtered PhiDP, STDPHIB: Std-dev of PhiDP
+    """
+    print('    Getting new Kdp...')
+
+#    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+#    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+#    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
+#    DP = self.radar.fields[self.phi_field_name]['data'].copy()
+
+    std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL','CASMB']
+    if self.site in std_list:
+        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+        window=4
+        std_gate=15
+        nfilter=1
+    else:
+        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+        window=4
+        std_gate=15
+        nfilter=1
+
+    # Range needs to be supplied as a variable, with same shape as DZ
+    rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+    gate_spacing = self.radar.range['meters_between_gates']
+
+    KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
+                                                    thsd=25, gs=gate_spacing, 
+                                                    window=window, nfilter=nfilter, 
+                                                    std_gate=std_gate)
+
+    self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
+		    units='deg/km',
+		    long_name='Specific Differential Phase (Bringi)',
+		    standard_name='Specific Differential Phase (Bringi)',
+		    dz_field=self.ref_field_name)
+
+    return self.radar
 
 # ***************************************************************************************
