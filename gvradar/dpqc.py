@@ -826,7 +826,7 @@ def calculate_kdp(self):
 #    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
 #    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
-    std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL','CASMB','KWAJ']
+    std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL','CASMB']
     if self.site in std_list:
         DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
         DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
@@ -922,8 +922,8 @@ def get_SD(self):
         sd_field.data[iray] = sd_gate_data
     
     sd_dict = {"data": sd_field, "units": "Std(PhiDP)",
-               "long_name": "Standard Deviation of PhiDP", "_FillValue": -32767.0,
-               "standard_name": "Standard Deviation of PhiDP",}
+               "long_name": "STD Differential Phase (GPM-GV)", "_FillValue": -32767.0,
+               "standard_name": "STD Differential Phase (GPM-GV)",}
     self.radar.add_field("SD", sd_dict, replace_existing=True)
 
     return self.radar
