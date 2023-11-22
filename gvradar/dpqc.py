@@ -859,7 +859,7 @@ def calculate_kdp(self):
     if self.unfold_phidp == False:
         print('    Retrieving CSU PH')
         self.radar = cm.add_field_to_radar_object(PHIDPB, self.radar, 
-		    field_name='PH', units='deg',
+		    field_name='PHIDPB', units='deg',
 		    long_name='Differential Phase (Bringi)',
 		    standard_name='Differential Phase (Bringi)',
 		    dz_field=self.ref_field_name)
