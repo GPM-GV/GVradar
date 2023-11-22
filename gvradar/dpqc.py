@@ -863,8 +863,10 @@ def calculate_kdp(self):
 		dz_field=self.ref_field_name)
     
     if self.site in std_list:
+        print('Retrieving GPMGV SD')
         self.radar = get_SD(self)
     else:
+        print('Retrieving CSU SD')
         self.radar = cm.add_field_to_radar_object(STDPHIB, self.radar, 
 		    field_name='SD', units='deg',
 		    long_name='STD Differential Phase (Bringi)',
