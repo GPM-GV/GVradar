@@ -856,11 +856,13 @@ def calculate_kdp(self):
 		    standard_name='Specific Differential Phase (Bringi)',
 		    dz_field=self.ref_field_name)
 
-    self.radar = cm.add_field_to_radar_object(PHIDPB, self.radar, 
-		field_name='PHIDPB', units='deg',
-		long_name='Differential Phase (Bringi)',
-		standard_name='Differential Phase (Bringi)',
-		dz_field=self.ref_field_name)
+    if self.unfold_phidp == False:
+        print('    Retrieving CSU PH')
+        self.radar = cm.add_field_to_radar_object(PHIDPB, self.radar, 
+		    field_name='PH', units='deg',
+		    long_name='Differential Phase (Bringi)',
+		    standard_name='Differential Phase (Bringi)',
+		    dz_field=self.ref_field_name)
     
     if self.site in std_list:
         print('    Retrieving GPMGV SD')
@@ -880,7 +882,7 @@ def calculate_kdp(self):
 def get_SD(self):
     
     BAD_DATA       = -32767.0
-    ws = 11
+    ws = 9
     #ws = 15
     ws_h = ws//2
 
