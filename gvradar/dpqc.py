@@ -863,10 +863,10 @@ def calculate_kdp(self):
 		dz_field=self.ref_field_name)
     
     if self.site in std_list:
-        print('Retrieving GPMGV SD')
+        print('    Retrieving GPMGV SD')
         self.radar = get_SD(self)
     else:
-        print('Retrieving CSU SD')
+        print('    Retrieving CSU SD')
         self.radar = cm.add_field_to_radar_object(STDPHIB, self.radar, 
 		    field_name='SD', units='deg',
 		    long_name='STD Differential Phase (Bringi)',
@@ -880,6 +880,9 @@ def calculate_kdp(self):
 def get_SD(self):
     
     BAD_DATA       = -32767.0
+    ws = 11
+    #ws = 15
+    ws_h = ws//2
 
     # Copy current PhiDP field to phm_field
     ph_field = self.radar.fields['PH']['data'].copy()
@@ -894,27 +897,27 @@ def get_SD(self):
         sd_gate_data = sd_field.data[iray]
         dz_gate_data = dz_field.data[iray]
     
-        for igate in range(0, 6):
-            phbox=ph_gate_data[0:14]
-            dzbox=dz_gate_data[0:14]
+        for igate in range(0, ws_h-1):
+            phbox=ph_gate_data[0:ws]
+            dzbox=dz_gate_data[0:ws]
             x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
             if sum(x) >= 5:
                 sd_gate_data[igate] = np.std(phbox[x])
             else:
                 sd_gate_data[igate] = BAD_DATA
             
-        for igate in range(7,ngates-8):
-            phbox=ph_gate_data[igate-7:igate+7]
-            dzbox=dz_gate_data[igate-7:igate+7]
+        for igate in range(ws_h,ngates-(ws_h+1)):
+            phbox=ph_gate_data[igate-ws_h:igate+ws_h]
+            dzbox=dz_gate_data[igate-ws_h:igate+ws_h]
             x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
             if sum(x) >= 5:
                 sd_gate_data[igate] = np.std(phbox[x])
             else:
                 sd_gate_data[igate] = BAD_DATA
          
-        for igate in range(ngates-7,ngates-1):
-            phbox=ph_gate_data[igate-15:igate-1]
-            dzbox=dz_gate_data[igate-15:igate-1]
+        for igate in range(ngates-ws_h,ngates-1):
+            phbox=ph_gate_data[igate-ws:igate-1]
+            dzbox=dz_gate_data[igate-ws:igate-1]
             x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
             if sum(x) >= 5:
                 sd_gate_data[igate] = np.std(phbox[x])
