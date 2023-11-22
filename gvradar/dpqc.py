@@ -861,15 +861,16 @@ def calculate_kdp(self):
 		long_name='Differential Phase (Bringi)',
 		standard_name='Differential Phase (Bringi)',
 		dz_field=self.ref_field_name)
-    '''
-    self.radar = cm.add_field_to_radar_object(STDPHIB, self.radar, 
-		field_name='SD', units='deg',
-		long_name='STD Differential Phase (Bringi)',
-		standard_name='STD Differential Phase (Bringi)',
-		dz_field=self.ref_field_name)
-    '''
-    self.radar = get_SD(self)
-
+    
+    if self.site in std_list:
+        self.radar = get_SD(self)
+    else:
+        self.radar = cm.add_field_to_radar_object(STDPHIB, self.radar, 
+		    field_name='SD', units='deg',
+		    long_name='STD Differential Phase (Bringi)',
+		    standard_name='STD Differential Phase (Bringi)',
+		    dz_field=self.ref_field_name)
+    
     return self.radar
 
 # ***************************************************************************************
