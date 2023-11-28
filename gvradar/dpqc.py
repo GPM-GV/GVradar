@@ -779,10 +779,11 @@ def unfold_phidp(self):
         folded_gates = 0
         for igate in range(start_gate,num_final-2):
             diff = final_data[igate+1] - final_data[igate]
-            if abs(diff) > MAX_PHIDP_DIFF:
-                #print('igate: igate+1: ',final_data[igate],final_data[igate+1])
-                final_data[igate+1] += 360
-                folded_gates += 1
+            if(diff < 0.0):
+                if abs(diff) >= MAX_PHIDP_DIFF:
+                    #print('igate: igate+1: ',final_data[igate],final_data[igate+1])
+                    final_data[igate+1] += 360
+                    folded_gates += 1
 
         # Put corrected data back into ray
         gate_data[good] = final_data
