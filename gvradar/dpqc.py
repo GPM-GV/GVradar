@@ -748,7 +748,7 @@ def unfold_phidp(self):
 
     BAD_DATA       = -32767.0        # Fill in bad data values
     FIRST_GATE     = 5000           # First gate to begin unfolding
-    MAX_PHIDP_DIFF = 360.0          # Set maximum phidp gate-to-gate difference allowed
+    MAX_PHIDP_DIFF = self.max_phidp_diff          # Set maximum phidp gate-to-gate difference allowed
 
     # Copy current PhiDP field to phm_field
     phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
@@ -978,7 +978,7 @@ def get_default_thresh_dict():
                            'do_kdp': False, 'kdp_min': -2.0, 'kdp_max': 7.0, 
                            'do_sq': False, 'sq_thresh': 0.45, 
                            'do_sd': True, 'sd_thresh': 18.0, 'sd_thresh_max': 60,
-                           'do_ph': False, 'ph_thresh': 80.0, 
+                           'do_ph': False, 'ph_thresh': 80.0, 'max_phidp_diff': 360,
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
                            'unfold_phidp': True,
                            'dealias_velocity': False,
