@@ -747,7 +747,7 @@ def get_field_info(radar, field):
         #Nbins = 0
         #title ='HIDRO Rain Rate [mm/hr]'
         title ='Tropical Rain Rate [mm/hr]'
-        cmap='pyart_NWSRef'
+        cmap='pyart_HomeyerRainbow'
     elif field == 'RP':
         units='PolZR Rain Rate [mm/hr]'
         vmin=1e-2
