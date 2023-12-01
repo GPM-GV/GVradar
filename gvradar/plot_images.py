@@ -190,9 +190,9 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                        "standard_name": "HIDRO Rainfall Rate",}
             radar.add_field("RC_plot", rc_dict, replace_existing=True)
             #levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
-            levels = [0, 5, 10, 15, 20, 25, 40, 55, 70, 85, 100]
+            levels = [0, 2.5, 5, 7.5, 10, 15, 20, 25, 40, 55, 70, 85, 100]
             #midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
-            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=100)
+            midnorm = MidpointNormalize(vmin=0, vcenter=15, vmax=100)
             display.plot_ppi_map("RC_plot", sweep,vmin=vmin, vmax=vmax,
                      resolution='10m',
                      title = title,
