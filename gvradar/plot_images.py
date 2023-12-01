@@ -192,7 +192,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
             #levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
             levels = [0, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20, 35, 50, 65, 80, 95, 110]
             #midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
-            midnorm = MidpointNormalize(vmin=0, vcenter=20, vmax=100)
+            midnorm = MidpointNormalize(vmin=0, vcenter=20, vmax=110)
             display.plot_ppi_map("RC_plot", sweep,vmin=vmin, vmax=vmax,
                      resolution='10m',
                      title = title,
