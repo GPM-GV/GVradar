@@ -743,7 +743,7 @@ def get_field_info(radar, field):
         units='Tropical Rain Rate [mm/hr]'
         vmin=1e-2
         vmax=3e2
-        Nbins = 30
+        Nbins = 25
         #Nbins = 0
         #title ='HIDRO Rain Rate [mm/hr]'
         title ='Tropical Rain Rate [mm/hr]'
