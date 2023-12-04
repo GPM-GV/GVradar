@@ -189,10 +189,10 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                        "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
                        "standard_name": "HIDRO Rainfall Rate",}
             radar.add_field("RC_plot", rc_dict, replace_existing=True)
-            #levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
-            levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-            #midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
-            midnorm = MidpointNormalize(vmin=0, vcenter=10, vmax=100)
+            #levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+            #midnorm = MidpointNormalize(vmin=0, vcenter=10, vmax=100)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
             display.plot_ppi_map("RC_plot", sweep,vmin=vmin, vmax=vmax,
                      resolution='10m',
                      title = title,
@@ -216,10 +216,10 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                        "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
                        "standard_name": "Polzr_Rain_Rate",}
             radar.add_field("RP_plot", rp_dict, replace_existing=True)
-            #levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
-            #midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
-            levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-            midnorm = MidpointNormalize(vmin=0, vcenter=10, vmax=100)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
+            #levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+            #midnorm = MidpointNormalize(vmin=0, vcenter=10, vmax=100)
             display.plot_ppi_map("RP_plot", sweep,vmin=vmin, vmax=vmax,
                      resolution='10m',
                      title = title,
@@ -274,8 +274,8 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         if index == num_fields-1:
             add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols)
             if num_fields >= 2:
-                #plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+((nrows/1.5)*0.055)))
-                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))
+                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+((nrows/1.5)*0.055)))
+                #plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))
                 
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
@@ -745,8 +745,8 @@ def get_field_info(radar, field):
         units='Tropical Rain Rate [mm/hr]'
         vmin=1e-2
         vmax=3e2
-        Nbins = 20
-        #Nbins = 0
+        #Nbins = 20
+        Nbins = 0
         #title ='HIDRO Rain Rate [mm/hr]'
         title ='Tropical Rain Rate [mm/hr]'
         cmap='pyart_NWSRef'
@@ -754,8 +754,8 @@ def get_field_info(radar, field):
         units='PolZR Rain Rate [mm/hr]'
         vmin=1e-2
         vmax=3e2
-        Nbins = 20
-        #Nbins = 0
+        #Nbins = 20
+        Nbins = 0
         title ='PolZR Rain Rate [mm/hr]'
         cmap='pyart_NWSRef'    
     elif field == 'MRC':
