@@ -87,7 +87,7 @@ def csu_filters(self):
                                          standard_name=fld, 
                                          dz_field=self.ref_field_name)
         '''
-        speckle = pyart.correct.despeckle_field(self.radar, 'CZ', label_dict=None, threshold=5, size=20, gatefilter=None, delta=5.0)
+        speckle = pyart.correct.despeckle_field(self.radar, 'CZ', label_dict=None, threshold=5, size=15, gatefilter=None, delta=5.0)
 
         # Apply gate filters to radar
         for fld in self.radar.fields:
