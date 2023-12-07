@@ -75,7 +75,7 @@ def csu_filters(self):
     
     if self.do_despeckle == True:
         
-        mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=10)
+        mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=40)
         bad = -32767.0
 
         for fld in self.radar.fields:
