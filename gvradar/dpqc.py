@@ -89,7 +89,7 @@ def csu_filters(self):
                                          dz_field=self.ref_field_name)
         '''
         if self.site == 'NPOL':
-            size = 40
+            size = 10
         else:
             size = 10
 
