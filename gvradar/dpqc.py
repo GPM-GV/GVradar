@@ -89,7 +89,7 @@ def csu_filters(self):
                                          standard_name=fld, 
                                          dz_field=self.ref_field_name)
             '''
-            size = 40
+            size = 20
 
             speckle = pyart.correct.despeckle_field(self.radar, 'CZ', label_dict=None, threshold=0, size=size, gatefilter=None, delta=5.0)
 
