@@ -89,7 +89,7 @@ def csu_filters(self):
                                          standard_name=fld, 
                                          dz_field=self.ref_field_name)
             '''
-            size = 20
+            size = 15
 
             speckle = pyart.correct.despeckle_field(self.radar, 'CZ', label_dict=None, threshold=0, size=size, gatefilter=None, delta=5.0)
 
@@ -897,7 +897,7 @@ def calculate_kdp(self):
 def get_SD(self):
     
     BAD_DATA       = -32767.0
-    ws = 31
+    ws = 25
     #ws = 15
     ws_h = ws//2
 
