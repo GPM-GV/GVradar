@@ -75,31 +75,28 @@ def csu_filters(self):
     
     if self.do_despeckle == True:
         
-        '''
-        mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=40)
-        bad = -32767.0
+        if self.site == 'NPOL':
+            mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=40)
+            bad = -32767.0
 
-        for fld in self.radar.fields:
-            nf = cm.extract_unmasked_data(self.radar, fld)
-            nf_ds = 1.0 * nf
-            nf_ds[mask_ds] = bad 
-            cm.add_field_to_radar_object(nf_ds, self.radar, field_name=fld, units='', 
+            for fld in self.radar.fields:
+                nf = cm.extract_unmasked_data(self.radar, fld)
+                nf_ds = 1.0 * nf
+                nf_ds[mask_ds] = bad 
+                cm.add_field_to_radar_object(nf_ds, self.radar, field_name=fld, units='', 
                                          long_name=fld,
                                          standard_name=fld, 
                                          dz_field=self.ref_field_name)
-        '''
-        if self.site == 'NPOL':
-            size = 10
         else:
             size = 10
 
-        speckle = pyart.correct.despeckle_field(self.radar, 'CZ', label_dict=None, threshold=0, size=size, gatefilter=None, delta=5.0)
+            speckle = pyart.correct.despeckle_field(self.radar, 'CZ', label_dict=None, threshold=0, size=size, gatefilter=None, delta=5.0)
 
-        # Apply gate filters to radar
-        for fld in self.radar.fields:
-            nf = deepcopy(self.radar.fields[fld])
-            nf['data'] = np.ma.masked_where(speckle.gate_excluded, nf['data'])
-            self.radar.add_field(fld, nf, replace_existing=True)
+            # Apply gate filters to radar
+            for fld in self.radar.fields:
+                nf = deepcopy(self.radar.fields[fld])
+                nf['data'] = np.ma.masked_where(speckle.gate_excluded, nf['data'])
+                self.radar.add_field(fld, nf, replace_existing=True)
         
     return self.radar  
 
