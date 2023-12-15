@@ -76,7 +76,7 @@ def csu_filters(self):
     if self.do_despeckle == True:
         
         if self.site == 'NPOL':
-            mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=20)
+            mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=10)
             bad = -32767.0
             print('NPOL')
 
@@ -887,7 +887,7 @@ def calculate_kdp(self):
 def get_SD(self):
     
     BAD_DATA       = -32767.0
-    ws = 21
+    ws = 31
     #ws = 15
     ws_h = ws//2
 
