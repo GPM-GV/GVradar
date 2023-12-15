@@ -76,7 +76,7 @@ def csu_filters(self):
     if self.do_despeckle == True:
         
         if self.site == 'NPOL':
-            mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=40)
+            mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=10)
             bad = -32767.0
 
             for fld in self.radar.fields:
