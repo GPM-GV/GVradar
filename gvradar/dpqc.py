@@ -897,7 +897,7 @@ def calculate_kdp(self):
 def get_SD(self):
     
     BAD_DATA       = -32767.0
-    ws = 25
+    ws = 9
     #ws = 15
     ws_h = ws//2
 
