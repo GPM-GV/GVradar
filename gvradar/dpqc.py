@@ -879,7 +879,7 @@ def calculate_kdp(self):
 		    standard_name='Differential Phase (Bringi)',
 		    dz_field=self.ref_field_name)
     
-    if self.site in std_list:
+    if self.get_GV_SD:
         print('    Retrieving GPMGV SD')
         self.radar = get_SD(self)
     else:
@@ -897,8 +897,8 @@ def calculate_kdp(self):
 def get_SD(self):
     
     BAD_DATA       = -32767.0
-    ws = 15
-    #ws = 15
+    ws = self.SD_window
+    
     ws_h = ws//2
 
     # Copy current PhiDP field to phm_field
@@ -995,6 +995,7 @@ def get_default_thresh_dict():
                            'do_sd': True, 'sd_thresh': 18.0, 'sd_thresh_max': 60,
                            'do_ph': False, 'ph_thresh': 80.0, 'max_phidp_diff': 360,
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
+                           'get_GV_SD':  False, 'SD_window': 15,
                            'unfold_phidp': True,
                            'dealias_velocity': False,
                            'do_insect': False, 
