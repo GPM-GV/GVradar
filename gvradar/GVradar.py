@@ -146,7 +146,11 @@ class QC:
 
         if self.use_sounding == False:
             self.radar = cm.get_beam_height(self)        
-        
+
+    # Dealiasing Velocity
+        if self.dealias_velocity == True:
+            self.radar = qc.velocity_dealias(self)  
+
     # Apply CSU_RT filters
         self.radar = qc.csu_filters(self)
                                                   
@@ -170,11 +174,7 @@ class QC:
             self.radar = qc.ph_sector(self)
                 
     # Perform gatefilters for calculated fields
-        self.radar = qc.threshold_qc_calfields(self)
-        
-    # Dealiasing Velocity
-        if self.dealias_velocity == True:
-            self.radar = qc.velocity_dealias(self)            
+        self.radar = qc.threshold_qc_calfields(self)       
         
     # Add uncorrected reflectiviy field to radar structure.
         self.radar.add_field('DZ', zz, replace_existing=True)
