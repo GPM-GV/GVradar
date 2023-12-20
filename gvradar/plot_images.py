@@ -630,18 +630,19 @@ def get_field_info(radar, field):
         cmap='pyart_HomeyerRainbow'
     elif field == 'VR':
         units='Velocity [m/s]'
-        vmin=-15
-        vmax=15
-        Nbins = 10
+        vmin=-20
+        vmax=20
+        Nbins = 12
         title = 'Radial Velocity [m/s]'
-        cmap='pyart_balance'
+        #cmap='pyart_balance'
+        cmap='pyart_NWSVel'
     elif field == 'corrected_velocity':
         units='Velocity [m/s]'
-        vmin=-15
-        vmax=15
-        Nbins = 15
+        vmin=-20
+        vmax=20
+        Nbins = 12
         title = 'Dealiased Radial Velocity [m/s]'
-        cmap='pyart_balance'
+        cmap='pyart_NWSVel'
     elif field == 'KD':
         units='Kdp [deg/km]'
         vmin=-2
