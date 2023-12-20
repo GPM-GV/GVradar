@@ -1062,11 +1062,11 @@ def velocity_dealias(self):
     ''' 
     
     # Dealiasing Velocity                     
-    
+    print('    Dealiasing Velocity...')
     
     velocity_dealiased = pyart.correct.dealias_region_based(self.radar, vel_field='VR',
                                                             nyquist_vel=nyq, centered=True)
-    self.radar.add_field('corrected_velocity', velocity_dealiased, replace_existing=True)   
+    self.radar.add_field('VR', velocity_dealiased, replace_existing=True)   
         
     return self.radar
     
