@@ -743,14 +743,14 @@ def get_field_info(radar, field):
         title ='Ice Mass [g/m^3]'
         cmap='pyart_BlueBrown10'
     elif field == 'RC':
-        #units='HIDRO Rain Rate [mm/hr]'
-        units='Tropical Rain Rate [mm/hr]'
+        units='HIDRO Rain Rate [mm/hr]'
+        #units='Tropical Rain Rate [mm/hr]'
         vmin=1e-2
         vmax=3e2
         #Nbins = 20
         Nbins = 0
-        #title ='HIDRO Rain Rate [mm/hr]'
-        title ='Tropical Rain Rate [mm/hr]'
+        title ='HIDRO Rain Rate [mm/hr]'
+        #title ='Tropical Rain Rate [mm/hr]'
         cmap='pyart_NWSRef'
     elif field == 'RP':
         units='PolZR Rain Rate [mm/hr]'
