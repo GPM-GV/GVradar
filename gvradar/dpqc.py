@@ -646,7 +646,7 @@ def sw_sector(self):
     sw = self.radar.fields['SW']['data'].copy()
     sector_w = np.ones(sw.shape)
     sw_sec = sector['sw_sec']
-    sw_lt = np.ma.where(sw < sw_sec , 1, 0)
+    sw_lt = np.ma.where(sw > sw_sec , 1, 0)
     sec_f = np.logical_and(sw_lt == 1 , sector_wipeout == 1)
     sector_w[sec_f] = 0
 
