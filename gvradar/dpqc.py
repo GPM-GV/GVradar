@@ -594,7 +594,7 @@ def sw_sector(self):
 
     Returns
     -------
-    sector_rh : ndarray
+    sector_sw : ndarray
     a field array with ones in gates that are in the Region of Interest
 
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
@@ -650,8 +650,8 @@ def sw_sector(self):
     sec_f = np.logical_and(sw_lt == 1 , sector_wipeout == 1)
     sector_w[sec_f] = 0
 
-    sector_sw = sector_r
-    cm.add_field_to_radar_object(sector_w, self.radar, field_name='SECSW', 
+    sector_sw = sector_w
+    cm.add_field_to_radar_object(sector_sw, self.radar, field_name='SECSW', 
                                  units='0 = Z < 0, 1 = Z >= 0',
                                  long_name='Sector SW Mask', 
                                  standard_name='Sector SW Mask', 
