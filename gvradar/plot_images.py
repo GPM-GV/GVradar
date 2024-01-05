@@ -637,6 +637,14 @@ def get_field_info(radar, field):
         title = 'Radial Velocity [m/s]'
         #cmap='pyart_balance'
         cmap='pyart_NWSVel'
+    elif field == 'SW':
+        units='Spectrum Width'
+        vmin=0
+        vmax=21
+        Nbins = 12
+        title = 'Spectrum Width'
+        #cmap='pyart_balance'
+        cmap='pyart_NWS_SPW'    
     elif field == 'corrected_velocity':
         units='Velocity [m/s]'
         vmin=-20
