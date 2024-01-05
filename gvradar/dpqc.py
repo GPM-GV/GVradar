@@ -651,7 +651,7 @@ def sw_sector(self):
     sector_w[sec_f] = 0
 
     sector_sw = sector_r
-    cm.add_field_to_radar_object(sector_sw, self.radar, field_name='SECSW', 
+    cm.add_field_to_radar_object(sector_w, self.radar, field_name='SECSW', 
                                  units='0 = Z < 0, 1 = Z >= 0',
                                  long_name='Sector SW Mask', 
                                  standard_name='Sector SW Mask', 
