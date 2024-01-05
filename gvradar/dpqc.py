@@ -1077,6 +1077,7 @@ def get_default_thresh_dict():
                            'get_GV_SD':  False, 'SD_window': 15,
                            'unfold_phidp': True,
                            'dealias_velocity': False,
+                           'do_sw_mask': False,
                            'do_insect': False, 
                            'do_despeckle': True, 'speck_size': 10, 'pyart_speck': True,
                            'do_cos': False, 'coshmin': 0, 'coshmax': None,
