@@ -144,6 +144,7 @@ def threshold_qc_dpfields(self):
     if self.do_dbz == True: dbzfilter.exclude_below('CZ', self.dbz_thresh)
     if self.do_sector == True: dbzfilter.exclude_not_equal('SEC', cos)
     if self.do_rh_sector == True: dbzfilter.exclude_not_equal('SECRH', sec) 
+    if self.do_sw_sector == True: dbzfilter.exclude_not_equal('SECSW', sec) 
     if self.do_cos == True: dbzfilter.exclude_not_equal('COS', cos)
     if self.do_sq == True: dbzfilter.exclude_below('SQ', self.sq_thresh)
     if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
@@ -573,6 +574,87 @@ def rh_sector(self):
                                  units='0 = Z < 0, 1 = Z >= 0',
                                  long_name='Sector RH Mask', 
                                  standard_name='Sector RH Mask', 
+                                 dz_field=self.ref_field_name)
+     
+    return self.radar
+
+# ***************************************************************************************
+
+def sw_sector(self):
+    
+    """
+    filter out any data inside the region of interest that is < rh_sector
+
+    Parameters
+    ----------
+    radar : radar object
+            the radar object where the data is
+    self : dict
+            a dictionary defining the region of interest
+
+    Returns
+    -------
+    sector_rh : ndarray
+    a field array with ones in gates that are in the Region of Interest
+
+    Written by: Jason L. Pippitt, NASA/GSFC/SSAI
+    """
+
+    sector = {'hmin': self.swhmin, 'hmax': self.swhmax,
+	          'rmin':  self.swrmin * 1000, 'rmax':  self.swrmax * 1000,
+              'azmin': self.swazmin, 'azmax': self.swazmax,
+	          'elmin': self.swelmin, 'elmax': self.swelmax,
+              'sw_sec': self.sw_sec}
+
+    sector_wipeout = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
+
+    # check for altitude limits
+    if sector['hmin'] is not None:
+        sector_wipeout[self.radar.gate_altitude['data'] < sector['hmin']] = 0
+
+    if sector['hmax'] is not None:
+        sector_wipeout[self.radar.gate_altitude['data'] > sector['hmax']] = 0
+
+    # check for range limits
+    if sector['rmin'] is not None:
+        sector_wipeout[:, self.radar.range['data'] < sector['rmin']] = 0
+
+    if sector['rmax'] is not None:
+        sector_wipeout[:, self.radar.range['data'] > sector['rmax']] = 0
+
+    # check elevation angle limits
+    if sector['elmin'] is not None:
+        sector_wipeout[self.radar.elevation['data'] < sector['elmin'], :] = 0
+
+    if sector['elmax'] is not None:
+        sector_wipeout[self.radar.elevation['data'] > sector['elmax'], :] = 0
+
+    # check min and max azimuth angle
+    if sector['azmin'] is not None and sector['azmax'] is not None:
+        if sector['azmin'] <= sector['azmax']:
+            sector_wipeout[self.radar.azimuth['data'] < sector['azmin'], :] = 0
+            sector_wipeout[self.radar.azimuth['data'] > sector['azmax'], :] = 0
+        if sector['azmin'] > sector['azmax']:
+            sector_wipeout[np.logical_and(
+            self.radar.azimuth['data'] < sector['azmin'],
+            self.radar.azimuth['data'] > sector['azmax']), :] = 0
+    elif sector['azmin'] is not None:
+        sector_wipeout[self.radar.azimuth['data'] < sector['azmin'], :] = 0
+    elif sector['azmax'] is not None:
+        sector_wipeout[self.radar.azimuth['data'] > sector['azmax'], :] = 0
+    
+    sw = self.radar.fields['SW']['data'].copy()
+    sector_w = np.ones(sw.shape)
+    sw_sec = sector['sw_sec']
+    sw_lt = np.ma.where(sw < sw_sec , 1, 0)
+    sec_f = np.logical_and(sw_lt == 1 , sector_wipeout == 1)
+    sector_w[sec_f] = 0
+
+    sector_sw = sector_r
+    cm.add_field_to_radar_object(sector_sw, self.radar, field_name='SECSW', 
+                                 units='0 = Z < 0, 1 = Z >= 0',
+                                 long_name='Sector SW Mask', 
+                                 standard_name='Sector SW Mask', 
                                  dz_field=self.ref_field_name)
      
     return self.radar
@@ -1009,6 +1091,10 @@ def get_default_thresh_dict():
                            'rhrmin': 0, 'rhrmax': 20, 
                            'rhazmin': 0, 'rhazmax': 360, 
                            'rhelmin': 0, 'rhelmax': 7.0, 'rh_sec': 0.92, 
+                           'do_sw_sector': False, 'swhmin': 0, 'swhmax': None,
+                           'swrmin': 0, 'swrmax': 20, 
+                           'swazmin': 0, 'swazmax': 360, 
+                           'swelmin': 0, 'swelmax': 7.0, 'sw_sec': 2.0, 
                            'do_sd_sector': False, 'sdhmin': 0, 'sdhmax': None, 
                            'sdrmin': 0, 'sdrmax': 20, 
                            'sdazmin': 0, 'sdazmax': 360, 
