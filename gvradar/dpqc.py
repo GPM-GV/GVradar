@@ -102,6 +102,14 @@ def csu_filters(self):
 
 # ***************************************************************************************
 
+def apply_SW_mask(self):
+
+    self.radar.fields['CZ']['data'] = np.ma.masked_where(
+        self.radar.fields['SW']['data'].mask, self.radar.fields["CZ"]['data'])
+    return self.radar
+
+# ***************************************************************************************
+
 def threshold_qc_dpfields(self):
 
     """
