@@ -156,7 +156,8 @@ class QC:
             self.radar = qc.velocity_dealias(self)  
 
     # Apply SW filter
-        self.radar = qc.apply_SW_mask(self)
+        if self.do_sw_mask == True:
+            self.radar = qc.apply_SW_mask(self)
 
     # Apply CSU_RT filters
         self.radar = qc.csu_filters(self)
