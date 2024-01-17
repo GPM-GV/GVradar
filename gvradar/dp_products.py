@@ -136,7 +136,9 @@ def add_csu_blended_rain(self):
     rain[rc_max] = rain[rc_max] * -1.0
 
     # HID ice threshold
-    rain = remove_ice(rain, self.fh)
+    if self.de_ice:
+        print('    Removing HID ice from rainrate...')
+        rain = remove_ice(rain, self.fh)
 
     rc_dict = {"data": rain, "units": "mm/h",
                 "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
@@ -173,7 +175,9 @@ def add_polZR_rr(self):
     rp[rp_max] = rp[rp_max] * -1.0
 
     # HID ice threshold
-    rp = remove_ice(rp, self.fh)
+    if self.de_ice:
+        print('    Removing HID ice from rainrate...')
+        rp = remove_ice(rp, self.fh)
 
     rp_dict = {"data": rp, "units": "mm/h",
                "long_name": "Polzr_Rain_Rate", "_FillValue": -32767.0,
@@ -750,6 +754,7 @@ def get_default_product_dict():
                             'no_temp': False,
                             'snthresh': -30,
                             'do_mass': True,
+                            'de_ice': True,
                             'do_RC': True,
                             'do_RP': True,
                             'do_tokay_DSD': True,
