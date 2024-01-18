@@ -956,10 +956,12 @@ def add_rings_radials(site, display, radar_lat, radar_lon, max_range, ax, add_lo
     meters_to_lat = 1. / 111177.
     meters_to_lon =  1. / (111177. * math.cos(radar_lat * dtor))
     display.plot_cross_hair(10,npts=100)
-    #for rng in range(20,max_range+20,20):
-    #    display.plot_range_ring(rng, line_style='k--', lw=0.5)
-    for rng in range(50,max_range+50,50):
-        display.plot_range_ring(rng, line_style='--', lw=0.5,color='white')
+    if site == 'KaD3R' or site == 'KuD3R':
+        for rng in range(20,max_range+20,20):
+            display.plot_range_ring(rng, line_style='k--', lw=0.5)
+    else:
+        for rng in range(50,max_range+50,50):
+            display.plot_range_ring(rng, line_style='--', lw=0.5,color='white')
 
     for azi in range(0,360,30):
         azimuth = 90. - azi
@@ -969,7 +971,7 @@ def add_rings_radials(site, display, radar_lat, radar_lon, max_range, ax, add_lo
         display.plot_line_geo([radar_lon, lon_maxrange], [radar_lat, lat_maxrange],
                               line_style='--',lw=0.5,color='white')
     
-    wff_list = ['KDOX','KAKQ','NPOL']
+    wff_list = ['KDOX','KAKQ','NPOL','KuD3R', 'KaD3R']
     IMPACTS_list = ['KOKX','KBOX']
     if site in wff_list:
         display.plot_point(Pad_lon, Pad_lat, symbol = 'v', markersize=5, color='white')
