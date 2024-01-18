@@ -62,7 +62,7 @@ class QC:
         # Get site name and date time from radar
         site_time = cm.get_site_date_time(self.radar)
         kwargs = {**site_time, **kwargs}
-        if D3R_file == 'D3R': kwargs.update({'site': 'D3R'})
+        #if D3R_file == 'D3R': kwargs.update({'site': 'D3R'})
         
         for key, value in kwargs.items():
             setattr(self, key, value)
