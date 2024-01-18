@@ -180,7 +180,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         kwargs = {}
         kwargs.update({'transform_first': True})
         ax = fig.add_subplot(spec[r_c[index]], projection=projection)
-        ax.set_facecolor('none')
+        ax.set_facecolor('black')
 
         if field == 'RC':
             rc = radar.fields['RC']['data'].copy()
@@ -981,7 +981,7 @@ def add_rings_radials(site, display, radar_lat, radar_lon, max_range, ax, add_lo
         display.plot_point(IMPACTS_lon2, IMPACTS_lat2, symbol = 'v', markersize=3, color='white')
 
     # Add state and countines to map
-    ax.add_feature(STATES, edgecolor='white', lw=0.5)
+    ax.add_feature(STATES, facecolor='none', edgecolor='white', lw=0.5)
     ax.add_feature(COUNTIES, facecolor='black', edgecolor='white', lw=0.25)
     ax.add_feature(cfeature.OCEAN.with_scale('10m'),facecolor=("#414141"))
     ax.add_feature(cfeature.LAKES.with_scale('10m'),facecolor=("#414141"), edgecolor='white',  lw=0.25, zorder=0)
