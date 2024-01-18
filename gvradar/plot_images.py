@@ -180,7 +180,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         kwargs = {}
         kwargs.update({'transform_first': True})
         ax = fig.add_subplot(spec[r_c[index]], projection=projection)
-        ax.set_facecolor('black')
+        ax.set_facecolor('none')
 
         if field == 'RC':
             rc = radar.fields['RC']['data'].copy()
