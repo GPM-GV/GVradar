@@ -273,7 +273,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
 
         if index == num_fields-1:
             add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols)
-            if num_fields > 2:
+            if num_fields > 4:
                 plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+((nrows/1.5)*0.055)))
             else:
                 plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))
