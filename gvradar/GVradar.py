@@ -76,7 +76,7 @@ class QC:
     # Instance Method
     def run_dpqc(self):
         
-        if self.site == 'D3R':
+        if self.site == 'D3R_ku' or self.site == 'D3R_ka':
             d3r.run_d3r(self)
             '''
             if self.scan_type == 'RHI':
