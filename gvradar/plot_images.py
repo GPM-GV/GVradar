@@ -982,7 +982,7 @@ def add_rings_radials(site, display, radar_lat, radar_lon, max_range, ax, add_lo
 
     # Add state and countines to map
     ax.add_feature(STATES, facecolor='none', edgecolor='white', lw=0.5)
-    ax.add_feature(COUNTIES, facecolor='black', edgecolor='white', lw=0.25)
+    ax.add_feature(COUNTIES, facecolor='none', edgecolor='white', lw=0.25)
     ax.add_feature(cfeature.OCEAN.with_scale('10m'),facecolor=("#414141"))
     ax.add_feature(cfeature.LAKES.with_scale('10m'),facecolor=("#414141"), edgecolor='white',  lw=0.25, zorder=0)
 
