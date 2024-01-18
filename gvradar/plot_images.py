@@ -958,10 +958,10 @@ def add_rings_radials(site, display, radar_lat, radar_lon, max_range, ax, add_lo
     display.plot_cross_hair(10,npts=100)
     if site == 'KaD3R' or site == 'KuD3R':
         for rng in range(20,max_range+20,20):
-            display.plot_range_ring(rng, line_style='k--', lw=0.5)
+            display.plot_range_ring(rng, line_style='--', lw=0.5, color='white')
     else:
         for rng in range(50,max_range+50,50):
-            display.plot_range_ring(rng, line_style='--', lw=0.5,color='white')
+            display.plot_range_ring(rng, line_style='--', lw=0.5, color='white')
 
     for azi in range(0,360,30):
         azimuth = 90. - azi
