@@ -846,8 +846,8 @@ def get_radar_info(radar, sweep):
     if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
     if site == 'CP2RADAR': site = 'CP2'
-    if radar.metadata['system'] == 'KuD3R': site = 'D3R_ku'
-    if radar.metadata['system'] == 'KaD3R': site = 'D3R_ka'
+    if radar.metadata['system'] == 'KuD3R': site = 'KuD3R'
+    if radar.metadata['system'] == 'KaD3R': site = 'KaD3R'
 
     radar_DT = pyart.util.datetime_from_radar(radar)
 

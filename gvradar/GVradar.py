@@ -170,7 +170,7 @@ class QC:
             self.radar = qc.unfold_phidp(self)
         
     # Get KDP and Std(PhiDP)
-        if self.site != 'D3R':
+        if self.site != 'KaD3R' or self.site != 'KuD3R':
             self.radar = qc.calculate_kdp(self)
         
     # Create mask to filter a range/azm/height sector of radar based on SD threshold
@@ -182,7 +182,7 @@ class QC:
             self.radar = qc.ph_sector(self)
                 
     # Perform gatefilters for calculated fields
-        if self.site != 'D3R':
+        if self.site != 'KaD3R' or self.site != 'KuD3R':
             self.radar = qc.threshold_qc_calfields(self)       
         
     # Add uncorrected reflectiviy field to radar structure.

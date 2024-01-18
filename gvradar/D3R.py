@@ -35,7 +35,7 @@ def read_d3r(file):
     else:
         radar = pyart.aux_io.read_d3r_gcpex_nc(file, file_field_names=True)   
 
-    site = 'D3R'
+    #site = 'D3R'
     return radar 
 
 # ***************************************************************************************
