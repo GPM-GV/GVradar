@@ -118,6 +118,8 @@ def get_ruc_archive(self):
     hh = str(hour).zfill(2)
     if self.site == 'XPOL':
         sounding_dir = snd_dir + year + '/' + month + day + '/TM1/TM1_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
+    elif self.site == 'KuD3R' or self.site == 'KaD3R':
+        sounding_dir = snd_dir + year + '/' + month + day + '/NPOL/NPOL_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
     else:
         sounding_dir = snd_dir + year + '/' + month + day + '/' + self.site + '/' + self.site + '_' + year + '_' + month + day + '_' + hh + 'UTC.txt'
     
