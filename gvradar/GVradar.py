@@ -182,7 +182,7 @@ class QC:
             self.radar = qc.ph_sector(self)
                 
     # Perform gatefilters for calculated fields
-        D3R_list = ['KuD3R', 'KaD3R']
+        D3R_list = ['KaD3R', 'KuD3R']
         if self.site not in D3R_list:
             self.radar = qc.threshold_qc_calfields(self)       
         
