@@ -57,6 +57,7 @@ class QC:
         
         # Check and fix missing user defined kwargs
         default_kw = qc.get_default_thresh_dict()
+        print('check')
         kwargs = cm.check_kwargs(kwargs, default_kw)
         
         # Get site name and date time from radar
