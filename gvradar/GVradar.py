@@ -182,7 +182,8 @@ class QC:
             self.radar = qc.ph_sector(self)
                 
     # Perform gatefilters for calculated fields
-        if self.site != 'KaD3R' or self.site != 'KuD3R':
+        D3R_list = ['KuD3R', 'KaD3R']
+        if self.site not in D3R_list:
             self.radar = qc.threshold_qc_calfields(self)       
         
     # Add uncorrected reflectiviy field to radar structure.
