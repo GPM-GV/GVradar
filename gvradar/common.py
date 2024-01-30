@@ -932,7 +932,7 @@ def get_z_from_radar(radar):
     sr_2d, az_2d = np.meshgrid(srange_1D, azimuth_1D)
     el_2d = np.meshgrid(srange_1D, elevation_1D)[1]
     xx, yy, zz = radar_coords_to_cart(sr_2d/1000.0, az_2d, el_2d)
-    return zz + radar.altitude['data'][0]
+    return zz + radar.altitude['data']
 
 # ***************************************************************************************
 
