@@ -39,7 +39,7 @@ class QC:
         cfy = pathlib.Path(file).suffix
         
         # Uncompress input file, and create radar structure
-        if D3R_file == 'D3R' and cfy == 'nc':
+        if D3R_file == 'D3R' and cfy == '.nc':
             radar = d3r.read_d3r(self.file)
         else: 
             if cfy == '.gz': 
