@@ -76,19 +76,10 @@ class QC:
     # Instance Method
     def run_dpqc(self):
         
+    # Check if radar D3R    
         if self.site == 'KuD3R' or self.site == 'KaD3R':
             d3r.run_d3r(self)
-            if len(self.radar.fixed_angle['data'][:]) == 5:
-                self.scan_type = 'RHI'
-                self.radar.scan_type = 'rhi'
-            '''
-            if self.scan_type == 'RHI':
-                d3r.plot_d3r_rhi(self)
-            elif self.scan_type == 'PPI':
-                d3r.plot_d3r_ppi(self)
-            else: 
-                print('Scan type not supported')
-            '''
+            
     # If radar is 88D merge split cuts and remove MRLE scans
         if self.radar.metadata['original_container'] == 'NEXRAD Level II':
             self.radar = cm.merge_split_cuts(self)
