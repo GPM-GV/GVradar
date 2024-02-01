@@ -79,8 +79,8 @@ class QC:
         if self.site == 'KuD3R' or self.site == 'KaD3R':
             d3r.run_d3r(self)
             if len(self.radar.fixed_angle['data'][:]) == 5:
-                self.scan_type == 'RHI'
-                self.radar.scan_type == 'rhi'
+                self.scan_type = 'RHI'
+                self.radar.scan_type = 'rhi'
             '''
             if self.scan_type == 'RHI':
                 d3r.plot_d3r_rhi(self)
