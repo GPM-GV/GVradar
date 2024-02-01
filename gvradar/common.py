@@ -803,9 +803,9 @@ def get_site_date_time(radar):
     if 'original_container' not in radar.metadata.keys():
         radar.metadata['original_container'] = site
     
-    if site == 'KuD3R' or site == 'KaD3R':
-        if len(radar.fixed_angle['data'][:]) == 5:
-                radar.scan_type = 'rhi'
+    #if site == 'KuD3R' or site == 'KaD3R':
+    #    if len(radar.fixed_angle['data'][:]) == 5:
+    #            radar.scan_type = 'rhi'
 
     scan_type = radar.scan_type.upper()
     
