@@ -501,7 +501,6 @@ def rename_fields_in_radar(self):
         old_fields = ['DBZ', 'VEL', 'WIDTH', 'ZDR', 'KDP', 'PHIDP', 'SQI', 'RHOHV']
         new_fields = ['DZ',  'VR',   'SW',   'DR',  'KD',   'PH',    'SQ',    'RH']
     elif 'MaskSecondTrip' in self.radar.fields.keys():
-        print('hi')
         old_fields = ['ReflectivityHV', 'Velocity', 'SpectralWidth', 
                       'DifferentialReflectivity', 'DifferentialPhase', 
                       'CopolarCorrelation']
@@ -558,6 +557,11 @@ def rename_fields_in_radar(self):
                                          long_name='Corrected Reflectivity', 
                                          standard_name='Corrected Reflectivity', 
                                          dz_field='DZ')
+        elif self.site == 'KaD3R' or self.site == 'KuD3R':
+            zz = deepcopy(self.radar.fields['DZ'])
+            cz_dict = {'data': zz['data'], 'units': '', 'long_name': 'CZ',
+                       '_FillValue': -32767.0, 'standard_name': 'CZ'}
+            self.radar.add_field('CZ', cz_dict, replace_existing=True)
         else: 
             zz = deepcopy(self.radar.fields['DZ'])
             cz = self.radar.fields['DZ']['data'].copy()
