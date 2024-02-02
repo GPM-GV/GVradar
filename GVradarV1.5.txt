@@ -1,7 +1,47 @@
 GVradarV1.5 Details - 02/02/2024
 
--
+- Updates to dp_products.py:
+    - Added Pol-ZR rain rate.  Bring et al. 2004.
+    - Option added for Summer and Winter HID.
+    - Rain rate and DSD fields initialized as 0.
+    - Ice flag added to rain rate and DSD fields.  If True HID ice bins will
+      be removed from RC, RP, DM, NW.
+    - Updated DM and NW equations to reflect Tokay et al. 2020.
+    - Flag to set bins beyond 150 km to missing.
+    - DSD location flag added.
+    - get_Bringi_kdp flag added.
+    - rain rates capped at 300 mm/hr
+    - Added Gatlin DM for C band radars.
+    - No_temp flag added, retrieves HID with no Temp field.
+    - Added ability to black out blockage sectors.
+- Updates to GVradar.py:
+    - Added D3R checks, removed D3R.py.
+    - Added checks for Canadian odim_h5 format.
+    - New sounding retrievals
+    - Calls to new Spectrum Width (SW) thresholds.
+    - get_cal_file call added, will retrieve cal data from file.
+- Updates to dpqc.py:
+    - Spectrum Width mask and sw_sector added.
+    - Option to choose despeckle pyART or CSU radar tools.
+    - Added max_phidp_diff flag, to set for PH unfolding.
+    - get_GV_SD flag added, ported from IDL DPQC.
+- Updates to common.py:
+    - Updated sounding functions for RUC and UWY files.
+    - Updates rename fields for new radars.
+    - Added update_metadata, adds detailed information.
+    - Added reorder sweeps, places Canadian radar sweep in ascending order.
+    - Added get_cal_numbers, pulls cal numbers from GV cal files.
+    - Added retrieve_ML, calculates melting layer for winter HID.
+- Updates to plot_images.py:
+    - Added function to load counties and states once, speeds up plotting.
+    - Added fast flag, creates fast basic plots for QC only purposes.
+    - Added mid point Normalize colorbars to rain rate plots.
+    - Face color set to black.
+    - Water set to grey.
+    - Discrete colorbars added.
+    - Winter HID colorbar added.
 
+# ***************************************************************************************   
 
 GVradarV1.0 Details - 11/01/2022
 

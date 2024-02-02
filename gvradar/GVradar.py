@@ -41,7 +41,7 @@ class QC:
         
         # Uncompress input file, and create radar structure
         if D3R_file == 'D3R' and cfy == '.nc':
-            radar = d3r.read_d3r(self.file, file_field_names=True, read_altitude_from_nc=True)
+            radar = pyart.aux_io.read_d3r_gcpex_nc(self.file, file_field_names=True, read_altitude_from_nc=True)
         else: 
             if cfy == '.gz': 
                 self.file = cm.unzip_file(self.file)
