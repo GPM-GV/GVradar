@@ -1,4 +1,9 @@
-GVradarV1.0 Details
+GVradarV1.5 Details - 02/02/2024
+
+-
+
+
+GVradarV1.0 Details - 11/01/2022
 
 - Add WSR-88D merge split cuts
     Function added to common.py, merge_split_cuts.
