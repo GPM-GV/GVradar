@@ -5,6 +5,7 @@ Python based Quality Control utilizing PyArt
 Developed by the NASA GPM-GV group
 V0.5 - 12/06/2021 - update by Jason Pippitt NASA/GSFC/SSAI
 V1.0 - 11/01/2022 - update by Jason Pippitt NASA/GSFC/SSAI
+V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 '''
 # ***************************************************************************************
 import cartopy.crs as ccrs

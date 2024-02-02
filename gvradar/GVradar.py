@@ -5,7 +5,9 @@ GPM-GV radar processing software.
     -Rainfall product generation from Dual Pol data
 
 Developed by the NASA GPM-GV group
+V0.5 - 12/06/2021 - update by Jason Pippitt NASA/GSFC/SSAI
 V1.0 - 11/01/2022 - update by Jason Pippitt NASA/GSFC/SSAI
+V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 '''
 # ***************************************************************************************
 
@@ -15,8 +17,7 @@ import ast
 import argparse
 import pathlib
 from gvradar import (dp_products as dp, dpqc as qc, 
-                     common as cm, plot_images as pi,
-                     D3R as d3r)
+                     common as cm, plot_images as pi)
 #import warnings
 #warnings.filterwarnings("ignore")
 
@@ -74,10 +75,6 @@ class QC:
 
     # Instance Method
     def run_dpqc(self):
-        
-    # Check if radar D3R    
-    #    if self.site == 'KuD3R' or self.site == 'KaD3R':
-    #        d3r.run_d3r(self)
             
     # If radar is 88D merge split cuts and remove MRLE scans
         if self.radar.metadata['original_container'] == 'NEXRAD Level II':

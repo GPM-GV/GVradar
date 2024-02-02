@@ -29,6 +29,9 @@ def plot_fields(self):
     Calls plotting programs based on user defined dictionary parameters.
 
     Written by: Jason L. Pippitt, NASA/GSFC/SSAI
+    V0.5 - 12/06/2021 - update by Jason Pippitt NASA/GSFC/SSAI
+    V1.0 - 11/01/2022 - update by Jason Pippitt NASA/GSFC/SSAI
+    V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
     """
     start = time.time()
     if self.sweeps_to_plot == 'all':
