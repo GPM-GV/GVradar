@@ -40,7 +40,7 @@ class QC:
         
         # Uncompress input file, and create radar structure
         if D3R_file == 'D3R' and cfy == '.nc':
-            radar = d3r.read_d3r(self.file)
+            radar = d3r.read_d3r(self.file, file_field_names=True, read_altitude_from_nc=True)
         else: 
             if cfy == '.gz': 
                 self.file = cm.unzip_file(self.file)
@@ -62,7 +62,6 @@ class QC:
         # Get site name and date time from radar
         site_time = cm.get_site_date_time(self.radar)
         kwargs = {**site_time, **kwargs}
-        #if D3R_file == 'D3R': kwargs.update({'site': 'D3R'})
         
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -77,8 +76,8 @@ class QC:
     def run_dpqc(self):
         
     # Check if radar D3R    
-        if self.site == 'KuD3R' or self.site == 'KaD3R':
-            d3r.run_d3r(self)
+    #    if self.site == 'KuD3R' or self.site == 'KaD3R':
+    #        d3r.run_d3r(self)
             
     # If radar is 88D merge split cuts and remove MRLE scans
         if self.radar.metadata['original_container'] == 'NEXRAD Level II':

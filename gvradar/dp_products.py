@@ -238,8 +238,9 @@ def add_calc_dsd_sband_tokay_2020(self):
     nw = np.ma.filled(nw, fill_value=0.0)
 
     # HID ice threshold
-    dm = remove_ice(dm, self.fh)
-    nw = remove_ice(nw, self.fh)
+    if self.de_ice:
+        dm = remove_ice(dm, self.fh)
+        nw = remove_ice(nw, self.fh)
 
     dm_dict = {"data": dm, "units": "DM [mm]",
                 "long_name": "Mass-weighted mean diameter", "_FillValue": -32767.0,
