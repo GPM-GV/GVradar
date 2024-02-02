@@ -8,14 +8,10 @@ V1.0 - 11/01/2022 - update by Jason Pippitt NASA/GSFC/SSAI
 V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 '''
 # ***************************************************************************************
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
+
 import numpy as np
 from copy import deepcopy
 import pyart
-import os
-import subprocess
-import shlex
 from gvradar import common as cm
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,
                             csu_dsd, csu_kdp, csu_misc, fundamentals)

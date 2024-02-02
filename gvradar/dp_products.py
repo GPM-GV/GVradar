@@ -13,7 +13,6 @@ from __future__ import print_function
 import numpy as np
 import pyart
 import datetime
-from copy import deepcopy
 from scipy.special import gamma
 from gvradar import (common as cm, plot_images as pi)
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain, 
