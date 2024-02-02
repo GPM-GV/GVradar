@@ -500,7 +500,7 @@ def rename_fields_in_radar(self):
     elif 'SQI' in self.radar.fields.keys():
         old_fields = ['DBZ', 'VEL', 'WIDTH', 'ZDR', 'KDP', 'PHIDP', 'SQI', 'RHOHV']
         new_fields = ['DZ',  'VR',   'SW',   'DR',  'KD',   'PH',    'SQ',    'RH']
-    elif 'ReflectivityHV' in self.radar.fields.keys():
+    elif 'MaskSecondTrip' in self.radar.fields.keys():
         old_fields = ['ReflectivityHV', 'Velocity', 'SpectralWidth', 
                       'DifferentialReflectivity', 'DifferentialPhase', 
                       'CopolarCorrelation']
