@@ -24,8 +24,8 @@ We suggest creating an environment, GVradar.  Install the following programs.
 
 * Download [CSU Radar Tools](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/CSU_RadarTools-master.tar.gz) tarball.
 * Download [SkewT](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/SkewT-master.tar.gz) tarball.
-* Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV1.0.tar.gz) tarball.
-* If you would like to test with data used in notebooks, Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV1.0_raw.tar.gz) tarball.
+* Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV1.5.tar.gz) tarball.
+* If you would like to test with data used in notebooks, Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV1.5_raw.tar.gz) tarball.
 
 Execute the following command in the active GVradar environment for each above program:
 
