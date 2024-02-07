@@ -1,22 +1,47 @@
-# Select if you want to output a cf file and what fields to write
-{'output_cf': True, 'cf_dir': './cf/', 
- 'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 
-                   'PH', 'RH', 'SD', 'SQ', 'FH',
-                   'RC', 'DM', 'NW', 'MW', 'MI']}
-
+# Select if you want to output a cf file or grid file and what fields to write
+'output_cf': True, 'cf_dir': out_dir, 'output_grid': False, 'grid_dir': './grid/',
+'output_fields': ['DZ', 'CZ', 'VR', 'SW', 'DR', 'KD',
+                   'PH', 'RH', 'SD', 'FH', 'RP', 'SQ',
+                   'RC', 'DM', 'NW', 'MW', 'MI']
+                           
 # Select which products to produce.
-{'do_HID': True,
- 'do_mass': True,
- 'do_RC': True,
- 'do_tokay_DSD': True}
+# Calculate Dolan et al. HID fields
+'do_HID_summer': True,
+'do_HID_winter': False,
+# Do not use temperature in HID calculation
+'no_temp': False,
+# Calculate Bringi KDP field
+'get_Bringi_kdp': True,
+# Calculate Ice and liquid Mass Calculation
+'do_mass': True,
+# Calculate CSU Blended Rainfall Algorithm
+'do_RC': True,
+# Calculate Pol ZR rain rate
+'do_RP': True,
+# Remove bins classified as ice from rain rates and DSD fields
+'de_ice': False,
+# Calculate DM and NW from Tokay et al.
+'do_tokay_DSD': True,
+# Set which DM equations will be applied.
+'dsd_loc': 'wff',
+# Mask bins beyond 150 km.
+'do_150_mask': False,
+# Mask sectors with blockage issues. 
+'do_block_mask': False,
+# Get calibration numbers from cal txt files.
+'get_cal_file': False, 'cal_dir': '/gvraid/trmmgv/caltxt_files/',
+# Apply and set calibration numbers.
+'apply_cal': False, 'ref_cal': 0.0, 'zdr_cal': 0.0
 
 # Select plots ranges, type, and fields
-{'plot_images': True, 'plot_single': False, 'plot_multi': True,
- 'max_range': 150, 'max_height': 10, 'sweeps_to_plot': [0],
- 'fields_to_plot': ['DM', 'NW', 'FH', 'RC', 'MW', 'MI'],
- 'plot_dir': './plots/', 'add_logos': True}
+'plot_images': False, 'plot_single': True, 'plot_multi': False,
+                'max_range': 150, 'max_height': 14, 'sweeps_to_plot': [0],
+                'plot_fast': False,
+                'mask_outside':  True,
+                'fields_to_plot': ['CZ','FH','MW','MI',
+                                   'RP','RC','DM','NW'],
+                'plot_dir': image_dir, 'add_logos': True}
 
-# A Sounding is needed for DP products, sounding type can be; uwy, get_ruc, ruc, ruc_archive)
-# get_ruc will download model sounding data for radar lat, lon
-{'use_sounding': True, 'sounding_type': 'ruc_archive',
- 'sounding_dir': './sounding/'}
+# A Sounding is needed for DP products, sounding type can be; uwy, ruc, ruc_archive)
+'use_sounding': True, 'sounding_type': 'ruc_archive',
+'sounding_dir': '/gpmgv3/raw/Soundings/RUC_Soundings/'

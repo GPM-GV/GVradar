@@ -747,8 +747,7 @@ def get_conv_strat(self):
 
 def get_default_product_dict():
 
-    default_product_dict = {'cf_dir': './cf/',
-                            'get_cal_file': False, 'cal_dir': './cal_files/',
+    default_product_dict = {'get_cal_file': False, 'cal_dir': './cal_files/',
                             'apply_cal': False, 'ref_cal': 0.0, 'zdr_cal': 0.0, 
                             'do_HID_summer': True,
                             'do_HID_winter': False,
@@ -768,7 +767,7 @@ def get_default_product_dict():
                             'sweeps_to_plot': [0],
                             'output_cf': False,
                             'output_grid': False,
-                            'cf_dir': './cf',
+                            'cf_dir': './cf/',
                             'grid_dir': './grid',
                             'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 
                                               'PH', 'RH', 'SD', 'SQ', 'FH',
