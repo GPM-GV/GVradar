@@ -54,7 +54,6 @@ class QC:
                 radar = pyart.io.read(self.file, file_field_names=True)
         
         self.radar = radar
-        print(self.radar.fixed_angle['data'][:])
         
         # Check and fix missing user defined kwargs
         default_kw = qc.get_default_thresh_dict()

@@ -1222,6 +1222,7 @@ def reorder_sweeps(radar):
     # Reorder sweeps in ascending order
     sweep_index = np.argsort(radar.elevation['data'][radar.sweep_start_ray_index['data']])
     final_radar = radar.extract_sweeps(sweep_index)
+    print('New sweep angles:  ',final_radar.fixed_angle['data'][:], sep='\n')
 
     return final_radar
 

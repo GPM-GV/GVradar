@@ -20,6 +20,7 @@ from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from PIL import Image
 import matplotlib.image as image
 import time
+%matplotlib inline  
 
 # ****************************************************************************************
 
