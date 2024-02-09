@@ -1110,6 +1110,7 @@ def get_default_thresh_dict():
                            'cf_dir': './cf',
                            'grid_dir': './grid',
                            'plot_raw_images': False,
+                           'png': True,
                            'plot_images': True, 'max_range': 200, 'max_height': 10,
                            'sweeps_to_plot': [0], 
                            'plot_single': True,

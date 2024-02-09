@@ -488,7 +488,7 @@ def rename_fields_in_radar(self):
 
     """    
     print('', "Renaming radar fields...", sep='\n')
-    print(self.radar.fields.keys())
+    #print(self.radar.fields.keys())
     if 'PHIDP2' in self.radar.fields.keys():
         old_fields = ['DBZ2', 'VEL2', 'WIDTH2', 'ZDR2', 'PHIDP2', 'RHOHV2', 'SQI2']
         new_fields = ['DZ',     'VR',    'SW',   'DR', 'PH',     'RH',     'SQ']

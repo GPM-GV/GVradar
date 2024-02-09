@@ -50,7 +50,7 @@ def plot_fields(self):
                 sweep = sweepn[isweeps]
                 os.makedirs(self.plot_dir, exist_ok=True)
                 plot_fields_RHI(self.radar, sweep=sweep, fields=self.fields_to_plot , ymax=self.max_height,
-                                xmax=self.max_range, png=True, outdir=self.plot_dir, 
+                                xmax=self.max_range, png=self.png, outdir=self.plot_dir, 
                                 add_logos = self.add_logos, mask_outside=self.mask_outside)
         if self.plot_single == True:
             for ifld in range(len(self.fields_to_plot)):
@@ -61,7 +61,7 @@ def plot_fields(self):
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     plot_fields_RHI(self.radar, sweep=sweep, fields=[field] , ymax=self.max_height, 
-	                            xmax=self.max_range, png=True, outdir=plot_dir, add_logos = self.add_logos,
+	                            xmax=self.max_range, png=self.png, outdir=plot_dir, add_logos = self.add_logos,
                                 mask_outside=self.mask_outside)
 
     if self.scan_type == 'PPI':
@@ -73,11 +73,11 @@ def plot_fields(self):
                 os.makedirs(self.plot_dir, exist_ok=True)
                 if self.plot_fast:
                     plot_fields_PPI_QC(self.radar, sweep=sweep, fields=self.fields_to_plot, 
-                                       max_range=self.max_range, png=True, outdir=self.plot_dir, 
+                                       max_range=self.max_range, png=self.png, outdir=self.plot_dir, 
                                        add_logos = self.add_logos, mask_outside=self.mask_outside)
                 else:
                     plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, fields=self.fields_to_plot, 
-                                    max_range=self.max_range, png=True, outdir=self.plot_dir, 
+                                    max_range=self.max_range, png=self.png, outdir=self.plot_dir, 
                                     add_logos = self.add_logos, mask_outside=self.mask_outside)
         if self.plot_single == True:
             for ifld in range(len(self.fields_to_plot)):
@@ -89,11 +89,11 @@ def plot_fields(self):
                     sweep = sweepn[isweeps]
                     if self.plot_fast:
                         plot_fields_PPI_QC(self.radar, sweep=sweep, fields=[field], 
-                                           max_range=self.max_range, png=True, outdir=plot_dir, 
+                                           max_range=self.max_range, png=self.png, outdir=plot_dir, 
                                            add_logos = self.add_logos, mask_outside=self.mask_outside)
                     else:
                         plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, fields=[field], 
-                                        max_range=self.max_range, png=True, outdir=plot_dir, 
+                                        max_range=self.max_range, png=self.png, outdir=plot_dir, 
                                         add_logos = self.add_logos, mask_outside=self.mask_outside)
 
     end = time.time()
