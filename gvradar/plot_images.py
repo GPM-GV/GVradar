@@ -48,7 +48,7 @@ def plot_fields(self):
         if self.plot_multi == True:
             for isweeps in range(len(sweepn)):
                 sweep = sweepn[isweeps]
-                os.makedirs(self.plot_dir, exist_ok=True)
+                if self.png: os.makedirs(self.plot_dir, exist_ok=True)
                 plot_fields_RHI(self.radar, sweep=sweep, fields=self.fields_to_plot , ymax=self.max_height,
                                 xmax=self.max_range, png=self.png, outdir=self.plot_dir, 
                                 add_logos = self.add_logos, mask_outside=self.mask_outside)
@@ -57,7 +57,7 @@ def plot_fields(self):
                 print(self.fields_to_plot[ifld])
                 field = self.fields_to_plot[ifld]
                 plot_dir = self.plot_dir + '/' + field
-                os.makedirs(plot_dir, exist_ok=True)
+                if self.png: os.makedirs(plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     plot_fields_RHI(self.radar, sweep=sweep, fields=[field] , ymax=self.max_height, 
@@ -70,7 +70,7 @@ def plot_fields(self):
         if self.plot_multi == True:
             for isweeps in range(len(sweepn)):
                 sweep = sweepn[isweeps]
-                os.makedirs(self.plot_dir, exist_ok=True)
+                if self.png: os.makedirs(self.plot_dir, exist_ok=True)
                 if self.plot_fast:
                     plot_fields_PPI_QC(self.radar, sweep=sweep, fields=self.fields_to_plot, 
                                        max_range=self.max_range, png=self.png, outdir=self.plot_dir, 
@@ -84,7 +84,7 @@ def plot_fields(self):
                 print(self.fields_to_plot[ifld])
                 field = self.fields_to_plot[ifld]
                 plot_dir = self.plot_dir + '/' + field + '/'
-                os.makedirs(plot_dir, exist_ok=True)
+                if self.png: os.makedirs(plot_dir, exist_ok=True)
                 for isweeps in range(len(sweepn)):
                     sweep = sweepn[isweeps]
                     if self.plot_fast:

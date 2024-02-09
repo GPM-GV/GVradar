@@ -98,9 +98,9 @@
 # Select plot limits, plot type (single or multiplot), and fields to plot.
 {'plot_images': True, 'max_range': 150, 'max_height': 15, 
  'sweeps_to_plot': [0], 'plot_single': False, 'plot_multi': True,
- 'fields_to_plot': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD'],
- 'plot_dir': './plots/'}
+ 'fields_to_plot': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD']}
 
 # Select fast plots (No Geography), mask values outside colorbar range,
-# Add NASA and GPM logos to plot.
-{'plot_fast': False, 'mask_outside': True, 'add_logos': False}
+# Add NASA and GPM logos to plot.  Set png to True to save plots in plot_dir.
+ {'plot_fast': False, 'mask_outside': True, 'add_logos': False,
+  'png': False, 'plot_dir': './plots/'}

@@ -774,6 +774,7 @@ def get_default_product_dict():
                                               'RC', 'DM', 'NW', 'MW', 'MI',
                                               'RP', 'FW'],
                             'plot_images': True,
+                            'png': True,
                             'plot_fast': False,
                             'mask_outside': True,
                             'plot_single': True,

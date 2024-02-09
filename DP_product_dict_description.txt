@@ -33,14 +33,15 @@
 # Apply and set calibration numbers.
 'apply_cal': False, 'ref_cal': 0.0, 'zdr_cal': 0.0
 
-# Select plots ranges, type, and fields
-'plot_images': False, 'plot_single': True, 'plot_multi': False,
-                'max_range': 150, 'max_height': 14, 'sweeps_to_plot': [0],
-                'plot_fast': False,
-                'mask_outside':  True,
-                'fields_to_plot': ['CZ','FH','MW','MI',
-                                   'RP','RC','DM','NW'],
-                'plot_dir': image_dir, 'add_logos': True}
+# Select plot limits, plot type (single or multiplot), and fields to plot.
+'plot_images': True, 'max_range': 150, 'max_height': 15, 
+'sweeps_to_plot': [0], 'plot_single': False, 'plot_multi': True,
+'fields_to_plot': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD']
+
+# Select fast plots (No Geography), mask values outside colorbar range,
+# Add NASA and GPM logos to plot.  Set png to True to save plots in plot_dir.
+'plot_fast': False, 'mask_outside': True, 'add_logos': False,
+'png': False, 'plot_dir': './plots/'
 
 # A Sounding is needed for DP products, sounding type can be; uwy, ruc, ruc_archive)
 'use_sounding': True, 'sounding_type': 'ruc_archive',
