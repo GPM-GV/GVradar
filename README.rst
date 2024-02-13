@@ -59,11 +59,11 @@ Running GVradar with a Python Script
 
 DPQC can be run with the following script.  QC parameters are set within the script.
 
-    python [QC.py](https://github.com/GPM-GV/GVradar/blob/main/scripts/QC.py) input_directory
+python [QC.py](https://github.com/GPM-GV/GVradar/blob/main/scripts/QC.py) input_directory
 
 DP_PRODUCTS can be run with the following script.  Product parameters are set within the script.    
 
-    python [PRODUCTS.py](https://github.com/GPM-GV/GVradar/blob/main/scripts/PRODUCTS.py) input_directory
+python [PRODUCTS.py](https://github.com/GPM-GV/GVradar/blob/main/scripts/PRODUCTS.py) input_directory
 
 Running GVradar With Input Dictionaries
 =======================================
