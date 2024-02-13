@@ -25,7 +25,6 @@ We suggest creating an environment, GVradar.  Install the following programs.
 * Download [CSU Radar Tools](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/CSU_RadarTools-master.tar.gz) tarball.
 * Download [SkewT](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/SkewT-master.tar.gz) tarball.
 * Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV1.5.tar.gz) tarball.
-* If you would like to test with data used in notebooks, Download [GVradar](https://pmm-gv.gsfc.nasa.gov/pub/NPOL/temp/GVradar/GVradarV1.5_raw.tar.gz) tarball.
 
 Execute the following command in the active GVradar environment for each above program:
 
@@ -49,9 +48,25 @@ Install using pip from within GVradar directory:
 or
 
     python setup.py install
-    
-Running GVradar
-===============
+
+Notebooks are a great way to learn GVradar
+===========================================
+
+* [Notebooks](https://github.com/GPM-GV/GVradar/tree/main/notebooks)
+
+Running GVradar with a Python Script
+=====================================
+
+DPQC can be run with the following script.  QC parameters are set within the script.
+
+    python [QC.py](https://github.com/GPM-GV/GVradar/blob/main/scripts/QC.py) input_directory
+
+DP_PRODUCTS can be run with the following script.  Product parameters are set within the script.    
+
+    python [PRODUCTS.py](https://github.com/GPM-GV/GVradar/blob/main/scripts/PRODUCTS.py) input_directory
+
+Running GVradar With Input Dictionaries
+=======================================
 
 usage: GVradar.py [-h] [--thresh_dict THRESH_DICT] [--product_dict PRODUCT_DICT] [--do_qc] [--dp_products] file
 

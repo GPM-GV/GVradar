@@ -49,21 +49,21 @@ or
 
     python setup.py install
 
-Notebools are a great way to learn how to use GVradar
-=====================================================
+Notebooks are a great way to learn GVradar
+===========================================
 
-* [NOTEBOOKS](https://github.com/GPM-GV/GVradar/tree/main/notebooks)
+* [Notebooks](https://github.com/GPM-GV/GVradar/tree/main/notebooks)
 
 Running GVradar with a Python Script
 =====================================
 
 DPQC can be run with the following script.  QC parameters are set within the script.
 
-    python QC.py input_directory
+    python [QC.py](https://github.com/GPM-GV/GVradar/blob/main/scripts/QC.py) input_directory
 
 DP_PRODUCTS can be run with the following script.  Product parameters are set within the script.    
 
-    python PRODUCTS.py input_directory
+    python [PRODUCTS.py](https://github.com/GPM-GV/GVradar/blob/main/scripts/PRODUCTS.py) input_directory
 
 Running GVradar With Input Dictionaries
 =======================================
