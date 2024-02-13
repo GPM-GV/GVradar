@@ -12,7 +12,7 @@ def get_kwargs():
     kwargs = {}
 
     # Set DBZ threshold, values less than thresh will be masked.
-    kwargs.update({'do_dbz': True, 'dbz_thresh': 5.0})
+    kwargs.update({'do_dbz': True, 'dbz_thresh': 0.0})
 
     # Set RHOhv threshold, values less than thresh will be masked.
     kwargs.update({'do_rh': True, 'rh_thresh': 0.72})
@@ -26,20 +26,35 @@ def get_kwargs():
     # Set SQ threshold, values less than thresh will be masked.
     kwargs.update({'do_sq': False, 'sq_thresh': 0.45})
 
-    # Set SD threshold, values greater than thresh will be masked.
-    kwargs.update({'do_sd': True, 'sd_thresh': 18.0})
+    # Get SD field, retrives CSU SD if get_GV_SD set to False.
+    kwargs.update({'get_GV_SD':  False, 'SD_window': 15})
+
+    # Apply SD thresholds
+    # If sd_thresh_max = 0 values greater than sd_thresh will be masked.
+    # If sd_thresh_max > sd_thresh values within range will be masked.
+    # Limit what height to apply threshold.
+    kwargs.update({'do_sd': True, 'sd_thresh': 18.0, 'sd_thresh_max': 0, 'sd_height': 4.4})
 
     # Set PH threshold, values less than thresh will be masked.
     kwargs.update({'do_ph': False, 'ph_thresh': 80.0})
 
+    # Unfold phidp and set max_phidp_diff
+    kwargs.update({'unfold_phidp': True, 'max_phidp_diff': 360})
+
     # Choose if you would like to dealias_the velocity field.
-    kwargs.update({'dealias_velocity': False,}) 
+    kwargs.update({'dealias_velocity': True}) 
+
+    # Apply SW mask
+    kwargs.update({'do_sw_mask': True})
 
     # Apply an AP filter, when DBZ is less then ap_dbz and ZDR is greater than ap_zdr, data will be masked.
     kwargs.update({'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3})
 
     # Apply CSU insect or despeckle filters.
     kwargs.update({'do_insect': False, 'do_despeckle': True})
+
+    # Apply pyART despeckle instead of CSU, and set speck size.
+    kwargs.update({'pyart_speck': True, 'speck_size': 10})
 
     # Apply sector filters, Dual Pol thresholds can be applied to an user defined sector if needed.
     # Cone of silence filter, data within area will be masked.
@@ -62,8 +77,15 @@ def get_kwargs():
     kwargs.update({'do_ph_sector': False, 'phhmin': 0, 'phhmax': None, 'phrmin': 0, 'phrmax': 200, 
                    'phazmin': 230, 'phazmax': 130, 'phelmin': 0, 'phelmax': 20.0, 'ph_sec': 80.0})
 
+    # Sector filter with SW threshold, data in sector with values less than sw_sec will be masked.
+    kwargs.update({'do_sw_sector': False, 'swhmin': 0, 'swhmax': None, 'swrmin': 0, 'swrmax': 150, 
+                   'swazmin': 160, 'swazmax': 165, 'swelmin': 0, 'swelmax': 20.0, 'sw_sec': 4.0})
+
     # Apply calibration corrections if needed, both are subtracted.
     kwargs.update({'apply_cal': False, 'ref_cal': 0.2, 'zdr_cal': 0.0})
+
+    # Grab calibration numbers from cal txt file.
+    kwargs.update({'get_cal_file': False, 'cal_dir': './cal_files/'})
 
     ## There are two options for applying QC thresholds.
 
@@ -81,11 +103,20 @@ def get_kwargs():
                    'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD'],
                    'cf_dir': './cf'})
 
+    # Output grid file, fields to output, and output directory.
+    kwargs.update({'output_grid': False,
+                   'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD'],
+                   'grid_dir': './nc/'})
+
     # Select plot limits, plot type (single or multiplot), and fields to plot.
-    kwargs.update({'plot_images': True, 'max_range': 200, 'max_height': 15, 
-                   'sweeps_to_plot': [0], 'plot_single': True, 'plot_multi': False,'add_logos': True, 
-                   'fields_to_plot': ['DZ','CZ', 'VR', 'DR', 'PH','KD','RH','SD'], 'plot_raw_images': False,
-                   'plot_dir': './plots/'})
+    kwargs.update({'plot_raw_images': False, 'plot_images': True, 'max_range': 150, 'max_height': 15, 
+                   'sweeps_to_plot': [0], 'plot_single': False, 'plot_multi': True,
+                   'fields_to_plot': ['DZ', 'CZ', 'DR', 'KD', 'RH', 'VR']})
+
+    # Select fast plots (No Geography), mask values outside colorbar range,
+    # Add NASA and GPM logos to plot.  Set png to True to save plots in plot_dir.
+    kwargs.update({'plot_fast': False, 'mask_outside': False, 'add_logos': True,
+                   'png': True, 'plot_dir': './plots/'})
     
     return kwargs
 
