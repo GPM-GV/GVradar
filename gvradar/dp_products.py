@@ -102,18 +102,12 @@ def add_hydroclass(self):
                         kdp_field=self.kd, 
                         temp_field=self.radar_T)
 
-    '''
     ec_dict = {"data": ec, "units": "Unitless",
                 "long_name": "Radar Echo Classification", "_FillValue": -32767.0,
                 "standard_name": "Radar Echo Classification",}
 
     self.radar.add_field("EC", ec_dict, replace_existing=True)  
-    '''
-    self.radar = cm.add_field_to_radar_object(ec, self.radar, field_name = 'EC',
-                                                  units='Unitless', long_name='Radar Echo Classification',
-                                                  standard_name='Radar Echo Classification',
-                                                  dz_field='CZ')
-
+    
     return self.radar
 
 # ***************************************************************************************
@@ -776,6 +770,7 @@ def get_default_product_dict():
                             'apply_cal': False, 'ref_cal': 0.0, 'zdr_cal': 0.0, 
                             'do_HID_summer': True,
                             'do_HID_winter': False,
+                            'get_echo_class': False,
                             'no_temp': False,
                             'snthresh': -30,
                             'do_mass': True,
