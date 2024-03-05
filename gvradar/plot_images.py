@@ -750,7 +750,7 @@ def get_field_info(radar, field):
     elif field == 'EC':
         units='HID'
         vmin=0
-        vmax=11
+        vmax=9
         Nbins = 0
         title = 'Radar Echo Classification'
         cmap=cmaphidw     
