@@ -753,7 +753,7 @@ def get_field_info(radar, field):
         vmax=9
         Nbins = 0
         title = 'Radar Echo Classification'
-        cmap=cmaphidw     
+        cmap=cmaphidec     
     elif field == 'MW':
         units='Water Mass [g/m^3]'
         vmin=-1
