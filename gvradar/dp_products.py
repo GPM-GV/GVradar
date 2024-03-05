@@ -93,6 +93,31 @@ def add_csu_fhc(self):
     return self.radar
 # ***************************************************************************************
 
+def add_hydroclass(self):
+
+    ec = pyart.retrieve.hydroclass_semisupervised(self.radar, 
+                        refl_field=self.dz, 
+                        zdr_field=self.dr, 
+                        rhv_field=self.rh, 
+                        kdp_field=self.kd, 
+                        temp_field=self.radar_T)
+
+    '''
+    ec_dict = {"data": ec, "units": "Unitless",
+                "long_name": "Radar Echo Classification", "_FillValue": -32767.0,
+                "standard_name": "Radar Echo Classification",}
+
+    self.radar.add_field("EC", ec_dict, replace_existing=True)  
+    '''
+    self.radar = cm.add_field_to_radar_object(ec, self.radar, field_name = 'EC',
+                                                  units='Unitless', long_name='Radar Echo Classification',
+                                                  standard_name='Radar Echo Classification',
+                                                  dz_field='CZ')
+
+    return self.radar
+
+# ***************************************************************************************
+
 def add_csu_liquid_ice_mass(self):
 
     print('    Calculating water and ice mass...')

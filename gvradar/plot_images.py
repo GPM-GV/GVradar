@@ -288,6 +288,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
         if field == 'FS' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'FW' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
         if field == 'NT' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
+        if field == 'EC': display.cbs[index] = adjust_ec_colorbar_for_pyart(display.cbs[index])
         
     #
     # *** save plot
@@ -386,6 +387,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
         if field == 'FS' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'FW' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
         if field == 'NT' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
+        if field == 'EC': display.cbs[index] = adjust_ec_colorbar_for_pyart(display.cbs[index])
     #
     # *** save plot
     #
@@ -509,6 +511,7 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
         if field == 'FS' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'FW' or field == 'FH2': display.cbs[index] = adjust_fhw_colorbar_for_pyart(display.cbs[index])
+        if field == 'EC': display.cbs[index] = adjust_ec_colorbar_for_pyart(display.cbs[index])
 
     if num_fields >= 2:
         plt.suptitle(mytitle,fontsize = 28, weight ='bold')
@@ -606,8 +609,11 @@ def get_field_info(radar, field):
                    'Cyan','DarkGray', 'Lime','Yellow','Red','Fuchsia']
     hid_colors_winter = ['White','Orange', 'Purple', 'Fuchsia', 'Pink', 'Cyan',
                          'LightBlue', 'Blue']
+    ec_hid_colors =  ['White','LightPink','Darkorange','LightBlue','Lime','MediumBlue','DarkGray',
+                      'Cyan','Red','Yellow']                     
     cmaphidw = colors.ListedColormap(hid_colors_winter)
     cmaphid = colors.ListedColormap(hid_colors_summer)
+    cmaphidec = colors.ListedColormap(ec_hid_colors)
     #cmaphid = colors.ListedColormap(hid_colors)
     cmapmeth = colors.ListedColormap(hid_colors[0:6])
     cmapmeth_trop = colors.ListedColormap(hid_colors[0:7])
@@ -741,6 +747,13 @@ def get_field_info(radar, field):
         Nbins = 0
         title = 'No TEMP Winter Hydrometeor Identification'
         cmap=cmaphidw    
+    elif field == 'EC':
+        units='HID'
+        vmin=0
+        vmax=11
+        Nbins = 0
+        title = 'Radar Echo Classification'
+        cmap=cmaphidw     
     elif field == 'MW':
         units='Water Mass [g/m^3]'
         vmin=-1
@@ -1091,6 +1104,32 @@ def adjust_fhw_colorbar_for_pyart(cb):
                            'Rain'])
     #cb.ax.set_yticklabels(['UC', 'IC', 'PL', 'DE', 'AG',
     #                       'WS', 'FP', 'RA'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
+
+# ****************************************************************************************
+
+def adjust_ec_colorbar_for_pyart(cb):
+   
+    '''
+    Cateories:
+    0 = not classified
+    1 = aggregates
+    2 = ice crystals
+    3 = light rain
+    4 = rimed particles
+    5 = rain
+    6 = vertically oriented ice
+    7 = wet snow
+    8 = melting hail
+    9 = dry hail / high density graupel
+    '''
+
+    cb.set_ticks(np.arange(1.4, 9, 0.9))
+    cb.ax.set_yticklabels(["Aggregates", "Ice Crystals", "Light Rain", 
+                           "Rimed Particles", "Rain", "Vertically Ice", 
+                           "Wet Snow", "Melting Hail", "Dry Hail/High Density Graupel"])
     cb.ax.set_ylabel('')
     cb.ax.tick_params(length=0)
     return cb

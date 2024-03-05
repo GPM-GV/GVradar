@@ -302,6 +302,10 @@ class DP_products:
                 self.radar = dp.add_csu_fhc(self)
                 self.fh = self.radar.fields['FH']['data']
 
+    # Get Radar Echo Classification based on Besic et al. 2016
+            if self.get_echo_class:
+                self.radar = dp.add_hydroclass(self)
+            
     # Calculate Drop-Size Distribution from Tokay et al. 2020 and add to radar
             if self.do_tokay_DSD == True:
                 if self.site == 'CPOL':
