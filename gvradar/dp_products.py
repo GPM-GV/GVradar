@@ -106,7 +106,7 @@ def add_hydroclass(self):
                 "long_name": "Radar Echo Classification", "_FillValue": -32767.0,
                 "standard_name": "Radar Echo Classification",}
 
-    self.radar.add_field("EC", ec_dict, replace_existing=True)  
+    self.radar.add_field("EC", ec, replace_existing=True)  
     
     return self.radar
 
