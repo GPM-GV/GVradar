@@ -1220,8 +1220,9 @@ def remove_mrle(self):
 def reorder_sweeps(radar):
 
     # Reorder sweeps in ascending order
-    sweep_index = np.argsort(radar.elevation['data'][radar.sweep_start_ray_index['data']])
-    final_radar = radar.extract_sweeps(sweep_index)
+    # sweep_index = np.argsort(radar.elevation['data'][radar.sweep_start_ray_index['data']])
+    # final_radar = radar.extract_sweeps(sweep_index)
+    final_radar = pyart.util.subset_radar(radar, list(radar.fields), ele_min=0., ele_max=90.)
     print('New sweep angles:  ',final_radar.fixed_angle['data'][:], sep='\n')
 
     return final_radar
