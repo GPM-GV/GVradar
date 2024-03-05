@@ -96,11 +96,11 @@ def add_csu_fhc(self):
 def add_hydroclass(self):
 
     ec = pyart.retrieve.hydroclass_semisupervised(self.radar, 
-                        refl_field=self.dz, 
-                        zdr_field=self.dr, 
-                        rhv_field=self.rh, 
-                        kdp_field=self.kd, 
-                        temp_field=self.radar_T)
+                        refl_field="CZ",
+                        zdr_field="DR", 
+                        rhv_field="RH", 
+                        kdp_field="KD", 
+                        temp_field="TEMP")
 
     ec_dict = {"data": ec, "units": "Unitless",
                 "long_name": "Radar Echo Classification", "_FillValue": -32767.0,
@@ -610,7 +610,7 @@ def mask_beyond_150(self):
     apply_beyond = np.equal(beyond_field,1)
 
     fields = []
-    cm_fields = ['FH','FW','RC','RP','MW','MI','DM','NW']
+    cm_fields = ['FH','FW','RC','RP','MW','MI','DM','NW','EC']
     sfields = ['FH','FW','MW','MI']
     for fld in cm_fields:
         if fld in self.radar.fields.keys():
