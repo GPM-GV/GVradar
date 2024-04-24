@@ -138,7 +138,11 @@ def threshold_qc_dpfields(self):
     gatefilter = pyart.filters.GateFilter(self.radar)
     
     # Apply dbz, sector, and SQI thresholds regardless of Temp 
-    if self.do_dbz == True: dbzfilter.exclude_below('CZ', self.dbz_thresh)
+    if self.do_dbz == True:
+        if self.dbz_max:
+            dbzfilter.exclude_outside('CZ', self.dbz_thresh, self.dbz_max)
+        else:    
+            dbzfilter.exclude_below('CZ', self.dbz_thresh)
     if self.do_sector == True: dbzfilter.exclude_not_equal('SEC', cos)
     if self.do_rh_sector == True: dbzfilter.exclude_not_equal('SECRH', sec) 
     if self.do_sw_sector == True: dbzfilter.exclude_not_equal('SECSW', sec) 
@@ -1062,7 +1066,7 @@ def remove_fields_from_radar(self):
 
 def get_default_thresh_dict():
 
-    default_thresh_dict = {'do_dbz': True, 'dbz_thresh': 5.0,
+    default_thresh_dict = {'do_dbz': True, 'dbz_thresh': 5.0, 'dbz_max': None,
                            'do_rh': True, 'rh_thresh': 0.72,
                            'do_zdr': True, 'dr_min': -6.0, 'dr_max': 4.0, 
                            'do_kdp': False, 'kdp_min': -2.0, 'kdp_max': 7.0, 
