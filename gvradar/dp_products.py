@@ -140,12 +140,12 @@ def add_csu_blended_rain(self):
 
     print('    Calculating blended rainfall field...')
 
-    rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, 
-                                                   kdp=self.kd, fhc=self.fh,
-                                                   band=self.radar_band)
-    #rain, method = csu_blended_rain.calc_blended_rain_tropical(dz=self.dz, zdr=self.dr, 
+    #rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, 
     #                                               kdp=self.kd, fhc=self.fh,
-    #                                               band=self.radar_band)                                               
+    #                                               band=self.radar_band)
+    rain, method = csu_blended_rain.calc_blended_rain_tropical(dz=self.dz, zdr=self.dr, 
+                                                   kdp=self.kd, fhc=self.fh,
+                                                   band=self.radar_band)                                               
 
     # Set fill to zero
     rain = np.ma.filled(rain, fill_value=0.0)
@@ -159,12 +159,12 @@ def add_csu_blended_rain(self):
         print('    Removing HID ice from rainrate...')
         rain = remove_ice(rain, self.fh)
 
-    rc_dict = {"data": rain, "units": "mm/h",
-                "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
-                "standard_name": "HIDRO Rainfall Rate",}
     #rc_dict = {"data": rain, "units": "mm/h",
-    #            "long_name": "Tropical Rainfall Rate", "_FillValue": -32767.0,
-    #            "standard_name": "Tropical Rainfall Rate",}
+    #            "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
+    #            "standard_name": "HIDRO Rainfall Rate",}
+    rc_dict = {"data": rain, "units": "mm/h",
+                "long_name": "Tropical Rainfall Rate", "_FillValue": -32767.0,
+                "standard_name": "Tropical Rainfall Rate",}
     self.radar.add_field("RC", rc_dict, replace_existing=True)
     
     return self.radar
