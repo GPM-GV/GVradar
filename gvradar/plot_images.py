@@ -276,12 +276,14 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
 
         if index == num_fields-1:
             add_logo_ppi(display, radar_lat, radar_lon, max_range, ax, add_logos, fig, num_fields, nrows, ncols)
-            if num_fields >= 2:
+            if num_fields == 2:
                 #plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+((nrows/1.5)*0.055)))
                 plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))
             elif num_fields == 3:
                 plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))
                 #plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.2)))
+            elif num_fields >= 4:
+                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.2)))    
                 
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
@@ -736,14 +738,14 @@ def get_field_info(radar, field):
     elif field == 'FW':
         units='HID'
         vmin=0
-        vmax=7
+        vmax=8
         Nbins = 0
         title = 'Winter Hydrometeor Identification'
         cmap=cmaphidw
     elif field == 'NT':
         units='HID'
         vmin=0
-        vmax=7
+        vmax=8
         Nbins = 0
         title = 'No TEMP Winter Hydrometeor Identification'
         cmap=cmaphidw    
@@ -1093,8 +1095,8 @@ def adjust_fhc_colorbar_for_pyart(cb):
 # ****************************************************************************************
 
 def adjust_fhw_colorbar_for_pyart(cb):
-    #cb.set_ticks(np.arange(0.5, 7, 1.0))
-    cb.set_ticks(np.arange(1.4, 7, 0.9))
+    cb.set_ticks(np.arange(0.5, 8, 1.0))
+    #cb.set_ticks(np.arange(1.4, 8, 0.9))
     '''
     Cateories:
     0  = Unclassified
@@ -1106,7 +1108,7 @@ def adjust_fhw_colorbar_for_pyart(cb):
     6  = Frozen precip
     7  = Rain
     '''
-    cb.ax.set_yticklabels(['Ice Crystals', 'Plates', 'Dendrites', 
+    cb.ax.set_yticklabels(['No Echo','Ice Crystals', 'Plates', 'Dendrites', 
                            'Aggregates', 'Wet Snow','Frozen Precip',
                            'Rain'])
     #cb.ax.set_yticklabels(['UC', 'IC', 'PL', 'DE', 'AG',
