@@ -736,14 +736,14 @@ def get_field_info(radar, field):
     elif field == 'FW':
         units='HID'
         vmin=0
-        vmax=8
+        vmax=7
         Nbins = 0
         title = 'Winter Hydrometeor Identification'
         cmap=cmaphidw
     elif field == 'NT':
         units='HID'
         vmin=0
-        vmax=8
+        vmax=7
         Nbins = 0
         title = 'No TEMP Winter Hydrometeor Identification'
         cmap=cmaphidw    
