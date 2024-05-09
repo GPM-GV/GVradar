@@ -1105,7 +1105,7 @@ def adjust_fhw_colorbar_for_pyart(cb):
     6  = Frozen precip
     7  = Rain
     '''
-    cb.ax.set_yticklabels(['No Echo', 'Ice Crystals', 'Plates', 'Dendrites', 
+    cb.ax.set_yticklabels(['Ice Crystals', 'Plates', 'Dendrites', 
                            'Aggregates', 'Wet Snow','Frozen Precip',
                            'Rain'])
     #cb.ax.set_yticklabels(['UC', 'IC', 'PL', 'DE', 'AG',
