@@ -1093,7 +1093,8 @@ def adjust_fhc_colorbar_for_pyart(cb):
 # ****************************************************************************************
 
 def adjust_fhw_colorbar_for_pyart(cb):
-    cb.set_ticks(np.arange(0.5, 7, 1.0))
+    #cb.set_ticks(np.arange(0.5, 7, 1.0))
+    cb.set_ticks(np.arange(1.4, 7, 0.9))
     '''
     Cateories:
     0  = Unclassified
