@@ -967,12 +967,12 @@ def add_rings_radials(year, site, display, radar_lat, radar_lon, max_range, ax, 
     Pad_lat =  37.934
     PCMK_lon = -75.515
     PCMK_lat =  38.078
-    IMPACTS_2022 = 41.80966
-    IMPACTS_2022 = -72.29597
-    IMPACTS_D3R = 41.81795
-    IMPACTS_D3R = -72.25770
-    IMPACTS_2024 = 41.80966
-    IMPACTS_2024 = -72.29597
+    IMPACTS_2022_lat = 41.80966
+    IMPACTS_2022_lon = -72.29597
+    IMPACTS_D3R_lat = 41.81795
+    IMPACTS_D3R_lon = -72.25770
+    IMPACTS_2024_lat = 41.80966
+    IMPACTS_2024_lon = -72.29597
     dtor = math.pi/180.0
 
     maxrange_meters = max_range * 1000.
@@ -1001,11 +1001,11 @@ def add_rings_radials(year, site, display, radar_lat, radar_lon, max_range, ax, 
         display.plot_point(PCMK_lon, PCMK_lat, symbol = 'v', markersize=5, color='white')
     if site in IMPACTS_list:
         if year == '2021' or year == '2022' or year == '2023': 
-            display.plot_point(IMPACTS_2022, IMPACTS_2022, symbol = 'v', markersize=3, color='white')
+            display.plot_point(IMPACTS_2022_lon, IMPACTS_2022_lat, symbol = 'v', markersize=3, color='white')
         elif year == '2022' or year == '2023':
-            display.plot_point(IMPACTS_D3R, IMPACTS_D3R, symbol = 'v', markersize=3, color='white')
+            display.plot_point(IMPACTS_D3R_lon, IMPACTS_D3R_lat, symbol = 'v', markersize=3, color='white')
         elif year == '2024':
-            display.plot_point(IMPACTS_2024, IMPACTS_2024, symbol = 'v', markersize=3, color='white')
+            display.plot_point(IMPACTS_2024_lon, IMPACTS_2024_lat, symbol = 'v', markersize=3, color='white')
 
     # Add state and countines to map
     ax.add_feature(STATES, facecolor='none', edgecolor='white', lw=0.5)
