@@ -1076,6 +1076,7 @@ def get_default_thresh_dict():
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
                            'get_GV_SD':  False, 'SD_window': 15,
                            'unfold_phidp': True,
+                           'merge_sp': True,
                            'dealias_velocity': False,
                            'do_sw_mask': False,
                            'do_insect': False, 
