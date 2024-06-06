@@ -279,7 +279,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
             if num_fields == 2:
                 plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+((nrows/1.5)*0.055)))
                 #plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))
-            elif num_fields <= 4:
+            elif num_fields <= 4 and num_fields > 2:
                 plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))
                 #plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.2)))
             elif num_fields > 4:
