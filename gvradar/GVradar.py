@@ -76,7 +76,7 @@ class QC:
     def run_dpqc(self):
             
     # If radar is 88D merge split cuts and remove MRLE scans
-        if merge_sp:
+        if self.merge_sp:
             if self.radar.metadata['original_container'] == 'NEXRAD Level II':
                 self.radar = cm.merge_split_cuts(self)
                 self.radar = cm.remove_mrle(self)
