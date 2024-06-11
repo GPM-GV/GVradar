@@ -283,7 +283,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                 plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))
                 #plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.2)))
             elif num_fields > 4:
-                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.2)))    
+                plt.suptitle(mytitle, fontsize = 8*ncols, weight ='bold', y=(1.0+(.1)))    
                 
         if field == 'FH' or field == 'FH2': display.cbs[index] = adjust_fhc_colorbar_for_pyart(display.cbs[index])
         if field == 'MRC' or field == 'MRC2': display.cbs[index] = adjust_meth_colorbar_for_pyart(display.cbs[index])
