@@ -866,13 +866,17 @@ def get_kdp(self):
 		        standard_name='Specific Differential Phase (Bringi)',
 		        dz_field=self.ref_field_name)
     except:
-        print('    Nan Kdp...')            
-        kd = self.radar.fields['CZ']['data'].copy()
-        kd = kd * 0 - 32767.0
+        if 'KD' in self.radar.fields.keys():  
+            kd = self.radar.fields['KD']['data'].copy()
+        else:
+            print('    Nan Kdp...')            
+            kd = self.radar.fields['CZ']['data'].copy()
+            kd = kd * 0 - 32767.0
+
         self.radar = cm.add_field_to_radar_object(kd, self.radar, field_name='KD', 
 		        units='deg/km',
-		        long_name='Specific Differential Phase (Blank)',
-		        standard_name='Specific Differential Phase (Blank)',
+		        long_name='Specific Differential Phase',
+		        standard_name='Specific Differential Phase',
 		        dz_field=self.ref_field_name)
 
     return self.radar
