@@ -836,34 +836,44 @@ def get_kdp(self):
 #    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
 #    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
-    std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL','CASMB']
-    if self.site in std_list:
-        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-        window=4
-        std_gate=15
-        nfilter=1
-    else:
-        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-        window=4
-        std_gate=15
-        nfilter=1
+    try:
+        std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL','CASMB']
+        if self.site in std_list:
+            DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+            DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            window=4
+            std_gate=15
+            nfilter=1
+        else:
+            DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+            DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            window=4
+            std_gate=15
+            nfilter=1
 
-    # Range needs to be supplied as a variable, with same shape as DZ
-    rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
-    gate_spacing = self.radar.range['meters_between_gates']
+        # Range needs to be supplied as a variable, with same shape as DZ
+        rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+        gate_spacing = self.radar.range['meters_between_gates']
 
-    KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
-                                                    thsd=25, gs=gate_spacing, 
-                                                    window=window, nfilter=nfilter, 
-                                                    std_gate=std_gate)
+        KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
+                                                        thsd=25, gs=gate_spacing, 
+                                                        window=window, nfilter=nfilter, 
+                                                        std_gate=std_gate)
 
-    self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
-		    units='deg/km',
-		    long_name='Specific Differential Phase (Bringi)',
-		    standard_name='Specific Differential Phase (Bringi)',
-		    dz_field=self.ref_field_name)
+        self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
+		        units='deg/km',
+		        long_name='Specific Differential Phase (Bringi)',
+		        standard_name='Specific Differential Phase (Bringi)',
+		        dz_field=self.ref_field_name)
+    except:
+        print('    Nan Kdp...')            
+        kd = self.radar.fields['CZ']['data'].copy()
+        kd = kd * 0 - 32767.0
+        self.radar = cm.add_field_to_radar_object(kd, self.radar, field_name='KD', 
+		        units='deg/km',
+		        long_name='Specific Differential Phase (Blank)',
+		        standard_name='Specific Differential Phase (Blank)',
+		        dz_field=self.ref_field_name)
 
     return self.radar
 
