@@ -140,9 +140,13 @@ def add_csu_blended_rain(self):
 
     print('    Calculating blended rainfall field...')
 
-    rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, 
-                                                   kdp=self.kd, fhc=self.fh,
-                                                   band=self.radar_band)
+    try:
+        rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, 
+                                                       kdp=self.kd, fhc=self.fh,
+                                                       band=self.radar_band)
+    except:
+        print(' ',"No precip RC will be -32767.0", '', sep='\n')
+        rain = self.radar.fields['CZ']['data'].copy()                                               
     #rain, method = csu_blended_rain.calc_blended_rain_tropical(dz=self.dz, zdr=self.dr, 
     #                                               kdp=self.kd, fhc=self.fh,
     #                                               band=self.radar_band)                                               
