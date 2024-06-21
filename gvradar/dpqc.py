@@ -146,6 +146,7 @@ def threshold_qc_dpfields(self):
     if self.do_sector == True: dbzfilter.exclude_not_equal('SEC', cos)
     if self.do_rh_sector == True: dbzfilter.exclude_not_equal('SECRH', sec) 
     if self.do_sw_sector == True: dbzfilter.exclude_not_equal('SECSW', sec) 
+    if self.do_sq_sector == True: dbzfilter.exclude_not_equal('SECSQ', sec) 
     if self.do_cos == True: dbzfilter.exclude_not_equal('COS', cos)
     if self.do_sq == True: dbzfilter.exclude_below('SQ', self.sq_thresh)
     if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
@@ -662,6 +663,87 @@ def sw_sector(self):
 
 # ***************************************************************************************
 
+def sq_sector(self):
+    
+    """
+    filter out any data inside the region of interest that is < sq_sector
+
+    Parameters
+    ----------
+    radar : radar object
+            the radar object where the data is
+    self : dict
+            a dictionary defining the region of interest
+
+    Returns
+    -------
+    sector_rh : ndarray
+    a field array with ones in gates that are in the Region of Interest
+
+    Written by: Jason L. Pippitt, NASA/GSFC/SSAI
+    """
+
+    sector = {'hmin': self.sqhmin, 'hmax': self.sqhmax,
+	      'rmin':  self.sqrmin * 1000, 'rmax':  self.sqrmax * 1000,
+              'azmin': self.sqazmin, 'azmax': self.sqazmax,
+	      'elmin': self.sqelmin, 'elmax': self.sqelmax,
+              'rh_sec': self.sq_sec}
+
+    sector_wipeout = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
+
+    # check for altitude limits
+    if sector['hmin'] is not None:
+        sector_wipeout[self.radar.gate_altitude['data'] < sector['hmin']] = 0
+
+    if sector['hmax'] is not None:
+        sector_wipeout[self.radar.gate_altitude['data'] > sector['hmax']] = 0
+
+    # check for range limits
+    if sector['rmin'] is not None:
+        sector_wipeout[:, self.radar.range['data'] < sector['rmin']] = 0
+
+    if sector['rmax'] is not None:
+        sector_wipeout[:, self.radar.range['data'] > sector['rmax']] = 0
+
+    # check elevation angle limits
+    if sector['elmin'] is not None:
+        sector_wipeout[self.radar.elevation['data'] < sector['elmin'], :] = 0
+
+    if sector['elmax'] is not None:
+        sector_wipeout[self.radar.elevation['data'] > sector['elmax'], :] = 0
+
+    # check min and max azimuth angle
+    if sector['azmin'] is not None and sector['azmax'] is not None:
+        if sector['azmin'] <= sector['azmax']:
+            sector_wipeout[self.radar.azimuth['data'] < sector['azmin'], :] = 0
+            sector_wipeout[self.radar.azimuth['data'] > sector['azmax'], :] = 0
+        if sector['azmin'] > sector['azmax']:
+            sector_wipeout[np.logical_and(
+            self.radar.azimuth['data'] < sector['azmin'],
+            self.radar.azimuth['data'] > sector['azmax']), :] = 0
+    elif sector['azmin'] is not None:
+        sector_wipeout[self.radar.azimuth['data'] < sector['azmin'], :] = 0
+    elif sector['azmax'] is not None:
+        sector_wipeout[self.radar.azimuth['data'] > sector['azmax'], :] = 0
+    
+    sq = self.radar.fields['SQ']['data'].copy()
+    sector_r = np.ones(sq.shape)
+    sq_sec = sector['sq_sec']
+    sq_lt = np.ma.where(sq < sq_sec , 1, 0)
+    sec_f = np.logical_and(sq_lt == 1 , sector_wipeout == 1)
+    sector_r[sec_f] = 0
+
+    sector_sq = sector_r
+    cm.add_field_to_radar_object(sector_sq, self.radar, field_name='SECSQ', 
+                                 units='0 = Z < 0, 1 = Z >= 0',
+                                 long_name='Sector SQ Mask', 
+                                 standard_name='Sector SQ Mask', 
+                                 dz_field=self.ref_field_name)
+     
+    return self.radar
+
+# ***************************************************************************************
+
 def sd_sector(self):
 
     """
@@ -1097,6 +1179,10 @@ def get_default_thresh_dict():
                            'swrmin': 0, 'swrmax': 20, 
                            'swazmin': 0, 'swazmax': 360, 
                            'swelmin': 0, 'swelmax': 7.0, 'sw_sec': 2.0, 
+                           'do_sq_sector': False, 'sqhmin': 0, 'sqhmax': None,
+                           'sqrmin': 0, 'sqrmax': 20, 
+                           'sqazmin': 0, 'sqazmax': 360, 
+                           'sqelmin': 0, 'sqelmax': 7.0, 'sq_sec': 0.35,
                            'do_sd_sector': False, 'sdhmin': 0, 'sdhmax': None, 
                            'sdrmin': 0, 'sdrmax': 20, 
                            'sdazmin': 0, 'sdazmax': 360, 
