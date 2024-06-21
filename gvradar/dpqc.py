@@ -687,7 +687,7 @@ def sq_sector(self):
 	      'rmin':  self.sqrmin * 1000, 'rmax':  self.sqrmax * 1000,
               'azmin': self.sqazmin, 'azmax': self.sqazmax,
 	      'elmin': self.sqelmin, 'elmax': self.sqelmax,
-              'rh_sec': self.sq_sec}
+              'sq_sec': self.sq_sec}
 
     sector_wipeout = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
 
