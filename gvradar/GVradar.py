@@ -117,6 +117,10 @@ class QC:
     # Create mask to filter a range/azm/height sector of radar based on Spectrum Width threshold
         if self.do_sw_sector == True:
             self.radar = qc.sw_sector(self)
+
+    # Create mask to filter a range/azm/height sector of radar based on SQ threshold
+        if self.do_sq_sector == True:
+            self.radar = qc.sq_sector(self)  
                 
     # Create Temperature and/or Height field
         if self.use_sounding == True:
@@ -166,11 +170,7 @@ class QC:
         
     # Create mask to filter a range/azm/height sector of radar based on SD threshold
         if self.do_sd_sector == True:
-            self.radar = qc.sd_sector(self)
-
-    # Create mask to filter a range/azm/height sector of radar based on SD threshold
-        if self.do_sq_sector == True:
-            self.radar = qc.sq_sector(self)            
+            self.radar = qc.sd_sector(self)         
                   
     # Create mask to filter a range/azm/height sector of radar based on PH threshold
         if self.do_ph_sector == True:
