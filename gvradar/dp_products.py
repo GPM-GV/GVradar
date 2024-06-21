@@ -829,14 +829,13 @@ def get_kdp(self):
 
     NOTE: KDPB: Bringi Kdp, PHIDPB: Bringi-filtered PhiDP, STDPHIB: Std-dev of PhiDP
     """
-    print('    Getting new Kdp...')
-
 #    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
 #    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
 #    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
 #    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
     try:
+        print('    Getting new Kdp...')
         std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL','CASMB']
         if self.site in std_list:
             DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
@@ -867,6 +866,7 @@ def get_kdp(self):
 		        dz_field=self.ref_field_name)
     except:
         if 'KD' in self.radar.fields.keys():  
+            print('    Existing Kdp...')
             kd = self.radar.fields['KD']['data'].copy()
         else:
             print('    Nan Kdp...')            
