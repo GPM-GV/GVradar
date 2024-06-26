@@ -1021,10 +1021,16 @@ def calculate_kdp(self):
     rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
     gate_spacing = self.radar.range['meters_between_gates']
 
-    KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
-                                                    thsd=25, gs=gate_spacing, 
-                                                    window=window, nfilter=nfilter, 
-                                                    std_gate=std_gate)
+    try:
+        KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
+                                                        thsd=25, gs=gate_spacing, 
+                                                        window=window, nfilter=nfilter, 
+                                                        std_gate=std_gate)
+    except:
+        print('    CSU Radar Tools could not retrieve Kdp...')
+        KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+        PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+        STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
 
     if 'KD' not in self.radar.fields.keys():
         self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
