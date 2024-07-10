@@ -239,6 +239,33 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                      lon_0=radar_lon,
                      embellish = False,
                      mask_outside=mask_outside)
+        elif field == 'RA':
+            ra = radar.fields['RA']['data'].copy()
+            ra[ra < 0.01] = np.nan
+            ra_dict = {"data": ra, "units": "mm/h",
+                       "long_name": "A_Rain_Rate", "_FillValue": -32767.0,
+                       "standard_name": "A_Rain_Rate",}
+            radar.add_field("RA_plot", ra_dict, replace_existing=True)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
+            #levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+            #midnorm = MidpointNormalize(vmin=0, vcenter=10, vmax=100)
+            display.plot_ppi_map("RA_plot", sweep,vmin=vmin, vmax=vmax,
+                     resolution='10m',
+                     title = title,
+                     projection=projection, ax=ax,
+                     cmap=cmap,
+                     norm = midnorm,
+                     ticks = levels,
+                     colorbar_label=units,
+                     min_lon=min_lon, max_lon=max_lon,
+                     min_lat=min_lat, max_lat=max_lat,
+                     lon_lines=lon_grid,lat_lines=lat_grid,
+                     add_grid_lines=False,
+                     lat_0=radar_lat,
+                     lon_0=radar_lon,
+                     embellish = False,
+                     mask_outside=mask_outside)
         else:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                      resolution='10m',
@@ -788,6 +815,14 @@ def get_field_info(radar, field):
         Nbins = 0
         title ='PolZR Rain Rate [mm/hr]'
         cmap='pyart_RefDiff'    
+    elif field == 'RA':
+        units='Attenuation Rain Rate [mm/hr]'
+        vmin=1e-2
+        vmax=3e2
+        #Nbins = 20
+        Nbins = 0
+        title ='Attenuation Rain Rate [mm/hr]'
+        cmap='pyart_RefDiff'
     elif field == 'MRC':
         units='HIDRO Method'
         vmin=0

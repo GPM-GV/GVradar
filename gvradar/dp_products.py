@@ -211,7 +211,7 @@ def add_polZR_rr(self):
 
 # ***************************************************************************************
 
-def add_RA(self):
+def add_ra(self):
 
     print('    Calculating RA...')
 
