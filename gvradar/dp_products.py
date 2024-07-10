@@ -236,7 +236,7 @@ def add_ra(self):
 
     # Plug our number in for Alpha and Beta
     ra_field = pyart.retrieve.est_rain_rate_a(self.radar, a_field='specific_attenuation',
-                                           alpha = 0.015, beta= 0.620,
+                                           alpha = 3100.0, beta= 1.03,
                                            rr_field='RC')
     self.radar.add_field('RA',ra_field)
 
