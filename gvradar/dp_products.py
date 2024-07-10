@@ -226,7 +226,7 @@ def add_ra(self):
     spec_at['data'][np.where(spec_at['data'] <= 0.0)] = np.nan
 
     # Plug our number in for Alpha and Beta
-    ra_field = pyart.retrieve.est_rain_rate_a(radar, a_field='specific_attenuation',
+    ra_field = pyart.retrieve.est_rain_rate_a(self.radar, a_field='specific_attenuation',
                                            alpha = 0.015, beta= 0.620,
                                            rr_field='RC')
     self.radar.add_field('RA',ra_field)
