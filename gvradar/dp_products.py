@@ -215,11 +215,21 @@ def add_ra(self):
 
     print('    Calculating RA...')
 
+    ''''
     spec_at, cor_z = pyart.correct.calculate_attenuation(
                  self.radar, 0, refl_field= 'CZ', 
                  ncp_field= None, rhv_field='RH', 
                  phidp_field= 'PH')
+    '''
 
+    out = pyart.correct.calculate_attenuation_zphi(
+                self.radar,
+                refl_field= 'CZ', 
+                phidp_field="PH",
+                temp_field="TEMP",
+                temp_ref="TEMP")
+
+    spec_at, pia, cor_z, spec_diff_at, pida, cor_zdr = out
     self.radar.add_field('specific_attenuation', spec_at)
 
     # Filter where specific_attenuation <= 0
