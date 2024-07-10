@@ -207,7 +207,31 @@ def add_polZR_rr(self):
                "standard_name": "Polzr_Rain_Rate",}
     self.radar.add_field("RP", rp_dict, replace_existing=True)
 
-    return self.radar                                     
+    return self.radar         
+
+# ***************************************************************************************
+
+def add_RA(self):
+
+    print('    Calculating RA...')
+
+    spec_at, cor_z = pyart.correct.calculate_attenuation(
+                 self.radar, 0, refl_field= 'CZ', 
+                 ncp_field= None, rhv_field='RH', 
+                 phidp_field= 'PH')
+
+    self.radar.add_field('specific_attenuation', spec_at)
+
+    # Filter where specific_attenuation <= 0
+    spec_at['data'][np.where(spec_at['data'] <= 0.0)] = np.nan
+
+    # Plug our number in for Alpha and Beta
+    ra_field = pyart.retrieve.est_rain_rate_a(radar, a_field='specific_attenuation',
+                                           alpha = 0.015, beta= 0.620,
+                                           rr_field='RC')
+    self.radar.add_field('RA',ra_field)
+
+    return self.radar 
 
 # ***************************************************************************************
 
@@ -781,6 +805,7 @@ def get_default_product_dict():
                             'de_ice': True,
                             'do_RC': True,
                             'do_RP': True,
+                            'do_RA': False,
                             'do_tokay_DSD': True,
                             'dsd_loc': 'all',
                             'do_150_mask': True,

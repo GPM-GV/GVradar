@@ -269,6 +269,7 @@ class DP_products:
         self.dr = self.radar.fields['DR']['data'].copy()
         self.kd = self.radar.fields['KD']['data'].copy()
         self.rh = self.radar.fields['RH']['data'].copy()
+        self.sq = self.radar.fields['RH']['data'].copy()
         if 'ZZ' in self.radar.fields.keys():
             self.zz = self.radar.fields['ZZ']['data'].copy()
         else:
@@ -331,10 +332,14 @@ class DP_products:
     # Calculate Bringi PolZR rainrate
             if self.do_RP == True:
                 self.radar = dp.add_polZR_rr(self)
+
+    # Calculate RA rainrate
+            if self.do_RA == True:
+                self.radar = dp.add_ra(self)
      
         else:  
             print('', 'Sounding file required to create HID, Ice and Water Mass and RC', '', sep='\n')
-
+            
         # Set data beyond 150 km to missing
         if self.do_150_mask == True:
             self.radar = dp.mask_beyond_150(self)
