@@ -221,7 +221,6 @@ def add_ra(self):
                  ncp_field= None, rhv_field='RH', 
                  phidp_field= 'PH')
     '''
-
     out = pyart.correct.calculate_attenuation_zphi(
                 self.radar,
                 refl_field= 'CZ', 
