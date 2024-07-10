@@ -203,6 +203,10 @@ def threshold_qc_dpfields(self):
         nf = deepcopy(self.radar.fields[fld])
         nf['data'] = np.ma.masked_where(gatefilter.gate_excluded, nf['data'])
         self.radar.add_field(fld, nf, replace_existing=True)
+    for fld in self.radar.fields:
+        nf = deepcopy(self.radar.fields[fld])
+        nf['data'] = np.ma.masked_where(gatefilter_sq.gate_excluded, nf['data'])
+        self.radar.add_field(fld, nf, replace_existing=True)
     
     return self.radar
     
