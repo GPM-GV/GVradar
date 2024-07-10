@@ -136,8 +136,9 @@ def threshold_qc_dpfields(self):
     # Create a pyart gatefilters from radar
     dbzfilter = pyart.filters.GateFilter(self.radar)
     gatefilter = pyart.filters.GateFilter(self.radar)
+    gatefilter_sq = pyart.filters.GateFilter(self.radar)
     
-    # Apply dbz, sector, and SQI thresholds regardless of Temp 
+    # Apply dbz and sector regardless of Temp 
     if self.do_dbz == True:
         if self.dbz_max:
             dbzfilter.exclude_outside('CZ', self.dbz_thresh, self.dbz_max)
@@ -148,7 +149,7 @@ def threshold_qc_dpfields(self):
     if self.do_sw_sector == True: dbzfilter.exclude_not_equal('SECSW', sec) 
     if self.do_sq_sector == True: dbzfilter.exclude_not_equal('SECSQ', sec) 
     if self.do_cos == True: dbzfilter.exclude_not_equal('COS', cos)
-    if self.do_sq == True: dbzfilter.exclude_below('SQ', self.sq_thresh)
+    #if self.do_sq == True: dbzfilter.exclude_below('SQ', self.sq_thresh)
     if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
        self.radar.metadata['original_container'] == 'UF' or\
        self.radar.metadata['original_container'] == 'odim_h5': dbzfilter.exclude_not_equal('WSR', cos)
@@ -177,18 +178,24 @@ def threshold_qc_dpfields(self):
     # Call gatefliters for each field based on temperature or beam height
     if self.use_qc_height == True or self.use_sounding == False:
         qc_height = self.qc_height * 1000
+        sq_height = self.sq_height * 1000
         gatefilter.exclude_all()
+        gatefilter_sq.exclude_all()
         gatefilter.include_below('HEIGHT', qc_height)
+        gatefilter_sq.include_below('HEIGHT', sq_height)
         if self.do_rh == True: gatefilter.exclude_below('RH', self.rh_thresh)
         if self.do_zdr == True: gatefilter.exclude_outside('DR', self.dr_min, self.dr_max)
         if self.do_ap == True: gatefilter.exclude_not_equal('AP', sec)
+        if self.do_sq == True: gatefilter_sq.exclude_below('SQ', self.sq_thresh)
         gatefilter.include_above('HEIGHT', qc_height)
+        gatefilter_sq.include_above('HEIGHT', sq_height)
     elif self.use_sounding == True:
         gatefilter.exclude_all()
         gatefilter.include_above('TEMP', 3.0)
         if self.do_rh == True: gatefilter.exclude_below('RH', self.rh_thresh)
         if self.do_zdr == True: gatefilter.exclude_outside('DR', self.dr_min, self.dr_max)
         if self.do_ap == True: gatefilter.exclude_not_equal('AP', sec)
+        if self.do_sq == True: gatefilter_sq.exclude_below('SQ', self.sq_thresh)
         gatefilter.include_below('TEMP', 3.1)   
     
     # Apply gate filters to radar
@@ -1209,6 +1216,7 @@ def get_default_thresh_dict():
                            'apply_cal': False, 'ref_cal': 0.1, 'zdr_cal': 0.0, 
                            'use_qc_height': True, 'qc_height': 4.4,
                            'sd_height': 4.4,
+                           'sq_height': 4.4,
                            'output_cf': False,
                            'output_grid': False,
                            'output_fields': ['DZ', 'CZ', 'VR', 'DR', 'KD', 'PH', 'RH', 'SD'],
