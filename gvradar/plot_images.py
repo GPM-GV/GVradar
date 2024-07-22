@@ -898,6 +898,7 @@ def get_radar_info(radar, sweep):
     if site == b'ST1-P\x00\x00\x00' or site == 'ST1-P': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00' or site == 'SV1-P': site = 'SV1'
     if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
+    if site == b'KHGX\x00\x00\x00\x00': 'KHGX'
     if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
     if site == 'CP2RADAR': site = 'CP2'
