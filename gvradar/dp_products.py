@@ -38,9 +38,14 @@ def add_csu_fhc(self):
 
     if self.do_HID_summer:
         print('    Add Summer HID field to radar...')
-        fh = csu_fhc.csu_fhc_summer(dz=self.dz, zdr=self.dr, rho=self.rh, kdp=self.kd, use_temp=True,
-                                    T=self.radar_T, band=self.radar_band, verbose=False,
-                                    use_trap=False, method='hybrid')
+        try:
+            fh = csu_fhc.csu_fhc_summer(dz=self.dz, zdr=self.dr, rho=self.rh, kdp=self.kd, use_temp=True,
+                                        T=self.radar_T, band=self.radar_band, verbose=False,
+                                        use_trap=False, method='hybrid')
+        except:
+            print(' ',"No precip FH will be -32767.0", '', sep='\n')
+            fh = self.radar.fields['CZ']['data'].copy()      
+            fh = (fh * 0) - 32767.0                                
         
         self.radar = cm.add_field_to_radar_object(fh, self.radar, field_name = 'FH',
                                                   units='Unitless', long_name='Summer Hydrometeor ID', 
@@ -146,7 +151,8 @@ def add_csu_blended_rain(self):
                                                        band=self.radar_band)
     except:
         print(' ',"No precip RC will be -32767.0", '', sep='\n')
-        rain = self.radar.fields['CZ']['data'].copy()                                               
+        rain = self.radar.fields['CZ']['data'].copy()      
+        rain = (rain * 0) - 32767.0                                         
     #rain, method = csu_blended_rain.calc_blended_rain_tropical(dz=self.dz, zdr=self.dr, 
     #                                               kdp=self.kd, fhc=self.fh,
     #                                               band=self.radar_band)                                               
