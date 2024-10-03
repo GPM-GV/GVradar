@@ -1121,6 +1121,12 @@ def merge_split_cuts(self):
     Functionm to merge 88D split cut sweeps and output new radar object.
     '''
 
+    # Removes triple base scan
+    ele_list = self.radar.fixed_angle['data'][:]
+    if ele_list[0] == ele_list[2]:
+        rm_list = [x for x in range(len(ele_list)) if x != 2]
+        self.radar = self.radar.extract_sweeps(rm_list)
+
     sweep_table = []
     reflectivity = []
     velocity = []
