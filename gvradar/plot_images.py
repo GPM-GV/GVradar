@@ -1042,7 +1042,8 @@ def add_rings_radials(year, site, display, radar_lat, radar_lon, max_range, ax, 
             display.plot_point(IMPACTS_D3R_lon, IMPACTS_D3R_lat, symbol = 'v', markersize=3, color='white')
         elif year == '2024':
             display.plot_point(IMPACTS_2024_lon, IMPACTS_2024_lat, symbol = 'v', markersize=3, color='white')
-
+    if site == 'KTBW':
+        display.plot_point(-82.406635, 27.115769, symbol = 'v', markersize=5, color='white')
     # Add state and countines to map
     ax.add_feature(STATES, facecolor='none', edgecolor='white', lw=0.5)
     ax.add_feature(COUNTIES, facecolor='none', edgecolor='white', lw=0.25)
