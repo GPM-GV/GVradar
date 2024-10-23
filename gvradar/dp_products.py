@@ -153,10 +153,7 @@ def add_csu_blended_rain(self):
         print(' ',"No precip RC will be -32767.0", '', sep='\n')
         rain = self.radar.fields['CZ']['data'].copy()      
         rain = (rain * 0) - 32767.0                                         
-    #rain, method = csu_blended_rain.calc_blended_rain_tropical(dz=self.dz, zdr=self.dr, 
-    #                                               kdp=self.kd, fhc=self.fh,
-    #                                               band=self.radar_band)                                               
-
+    
     # Set fill to zero
     rain = np.ma.filled(rain, fill_value=0.0)
 
@@ -172,12 +169,45 @@ def add_csu_blended_rain(self):
     rc_dict = {"data": rain, "units": "mm/h",
                 "long_name": "HIDRO Rainfall Rate", "_FillValue": -32767.0,
                 "standard_name": "HIDRO Rainfall Rate",}
-    #rc_dict = {"data": rain, "units": "mm/h",
-    #            "long_name": "Tropical Rainfall Rate", "_FillValue": -32767.0,
-    #            "standard_name": "Tropical Rainfall Rate",}
+    
     self.radar.add_field("RC", rc_dict, replace_existing=True)
     
     return self.radar
+
+# ***************************************************************************************
+
+def add_csu_blended_rain_tropical(self):
+
+    print('    Calculating blended rainfall TROPICAL field...')
+
+    try:
+        raint, method = csu_blended_rain.calc_blended_rain_tropical(dz=self.dz, zdr=self.dr, 
+                                                   kdp=self.kd, fhc=self.fh,
+                                                   band=self.radar_band)
+    except:
+        print(' ',"No precip RT will be -32767.0", '', sep='\n')
+        raint = self.radar.fields['CZ']['data'].copy()      
+        raint = (raint * 0) - 32767.0                                         
+    
+    # Set fill to zero
+    raint = np.ma.filled(raint, fill_value=0.0)
+
+    # Max rain rate test
+    rt_max = np.greater(raint,300)
+    raint[rt_max] = raint[rt_max] * -1.0
+
+    # HID ice threshold
+    if self.de_ice:
+        print('    Removing HID ice from rainrate...')
+        raint = remove_ice(raint, self.fh)
+
+    rt_dict = {"data": raint, "units": "mm/h",
+                "long_name": "Tropical Rainfall Rate", "_FillValue": -32767.0,
+                "standard_name": "Tropical Rainfall Rate",}
+    self.radar.add_field("RT", rt_dict, replace_existing=True)
+    
+    return self.radar
+
 # ***************************************************************************************
 
 def add_polZR_rr(self):
@@ -819,6 +849,7 @@ def get_default_product_dict():
                             'do_mass': True,
                             'de_ice': True,
                             'do_RC': True,
+                            'do_RT': True,
                             'do_RP': True,
                             'do_RA': False,
                             'do_tokay_DSD': True,

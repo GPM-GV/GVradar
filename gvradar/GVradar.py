@@ -329,6 +329,10 @@ class DP_products:
             if self.do_RC == True:
                 self.radar = dp.add_csu_blended_rain(self)
 
+    # Calculate Tropical Blended-rain from Cifelli et al. 2011 and addr to radar
+            if self.do_RT == True:
+                self.radar = dp.add_csu_blended_rain_tropical(self)            
+
     # Calculate Bringi PolZR rainrate
             if self.do_RP == True:
                 self.radar = dp.add_polZR_rr(self)
