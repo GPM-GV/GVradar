@@ -1123,7 +1123,7 @@ def merge_split_cuts(self):
 
     # Removes triple base scan
     ele_list = self.radar.fixed_angle['data'][:]
-    if ele_list[0] == ele_list[2]:
+    if ele_list[0] == ele_list[2] and ele_list[3] != ele_list[5] and ele_list[6] != ele_list[8]:
         rm_list = [x for x in range(len(ele_list)) if x != 2]
         self.radar = self.radar.extract_sweeps(rm_list)
 
