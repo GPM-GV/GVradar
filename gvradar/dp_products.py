@@ -683,7 +683,7 @@ def mask_beyond_150(self):
     apply_beyond = np.equal(beyond_field,1)
 
     fields = []
-    cm_fields = ['FH','FW','RC','RP','MW','MI','DM','NW','EC']
+    cm_fields = ['FH','FW','RC','RP','RT','MW','MI','DM','NW','EC']
     sfields = ['FH','FW','MW','MI']
     for fld in cm_fields:
         if fld in self.radar.fields.keys():
@@ -775,7 +775,7 @@ def set_blockage(self, sector_dict):
 
 def set_missing(self):
 
-    zero_list = ['DM','NW','RC','RP']
+    zero_list = ['DM','NW','RC','RP','RT']
 
     for fld in self.radar.fields:
         nf = self.radar.fields[fld]['data']
