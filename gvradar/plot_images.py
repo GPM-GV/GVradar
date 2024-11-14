@@ -66,7 +66,7 @@ def plot_fields(self):
 
     if self.scan_type == 'PPI':
         print('Plotting PPI images...')
-        COUNTIES, STATES = load_counties()
+        if not self.plot_fast: COUNTIES, STATES = load_counties()
         if self.plot_multi == True:
             for isweeps in range(len(sweepn)):
                 sweep = sweepn[isweeps]
