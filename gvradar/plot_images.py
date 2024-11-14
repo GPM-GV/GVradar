@@ -853,7 +853,7 @@ def load_counties():
 
     county_dir = os.path.dirname(__file__)
     shapefile_path = os.path.join(county_dir, "shape_files", "countyl010g.shp")
-    reader = shpreader.Reader('shapefile_path')
+    reader = shpreader.Reader(shapefile_path)
     counties = list(reader.geometries())
     COUNTIES = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
 
