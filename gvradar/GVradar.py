@@ -84,7 +84,12 @@ class QC:
     # Rename fields with GPM, 2-letter IDs (e.g. CZ, DR, KD)
     # Save raw reflectivity, will be applied to DZ later
         self.radar, zz = cm.rename_fields_in_radar(self)
-        
+
+    # Get KDP and Std(PhiDP)
+        D3R_list = ['KaD3R', 'KuD3R']
+        if self.site not in D3R_list:
+            self.radar = qc.calculate_kdp(self)
+
     # Create a filter to remove data beyond 200km
         if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
            self.radar.metadata['original_container'] == 'UF' or\
@@ -162,11 +167,6 @@ class QC:
     # Get PhiDP
         if self.unfold_phidp == True:
             self.radar = qc.unfold_phidp(self)
-        
-    # Get KDP and Std(PhiDP)
-        D3R_list = ['KaD3R', 'KuD3R']
-        if self.site not in D3R_list:
-            self.radar = qc.calculate_kdp(self)
         
     # Create mask to filter a range/azm/height sector of radar based on SD threshold
         if self.do_sd_sector == True:
