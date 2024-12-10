@@ -49,12 +49,8 @@ def get_ruc_sounding(self):
     #sound_dict = retrieveData(timestamp, RADAR_SITE)
    
     # Create data framne from dictionary
-    header2 = {"PRES":'hPa',"HGHT":'m', "TEMP":'C',"DWPT":'C',
-               "RELH":'%',"MIXR":'g/kg',"WINDDIR":'deg',
-               "WINDSP":'knot',"THTA":'K',"THTE":'K',"THTV":'K'}
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     sound = pd.DataFrame.from_dict(sound_dict)
-    sound = pd.concat([sound.iloc[:0], pd.DataFrame([header2]), sound.iloc[0:]], ignore_index=True)
     
     presssure_pa = sound.PRES
     height_m = sound.HGHT
@@ -62,7 +58,6 @@ def get_ruc_sounding(self):
     dewpoint_c = sound.DWPT
 
     mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
-    print(mydata)
     sounding=SkewT.Sounding(soundingdata=mydata)
            
     radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
