@@ -52,10 +52,10 @@ def get_ruc_sounding(self):
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     sound = pd.DataFrame.from_dict(sound_dict)
     
-    presssure_pa = sound.PRES
-    height_m = sound.HGHT
-    temperature_c = sound.TEMP
-    dewpoint_c = sound.DWPT
+    presssure_pa = sound.PRES.to_string(index=False)
+    height_m = sound.HGHT.to_string(index=False)
+    temperature_c = sound.TEMP.to_string(index=False)
+    dewpoint_c = sound.DWPT.to_string(index=False)
 
     mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
     print(mydata)
