@@ -13,7 +13,7 @@ import numpy as np
 import copy
 from copy import deepcopy
 import pyart
-import os, sys
+import os, sys, re
 import datetime
 from cftime import date2num, num2date
 import gzip
@@ -22,6 +22,7 @@ import xarray
 import pandas as pd
 from skewt import SkewT
 import urllib.request
+from urllib.request import urlopen
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,
                             csu_dsd, csu_kdp, csu_misc, fundamentals)
 
@@ -43,12 +44,17 @@ def get_ruc_sounding(self):
     RADAR_SITE = (self.site, str(self.radar.latitude['data'][0]), str(self.radar.longitude['data'][0]))
     timestamp = self.year + self.month + self.day + self.hh
 
-    # Grab RUC sounding frm website
-    sound_dict = retrieveData(timestamp, RADAR_SITE)
+    # Grab RUC sounding from website
+    sound_dict = twister_data(timestamp, RADAR_SITE)
+    #sound_dict = retrieveData(timestamp, RADAR_SITE)
    
     # Create data framne from dictionary
+    header2 = {"PRES":'hPa',"HGHT":'m', "TEMP":'C',"DWPT":'C',
+               "RELH":'%',"MIXR":'g/kg',"WINDDIR":'deg',
+               "WINDSP":'knot',"THTA":'K',"THTE":'K',"THTV":'K'}
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     sound = pd.DataFrame.from_dict(sound_dict)
+    sound = pd.concat([sound.iloc[:0], pd.DataFrame([header2]), sound.iloc[0:]], ignore_index=True)
     
     presssure_pa = sound.PRES
     height_m = sound.HGHT
@@ -1282,4 +1288,80 @@ def retrieve_ML(mydata):
 
     return expected_ML
 
-# ***************************************************************************************    
+# ***************************************************************************************
+
+def twister_data(timeStamp, radar_site):
+    year =  timeStamp[0:4]
+    month = timeStamp[4:6]
+    day =   timeStamp[6:8]
+    hour =  timeStamp[8:10]
+    name = radar_site[0]
+    lat = radar_site[1]
+    lon = radar_site[2]
+
+    print(name,lat,lon)
+    model ='RAP'
+    if model == 'RAP':  grid='255'
+    if model == 'GFS':  grid='3'
+
+    requestURL = 'http://www.twisterdata.com/index.php?sounding.\
+                  lat='+lat+'&sounding.lon='+lon+'&sndclick=y&\
+                  prog=forecast&model='+model+'&grid='+grid+'&model_yyyy='+year+'&\
+                  model_mm='+month+'&model_dd='+day+'&model_init_hh='+hour+'&\
+                  fhour=00&parameter=TMPF&level=2&unit=M_ABOVE_GROUND&\
+                  maximize=n&mode=singlemap&sounding=y&output=text&\
+                  view=large&archive=false'
+
+    url = requestURL.replace(" ","")
+
+    rawData = urlopen(url).read()
+    theData = rawData.decode('ascii')
+    dataArray = theData.split("\n")
+
+    start_sounding = model + " Text Sounding"
+    end_sounding = '</td></tr></table></div></div><div class="textAdBar">'
+    for i in range(0, len(dataArray)):
+        if start_sounding in dataArray[i]:
+            print(dataArray[i][34:118])
+            sline = i
+            #print(sline)
+    for j in range(sline, len(dataArray)):
+        if end_sounding in dataArray[j]:
+            #print(dataArray[j])
+            eline = j
+            #print(eline)
+
+    sound_dict = {"PRES":[],"HGHT":[],"TEMP":[],"DWPT":[],"RELH":[],
+                  "MIXR":[],"WINDDIR":[],"WINDSP":[],
+                  "THTA":[],"THTE":[],"THTV":[]}
+
+    for k in range(sline+1, eline-1):
+        cline = re.findall(r"[-+]?\d*\.\d+|\d+",dataArray[k])
+        #print(cline)
+        pressure = cline[0]
+        height = cline[1]
+        tempc = cline[2]
+        tempd = cline[3]
+        relh = cline[4]
+        mixr = cline[5]
+        winddir = cline[6]
+        windsp = cline[7]
+        thta = cline[10]
+        thte = cline[11]
+        thtv = cline[12]
+    
+        sound_dict["PRES"].append(pressure)
+        sound_dict["HGHT"].append(height)
+        sound_dict["TEMP"].append(tempc)
+        sound_dict["DWPT"].append(tempd)
+        sound_dict["RELH"].append(relh)
+        sound_dict["MIXR"].append(mixr)
+        sound_dict["WINDDIR"].append(winddir)
+        sound_dict["WINDSP"].append(windsp)
+        sound_dict["THTA"].append(thta)
+        sound_dict["THTE"].append(thte)
+        sound_dict["THTV"].append(thtv)
+
+    return sound_dict
+# ***************************************************************************************
+    
