@@ -1335,10 +1335,10 @@ def twister_data(timeStamp, radar_site):
     for k in range(sline+1, eline-1):
         cline = re.findall(r"[-+]?\d*\.\d+|\d+",dataArray[k])
         #print(cline)
-        pressure = round(float(cline[0])*0.1,1)
+        pressure = round(float(cline[0])*1.0,1)
         height = round(float(cline[1])*1.0,1)
-        tempc = round(float(cline[2])*0.1,1)
-        tempd = round(float(cline[3])*0.1,1)
+        tempc = round(float(cline[2])*1.0,1)
+        tempd = round(float(cline[3])*1.0,1)
         relh = cline[4]
         mixr = cline[5]
         winddir = cline[6]
