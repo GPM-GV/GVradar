@@ -43,7 +43,7 @@ def get_ruc_sounding(self):
     
     RADAR_SITE = (self.site, str(self.radar.latitude['data'][0]), str(self.radar.longitude['data'][0]))
     timestamp = self.year + self.month + self.day + self.hh
-
+    
     # Grab RUC sounding from website
     sound_dict = twister_data(timestamp, RADAR_SITE)
     #sound_dict = retrieveData(timestamp, RADAR_SITE)
@@ -1291,6 +1291,7 @@ def retrieve_ML(mydata):
 # ***************************************************************************************
 
 def twister_data(timeStamp, radar_site):
+
     year =  timeStamp[0:4]
     month = timeStamp[4:6]
     day =   timeStamp[6:8]
