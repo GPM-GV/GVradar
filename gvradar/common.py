@@ -47,7 +47,7 @@ def get_ruc_sounding(self):
     # Grab RUC sounding from website
     sound_dict = twister_data(timestamp, RADAR_SITE)
     #sound_dict = retrieveData(timestamp, RADAR_SITE)
-    #print(sound_dict)
+    
     # Create data framne from dictionary
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     sound = pd.DataFrame.from_dict(sound_dict)
@@ -58,9 +58,8 @@ def get_ruc_sounding(self):
     dewpoint_c = sound.DWPT.values
 
     mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
-    print(sound)
     sounding=SkewT.Sounding(soundingdata=mydata)
-    #print(sounding)       
+   
     radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
     
     add_field_to_radar_object(radar_T, self.radar, field_name='TEMP', units='deg C',
@@ -1319,7 +1318,7 @@ def twister_data(timeStamp, radar_site):
     end_sounding = '</td></tr></table></div></div><div class="textAdBar">'
     for i in range(0, len(dataArray)):
         if start_sounding in dataArray[i]:
-            print(dataArray[i][34:118])
+            print('', dataArray[i][34:118], '', sep='\n')
             sline = i
             #print(sline)
     for j in range(sline, len(dataArray)):
