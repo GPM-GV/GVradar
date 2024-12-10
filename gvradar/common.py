@@ -1338,7 +1338,7 @@ def twister_data(timeStamp, radar_site):
         pressure = round(float(cline[0])*0.1,1)
         height = round(float(cline[1])*1.0,1)
         tempc = round(float(cline[2])*0.1,1)
-        tempc = round(float(cline[3])*0.1,1)
+        tempd = round(float(cline[3])*0.1,1)
         relh = cline[4]
         mixr = cline[5]
         winddir = cline[6]
