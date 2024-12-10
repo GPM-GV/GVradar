@@ -58,9 +58,9 @@ def get_ruc_sounding(self):
     dewpoint_c = sound.DWPT
 
     mydata=dict(zip(('hght','pres','temp','dwpt'),(height_m,presssure_pa,temperature_c,dewpoint_c)))
-    print(mydata)
+    #print(mydata)
     sounding=SkewT.Sounding(soundingdata=mydata)
-           
+    print(sounding)       
     radar_T, radar_z = interpolate_sounding_to_radar(sounding, self.radar)
     
     add_field_to_radar_object(radar_T, self.radar, field_name='TEMP', units='deg C',
