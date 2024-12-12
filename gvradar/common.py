@@ -131,11 +131,11 @@ def get_ruc_archive(self):
     headings = ["PRES","HGHT","TEMP","DWPT","RELH","MIXR","DRCT","SKNT","THTA","THTE","THTV"]
 
     try:
-        colspecs = [(3, 9), (11, 18), (20, 26), (28, 34), (36, 38), (40, 42),
-                    (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
+        #colspecs = [(3, 9), (11, 18), (20, 26), (28, 34), (36, 38), (40, 42),
+        #            (44, 46), (48, 50), (52, 54), (56, 58), (60, 62)]
     
-        sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
-        
+        #sound = pd.read_fwf(sounding_dir, names=headings, header=None, colspecs=colspecs,skiprows=2)
+        sound = pd.read_csv(sounding_dir, sep='\\s+', encoding = "ISO-8859-1",skiprows = [1])
         presssure_pa = sound.PRES
         height_m = sound.HGHT
         temperature_c = sound.TEMP
