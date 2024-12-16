@@ -105,13 +105,13 @@ def add_hydroclass(self):
                         zdr_field="DR", 
                         rhv_field="RH", 
                         kdp_field="KD", 
-                        temp_field="TEMP")
+                        temp_field="TEMP")["hydro"]
 
     ec_dict = {"data": ec, "units": "Unitless",
                 "long_name": "Radar Echo Classification", "_FillValue": -32767.0,
                 "standard_name": "Radar Echo Classification",}
 
-    self.radar.add_field("EC", ec, replace_existing=True)  
+    self.radar.add_field("EC", ec)
     
     return self.radar
 
