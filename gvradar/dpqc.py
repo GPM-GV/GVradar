@@ -1044,6 +1044,7 @@ def calculate_kdp(self):
 
     # Range needs to be supplied as a variable, with same shape as DZ
     rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+    print(rng2d)
     gate_spacing = self.radar.range['meters_between_gates']
 
     
