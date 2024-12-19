@@ -1026,8 +1026,8 @@ def calculate_kdp(self):
         std_gate=15
         nfilter=1
     elif self.site == 'CASMB':
-        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+        DZ = self.radar.fields['DZ']['data'].copy()
+        DP = self.radar.fields['PH']['data'].copy()
         window=4
         std_gate=15
         nfilter=1
