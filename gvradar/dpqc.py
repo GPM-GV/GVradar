@@ -1044,10 +1044,12 @@ def calculate_kdp(self):
         nfilter=1
 
     # Range needs to be supplied as a variable, with same shape as DZ
-    rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
-    gate_spacing = self.radar.range['meters_between_gates']
-    
     try:
+        rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+        gate_spacing = self.radar.range['meters_between_gates']
+
+    
+    #try:
         KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                         thsd=25, gs=gate_spacing, 
                                                         window=window, nfilter=nfilter, 
