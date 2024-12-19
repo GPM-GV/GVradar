@@ -1026,9 +1026,8 @@ def calculate_kdp(self):
         std_gate=15
         nfilter=1
     elif self.site == 'CASMB':
-        print('    Getting new Kdp...')
-        DZ = self.radar.fields['DZ']['data'].copy()
-        DP = self.radar.fields['PH']['data'].copy()
+        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
         window=4
         std_gate=15
         nfilter=1
@@ -1044,18 +1043,17 @@ def calculate_kdp(self):
         nfilter=1
 
     # Range needs to be supplied as a variable, with same shape as DZ
-    try:
-        rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
-        gate_spacing = self.radar.range['meters_between_gates']
+    rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+    gate_spacing = self.radar.range['meters_between_gates']
 
     
-        #try:
-        '''
+    try:
+        
         KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                         thsd=25, gs=gate_spacing, 
                                                         window=window, nfilter=nfilter, 
                                                         std_gate=std_gate)
-        '''                                                    
+        print(KDPB)                                                    
     except Exception as e:
         print("An error occurred:", e)
         print('    CSU Radar Tools could not retrieve Kdp...')
