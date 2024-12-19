@@ -1049,13 +1049,13 @@ def calculate_kdp(self):
         gate_spacing = self.radar.range['meters_between_gates']
 
     
-    #try:
-    '''
+        #try:
+        '''
         KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                         thsd=25, gs=gate_spacing, 
                                                         window=window, nfilter=nfilter, 
                                                         std_gate=std_gate)
-    '''                                                    
+        '''                                                    
     except Exception as e:
         print("An error occurred:", e)
         print('    CSU Radar Tools could not retrieve Kdp...')
