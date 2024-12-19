@@ -1045,7 +1045,8 @@ def calculate_kdp(self):
                                                         thsd=25, gs=gate_spacing, 
                                                         window=window, nfilter=nfilter, 
                                                         std_gate=std_gate)
-    except:
+    except Exception as e:
+        print("An error occurred:", e)
         print('    CSU Radar Tools could not retrieve Kdp...')
         KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
         PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
