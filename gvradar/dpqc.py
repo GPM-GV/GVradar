@@ -12,6 +12,7 @@ V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 import numpy as np
 from copy import deepcopy
 import pyart
+import traceback
 from gvradar import common as cm
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,
                             csu_dsd, csu_kdp, csu_misc, fundamentals)
@@ -1052,10 +1053,10 @@ def calculate_kdp(self):
         KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                         thsd=25, gs=gate_spacing, 
                                                         window=window, nfilter=nfilter, 
-                                                        std_gate=std_gate)
-        print(KDPB)                                                    
+                                                        std_gate=std_gate)                                                 
     except Exception as e:
         print("An error occurred:", e)
+        traceback.print_exc()
         print('    CSU Radar Tools could not retrieve Kdp...')
         KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
         PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
