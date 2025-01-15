@@ -907,16 +907,24 @@ def get_kdp(self):
 
     try:
         print('    Getting new Kdp...')
-        std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL','CASMB']
+        std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1','NPOL']
         if self.site in std_list:
-            DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-            DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            try:
+                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            except:
+                DZ = self.radar.fields['DZ']['data'].copy()
+                DP = self.radar.fields['PH']['data'].copy()
             window=4
             std_gate=15
             nfilter=1
         else:
-            DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-            DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            try:
+                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            except:
+                DZ = self.radar.fields['DZ']['data'].copy()
+                DP = self.radar.fields['PH']['data'].copy()
             window=4
             std_gate=15
             nfilter=1

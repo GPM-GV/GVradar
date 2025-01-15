@@ -1026,12 +1026,6 @@ def calculate_kdp(self):
         window=4
         std_gate=15
         nfilter=1
-    elif self.site == 'CASMB':
-        DZ = self.radar.fields['DZ']['data'].copy()
-        DP = self.radar.fields['PH']['data'].copy()
-        window=4
-        std_gate=15
-        nfilter=1
     else:
         try:
             DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
@@ -1047,9 +1041,7 @@ def calculate_kdp(self):
     rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
     gate_spacing = self.radar.range['meters_between_gates']
 
-    
     try:
-        
         KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                         thsd=25, gs=gate_spacing, 
                                                         window=window, nfilter=nfilter, 

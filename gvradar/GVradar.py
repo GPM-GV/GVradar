@@ -261,8 +261,8 @@ class DP_products:
 
     # If no KDP, calculate field
         if 'KD' not in self.radar.fields.keys():  
-            #self.radar = dp.get_kdp(self)
-            self.radar = qc.calculate_kdp(self)
+            self.radar = dp.get_kdp(self)
+            #self.radar = qc.calculate_kdp(self)
         elif self.get_Bringi_kdp:
             self.radar = dp.get_kdp(self)
             #self.radar = qc.calculate_kdp(self)
