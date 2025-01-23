@@ -801,6 +801,7 @@ def get_site_date_time(radar):
     if site == b'SF1-P\x00\x00\x00' or site == 'SF1-P': site = 'SF1'
     if site == b'ST1-P\x00\x00\x00' or site == 'ST1-P': site = 'ST1'
     if site == b'SV1-P\x00\x00\x00' or site == 'SV1-P': site = 'SV1'
+    if site == b'SV1\x00\x00\x00\x00\x00' or site == 'SV1-P': site = 'SV1'
     if site == b'TM1-P\x00\x00\x00' or site == 'TM1-P': site = 'TM1'
     if site == 'GUNN_PT': site = 'CPOL'
     if site == 'REUNION': site = 'Reunion'
