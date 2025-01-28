@@ -1140,7 +1140,7 @@ def merge_split_cuts(self):
     n = 0
     while n <= len(elist)-1:
         
-        vcp_2 = [215, 35, 212, 32, 12, 31]
+        vcp_2 = [215, 35, 212, 32, 12, 31, 34]
         vcp_3 = [112]
 
         if elist[n] == 720 and elist[n+1] == 720:
