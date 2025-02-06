@@ -1042,6 +1042,7 @@ def add_rings_radials(year, site, display, radar_lat, radar_lon, max_range, ax, 
         elif year == '2022' or year == '2023' or year == '2024' or year == '2025':
             display.plot_point(IMPACTS_D3R_lon, IMPACTS_D3R_lat, symbol = 'v', markersize=3, color='white')
         elif year == '2024' or year == '2025':
+            display.plot_point(IMPACTS_D3R_lon, IMPACTS_D3R_lat, symbol = 'v', markersize=3, color='white')
             display.plot_point(IMPACTS_2024_lon, IMPACTS_2024_lat, symbol = 'v', markersize=3, color='white')
     if site == 'KTBW':
         display.plot_point(-82.406635, 27.115769, symbol = 'v', markersize=5, color='white')
