@@ -785,14 +785,14 @@ def get_field_info(radar, field):
         cmap=cmaphidec     
     elif field == 'MW':
         units='Water Mass [g/m^3]'
-        vmin=-1
+        vmin=0
         vmax=3
         Nbins = 8
         title = 'Water Mass [g/m^3]'
         cmap='pyart_BlueBrown10'
     elif field == 'MI':
         units='Ice Mass [g/m^3]'
-        vmin=-1
+        vmin=0
         vmax=3
         Nbins = 8
         title ='Ice Mass [g/m^3]'
