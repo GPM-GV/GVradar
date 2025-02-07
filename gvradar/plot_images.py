@@ -787,16 +787,16 @@ def get_field_info(radar, field):
         units='Water Mass [g/m^3]'
         vmin=0
         vmax=3
-        Nbins = 8
+        Nbins = 25
         title = 'Water Mass [g/m^3]'
-        cmap='pyart_BlueBrown10'
+        cmap='turbo'
     elif field == 'MI':
         units='Ice Mass [g/m^3]'
         vmin=0
-        vmax=3
+        vmax=25
         Nbins = 8
         title ='Ice Mass [g/m^3]'
-        cmap='pyart_BlueBrown10'
+        cmap='turbo'
     elif field == 'RC':
         units='HIDRO Rain Rate [mm/hr]'
         #units='Tropical Rain Rate [mm/hr]'
