@@ -793,8 +793,8 @@ def get_field_info(radar, field):
     elif field == 'MI':
         units='Ice Mass [g/m^3]'
         vmin=0
-        vmax=25
-        Nbins = 8
+        vmax=3
+        Nbins = 25
         title ='Ice Mass [g/m^3]'
         cmap='turbo'
     elif field == 'RC':
