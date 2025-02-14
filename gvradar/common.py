@@ -1367,7 +1367,7 @@ def remove_HDF_header(file):
     dn = os.path.abspath(file)
     os.makedirs(os.path.dirname(dn) + '/temp/',exist_ok=True)
     temp_dir = os.path.dirname(dn) + '/temp/'
-    temp_file = shutil.copy(file_path, temp_dir)
+    temp_file = shutil.copy(file, temp_dir)
 
     with open(temp_file, "r+b") as f:
         mmapped_file = mmap.mmap(f.fileno(), 0)
