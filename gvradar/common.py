@@ -1375,7 +1375,7 @@ def remove_HDF_header(file):
             mmapped_file.move(0, second_newline + 1, len(mmapped_file) - (second_newline + 1))
             mmapped_file.flush()
     
-        mmapped_file.close()
+        #mmapped_file.close()
 
 # ***************************************************************************************
 
