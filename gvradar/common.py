@@ -1364,7 +1364,12 @@ def twister_data(timeStamp, radar_site):
 
 def remove_HDF_header(file):
 
-    with open(file, "r+b") as f:
+    dn = os.path.abspath(file)
+    os.makedirs(os.path.dirname(dn) + '/temp/',exist_ok=True)
+    temp_dir = os.path.dirname(dn) + '/temp/'
+    temp_file = shutil.copy(file_path, temp_dir)
+
+    with open(temp_file, "r+b") as f:
         mmapped_file = mmap.mmap(f.fileno(), 0)
     
         # Find the first two line breaks and remove them
@@ -1375,7 +1380,9 @@ def remove_HDF_header(file):
             mmapped_file.move(0, second_newline + 1, len(mmapped_file) - (second_newline + 1))
             mmapped_file.flush()
     
-        #mmapped_file.close()
+        mmapped_file.close()
+
+    return temp_file
 
 # ***************************************************************************************
 
