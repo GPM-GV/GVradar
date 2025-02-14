@@ -1360,4 +1360,22 @@ def twister_data(timeStamp, radar_site):
 
     return sound_dict
 # ***************************************************************************************
+
+def remove_HDF_header(file):
+
+    with open(file_path, "r+b") as f:
+    mmapped_file = mmap.mmap(f.fileno(), 0)
+    
+    # Find the first two line breaks and remove them
+    first_newline = mmapped_file.find(b"\n")
+    second_newline = mmapped_file.find(b"\n", first_newline + 1)
+    
+    if second_newline != -1:
+        mmapped_file.move(0, second_newline + 1, len(mmapped_file) - (second_newline + 1))
+        mmapped_file.flush()
+    
+    mmapped_file.close()
+
+# ***************************************************************************************
+
     

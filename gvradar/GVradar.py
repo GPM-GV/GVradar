@@ -50,6 +50,10 @@ class QC:
             elif cfy == '.h5':
                 radar = pyart.aux_io.read_odim_h5(self.file, file_field_names=True)
                 radar = cm.reorder_sweeps(radar)
+            elif cfy == '.hdf5':
+                cm.remove_HDF_header(self.file)
+                radar = pyart.aux_io.read_odim_h5(self.file, file_field_names=True)
+                radar = cm.reorder_sweeps(radar)    
             else:
                 radar = pyart.io.read(self.file, file_field_names=True)
         
