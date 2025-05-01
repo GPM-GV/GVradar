@@ -92,7 +92,7 @@ class QC:
 
     # Get KDP and Std(PhiDP)
         D3R_list = ['KaD3R', 'KuD3R']
-        if self.site not in D3R_list or self.noKDP == False:
+        if self.site not in D3R_list:
             self.radar = qc.calculate_kdp(self)
 
     # Create a filter to remove data beyond 200km

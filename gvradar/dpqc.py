@@ -1008,58 +1008,61 @@ def calculate_kdp(self):
 
     NOTE: KDPB: Bringi Kdp, PHIDPB: Bringi-filtered PhiDP, STDPHIB: Std-dev of PhiDP
     """
-    print('    Getting new Kdp...')
 
 #    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
 #    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
 #    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
 #    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
-    std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1']
-    if self.site in std_list:
-        try:
-            DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-            DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-        except:  
-            DZ = self.radar.fields['DZ']['data'].copy()
-            DP = self.radar.fields['PH']['data'].copy()
-        window=4
-        std_gate=15
-        nfilter=1
+    if noKDP:
+        continue
     else:
+        print('    Getting new Kdp...')
+        std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1']
+        if self.site in std_list:
+            try:
+                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            except:  
+                DZ = self.radar.fields['DZ']['data'].copy()
+                DP = self.radar.fields['PH']['data'].copy()
+            window=4
+            std_gate=15
+            nfilter=1
+        else:
+            try:
+                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            except:
+                DZ = self.radar.fields['DZ']['data'].copy()
+                DP = self.radar.fields['PH']['data'].copy()
+            window=4
+            std_gate=15
+            nfilter=1
+
+        # Range needs to be supplied as a variable, with same shape as DZ
+        rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+        gate_spacing = self.radar.range['meters_between_gates']
+
         try:
-            DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-            DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-        except:
-            DZ = self.radar.fields['DZ']['data'].copy()
-            DP = self.radar.fields['PH']['data'].copy()
-        window=4
-        std_gate=15
-        nfilter=1
-
-    # Range needs to be supplied as a variable, with same shape as DZ
-    rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
-    gate_spacing = self.radar.range['meters_between_gates']
-
-    try:
-        KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
+            KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
                                                         thsd=25, gs=gate_spacing, 
                                                         window=window, nfilter=nfilter, 
                                                         std_gate=std_gate)                                                 
-    except Exception as e:
-        print("An error occurred:", e)
-        traceback.print_exc()
-        print('    CSU Radar Tools could not retrieve Kdp...')
-        KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-        PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-        STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+        except Exception as e:
+            print("An error occurred:", e)
+            traceback.print_exc()
+            print('    CSU Radar Tools could not retrieve Kdp...')
+            KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+            PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+            STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
 
-    if 'KD' not in self.radar.fields.keys():
-        self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
-		    units='deg/km',
-		    long_name='Specific Differential Phase (Bringi)',
-		    standard_name='Specific Differential Phase (Bringi)',
-		    dz_field=self.ref_field_name)
+        if 'KD' not in self.radar.fields.keys():
+            self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
+		        units='deg/km',
+		        long_name='Specific Differential Phase (Bringi)',
+		        standard_name='Specific Differential Phase (Bringi)',
+		        dz_field=self.ref_field_name)
 
     if self.unfold_phidp == False:
         print('    Retrieving CSU PH')
