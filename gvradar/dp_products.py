@@ -28,7 +28,7 @@ def dbz_to_zlin(dz):
 
 def zlin_to_dbz(Z):
     """Z (mm^6 m^-3), returns dbz = Reflectivity (dBZ) """
-    return 10. * np.log10(np.asarray(zlin))
+    return 10. * np.log10(np.asarray(Z))
 
 # ***************************************************************************************
 

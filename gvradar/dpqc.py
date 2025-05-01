@@ -1185,6 +1185,7 @@ def get_default_thresh_dict():
                            'do_ph': False, 'ph_thresh': 80.0, 'max_phidp_diff': 360,
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
                            'get_GV_SD':  False, 'SD_window': 15,
+                           'noKDP':  False,
                            'unfold_phidp': True,
                            'merge_sp': True,
                            'dealias_velocity': False,
