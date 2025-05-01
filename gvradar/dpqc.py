@@ -1014,9 +1014,7 @@ def calculate_kdp(self):
 #    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
 #    DP = self.radar.fields[self.phi_field_name]['data'].copy()
 
-    if noKDP:
-        continue
-    else:
+    if not self.noKDP:
         print('    Getting new Kdp...')
         std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1']
         if self.site in std_list:
