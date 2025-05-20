@@ -1117,12 +1117,139 @@ def isNumeric(theChar):
 
 # ***************************************************************************************
 
-def merge_split_cuts(self):
+def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
 
     '''
     Functionm to merge 88D split cut sweeps and output new radar object.
     '''
+    
+    field_names = self.radar.fields.keys()
+    grouped_sweeps = []  # List of sweep index lists
 
+    # Group by elevation, but separate if temporally distinct
+    visited = np.zeros(len(self.radar.fixed_angle['data']), dtype=bool)
+    for i, angle_i in enumerate(self.radar.fixed_angle['data']):
+        if visited[i]:
+            continue
+        group = [i]
+        visited[i] = True
+        time_i = self.radar.time['data'][self.radar.sweep_start_ray_index['data'][i]]
+
+        for j in range(i + 1, len(self.radar.fixed_angle['data'])):
+            if visited[j]:
+                continue
+            angle_j = self.radar.fixed_angle['data'][j]
+            time_j = self.radar.time['data'][self.radar.sweep_start_ray_index['data'][j]]
+
+            if abs(angle_i - angle_j) <= round_tol and abs(time_i - time_j) <= time_separation_threshold:
+                group.append(j)
+                visited[j] = True
+
+        grouped_sweeps.append(group)
+
+    # Process groups to merge them
+    azimuth_data, elevation_data, time_data = [], [], []
+    all_data = {f: [] for f in field_names}
+    nyquist_velocity_data, unambiguous_range_data = [], []
+    start_indices, end_indices = [], []
+    fixed_angles, sweep_modes, sweep_numbers = [], [], []
+    ray_index = 0
+
+    for sweep_num, group in enumerate(grouped_sweeps):
+        azimuths, elevations, times = [], [], []
+        sweep_data = {f: [] for f in field_names}
+        rays_in_sweep = 0
+
+        for sweep in group:
+            start = self.radar.sweep_start_ray_index['data'][sweep]
+            end = self.radar.sweep_end_ray_index['data'][sweep] + 1
+            rays = end - start
+            rays_in_sweep += rays
+
+            azimuths.append(self.radar.azimuth['data'][start:end])
+            elevations.append(self.radar.elevation['data'][start:end])
+            times.append(self.radar.time['data'][start:end])
+            for f in field_names:
+                sweep_data[f].append(self.radar.fields[f]['data'][start:end])
+
+            if self.radar.instrument_parameters is not None:
+                if 'nyquist_velocity' in self.radar.instrument_parameters:
+                    nyquist_velocity_data.append(self.radar.instrument_parameters['nyquist_velocity']['data'][start:end])
+                if 'unambiguous_range' in self.radar.instrument_parameters:
+                    unambiguous_range_data.append(self.radar.instrument_parameters['unambiguous_range']['data'][start:end])
+
+        # Concatenate
+        azimuth_concat = np.concatenate(azimuths)
+        elevation_concat = np.concatenate(elevations)
+        time_concat = np.concatenate(times)
+        azimuth_data.append(azimuth_concat)
+        elevation_data.append(elevation_concat)
+        time_data.append(time_concat)
+
+        for f in field_names:
+            all_data[f].append(np.ma.concatenate(sweep_data[f]))
+
+        start_indices.append(ray_index)
+        ray_index += rays_in_sweep
+        end_indices.append(ray_index - 1)
+
+        # Use average elevation from group
+        fixed_angles.append(np.mean([self.radar.fixed_angle['data'][i] for i in group]))
+        sweep_modes.append(b'azimuth_surveillance')
+        sweep_numbers.append(sweep_num)
+
+    # Assemble output Radar object
+    radar_out = pyart.core.Radar(
+        time={
+            'data': np.concatenate(time_data),
+            'units': radar.time['units'],
+            'standard_name': 'time',
+            'long_name': 'time_in_seconds_since_volume_start',
+            'calendar': 'gregorian',
+            'comment': radar.time.get('comment', ''),
+        },
+        _range=self.radar.range,
+        fields={
+            f: {
+                'data': np.ma.concatenate(all_data[f]),
+                **{k: v for k, v in self.radar.fields[f].items() if k != 'data'}
+            } for f in field_names
+        },
+        metadata=self.radar.metadata,
+        scan_type=self.radar.scan_type,
+        latitude=self.radar.latitude,
+        longitude=self.radar.longitude,
+        altitude=selfradar.altitude,
+        sweep_number={'data': np.array(sweep_numbers, dtype='int32')},
+        sweep_mode={'data': np.array(sweep_modes)},
+        fixed_angle={'data': np.array(fixed_angles, dtype='float32')},
+        sweep_start_ray_index={'data': np.array(start_indices, dtype='int32')},
+        sweep_end_ray_index={'data': np.array(end_indices, dtype='int32')},
+        azimuth={'data': np.concatenate(azimuth_data)},
+        elevation={'data': np.concatenate(elevation_data)},
+        instrument_parameters={
+            'nyquist_velocity': {
+                'data': np.concatenate(nyquist_velocity_data) if nyquist_velocity_data else None,
+                'units': 'meters_per_second',
+                'long_name': 'Nyquist velocity',
+                'comments': 'Unambiguous velocity',
+                'meta_group': 'instrument_parameters',
+            },
+            'unambiguous_range': {
+                'data': np.concatenate(unambiguous_range_data) if unambiguous_range_data else None,
+                'units': 'meters',
+                'long_name': 'Unambiguous range',
+                'comments': 'Unambiguous range',
+                'meta_group': 'instrument_parameters',
+            }
+        } if nyquist_velocity_data and unambiguous_range_data else None
+    )
+
+    print("Merged Elevation Angles:", radar_out.fixed_angle['data'])
+    
+    return radar_out
+
+    '''
     # Removes triple base scan
     ele_list = self.radar.fixed_angle['data'][:]
     if ele_list[0] == ele_list[2] and ele_list[3] != ele_list[5] and ele_list[6] != ele_list[8]:
@@ -1190,6 +1317,7 @@ def merge_split_cuts(self):
     print("New merged elevation angles:  ", radar.fixed_angle['data'][:], sep='\n')
 
     return radar
+    '''
 
 # ***************************************************************************************
 
