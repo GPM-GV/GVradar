@@ -1202,11 +1202,11 @@ def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
     radar_out = pyart.core.Radar(
         time={
             'data': np.concatenate(time_data),
-            'units': radar.time['units'],
+            'units': self.radar.time['units'],
             'standard_name': 'time',
             'long_name': 'time_in_seconds_since_volume_start',
             'calendar': 'gregorian',
-            'comment': radar.time.get('comment', ''),
+            'comment': self.adar.time.get('comment', ''),
         },
         _range=self.radar.range,
         fields={
