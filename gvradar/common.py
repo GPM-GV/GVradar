@@ -1206,7 +1206,7 @@ def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
             'standard_name': 'time',
             'long_name': 'time_in_seconds_since_volume_start',
             'calendar': 'gregorian',
-            'comment': self.adar.time.get('comment', ''),
+            'comment': self.radar.time.get('comment', ''),
         },
         _range=self.radar.range,
         fields={
@@ -1219,7 +1219,7 @@ def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
         scan_type=self.radar.scan_type,
         latitude=self.radar.latitude,
         longitude=self.radar.longitude,
-        altitude=selfradar.altitude,
+        altitude=self.radar.altitude,
         sweep_number={'data': np.array(sweep_numbers, dtype='int32')},
         sweep_mode={'data': np.array(sweep_modes)},
         fixed_angle={'data': np.array(fixed_angles, dtype='float32')},
