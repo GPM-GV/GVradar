@@ -22,6 +22,7 @@ import mmap
 import xarray
 import pandas as pd
 from skewt import SkewT
+from collections import defaultdict
 import urllib.request
 from urllib.request import urlopen
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,
@@ -1117,7 +1118,76 @@ def isNumeric(theChar):
 
 # ***************************************************************************************
 
-def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
+def merge_split_cuts(self, time_gap=120):
+
+    sweeps = []
+    for i, elev in enumerate(self.radar.fixed_angle['data']):
+        start = self.radar.sweep_start_ray_index['data'][i]
+        end = self.radar.sweep_end_ray_index['data'][i] + 1
+        time = float(np.mean(self.radar.time['data'][start:end]))
+
+        fields_present = set()
+        for field in self.radar.fields:
+            data = self.radar.fields[field]['data'][start:end]
+            if np.ma.is_masked(data) and data.mask.all():
+                continue
+            fields_present.add(field)
+
+        sweeps.append({
+            'index': i,
+            'elev': round(float(elev), 3),
+            'time': time,
+            'has_ref': any(f in fields_present for f in ['REF', 'DZ']),
+            'has_vel': 'VEL' in fields_present
+        })
+
+    # Group by elevation angle, then split by time gap
+    grouped = []
+    for elev in sorted(set(s['elev'] for s in sweeps)):
+        subset = [s for s in sweeps if s['elev'] == elev]
+        subset.sort(key=lambda x: x['time'])
+
+        group = []
+        prev_time = None
+        for s in subset:
+            if prev_time is None or abs(s['time'] - prev_time) > time_gap:
+                if group:
+                    grouped.append(group)
+                group = [s]
+            else:
+                group.append(s)
+            prev_time = s['time']
+
+        if group:
+            grouped.append(group)
+
+    # For each group, pick best REF + VEL sweep
+    ref_sweeps = []
+    vel_sweeps = []
+
+    for group in grouped:
+        best_ref = next((s for s in group if s['has_ref']), None)
+        best_vel = next((s for s in group if s['has_vel']), None)
+
+        if best_ref:
+            ref_sweeps.append(best_ref['index'])
+        if best_vel:
+            vel_sweeps.append(best_vel['index'])
+
+    # Extract and merge
+    radar_dz = self.radar.extract_sweeps(sorted(ref_sweeps))
+    radar_vr = self.radar.extract_sweeps(sorted(vel_sweeps))
+
+    radar_new = copy.deepcopy(radar_dz)
+
+    for field_name in ['VEL', 'SW']:
+        if field_name in radar_vr.fields:
+            data = radar_vr.fields[field_name]['data']
+            if data.shape == radar_new.fields['REF']['data'].shape:
+                radar_new.add_field(field_name, radar_vr.fields[field_name], replace_existing=True)
+
+    print("Merged Elevation Angles:\n", radar_new.fixed_angle['data'])
+    return radar_new
 
     '''
     Functionm to merge 88D split cut sweeps and output new radar object.
@@ -1249,7 +1319,7 @@ def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
     
     return radar_out
 
-    '''
+    
     # Removes triple base scan
     ele_list = self.radar.fixed_angle['data'][:]
     if ele_list[0] == ele_list[2] and ele_list[3] != ele_list[5] and ele_list[6] != ele_list[8]:
@@ -1318,7 +1388,7 @@ def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
 
     return radar
     
-
+    '''
 # ***************************************************************************************
 
 def remove_mrle(self):
