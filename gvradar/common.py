@@ -1122,7 +1122,7 @@ def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
     '''
     Functionm to merge 88D split cut sweeps and output new radar object.
     '''
-    
+    '''
     field_names = self.radar.fields.keys()
     grouped_sweeps = []  # List of sweep index lists
 
@@ -1317,7 +1317,7 @@ def merge_split_cuts(self, round_tol=0.00001, time_separation_threshold=60):
     print("New merged elevation angles:  ", radar.fixed_angle['data'][:], sep='\n')
 
     return radar
-    '''
+    
 
 # ***************************************************************************************
 
