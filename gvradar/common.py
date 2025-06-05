@@ -1431,6 +1431,11 @@ def reorder_sweeps(radar):
     final_radar = pyart.util.subset_radar(radar, list(radar.fields), ele_min=0., ele_max=90.)
     print('New sweep angles:  ',final_radar.fixed_angle['data'][:], sep='\n')
 
+    # Azimuths are negative, modify them to fit 0-360
+    final_radar.azimuth['data'] = np.mod(final_radar.azimuth['data'], 360)
+    az = final_radar.get_azimuth(0)
+    print(f"Azimuth Min/Max:  {az.min()} {az.max()}")
+
     return final_radar
 
 # ***************************************************************************************
