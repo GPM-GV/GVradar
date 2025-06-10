@@ -132,6 +132,10 @@ class QC:
         if self.do_sq_sector == True:
             self.radar = qc.sq_sector(self)  
                 
+    # Create mask to filter a range/azm/height sector of radar based on KD threshold
+        if self.do_kd_sector == True:
+            self.radar = qc.kd_sector(self)
+
     # Create Temperature and/or Height field
         if self.use_sounding == True:
             if self.sounding_type == 'get_ruc':
