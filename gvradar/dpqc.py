@@ -659,8 +659,9 @@ def kd_sector(self):
     sector_k = np.ones(kd.shape)
     kd_sec_min = sector['kd_sec_min']
     kd_sec_max = sector['kd_sec_max']
-    kd_outside = np.ma.where((kd >= kd_sec_min) & (kd <= kd_sec_max), 1, 0)
-    sec_f = np.logical_and(kd_outside == 1 , sector_wipeout == 1)
+    kd_nan = np.ma.where(~np.ma.getmaskarray(kd), 1, 0)
+    #kd_outside = np.ma.where((kd >= kd_sec_min) & (kd <= kd_sec_max), 1, 0)
+    sec_f = np.logical_and(kd_nan == 1 , sector_wipeout == 1)
     sector_k[sec_f] = 0
 
     sector_kd = sector_k
