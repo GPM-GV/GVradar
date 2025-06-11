@@ -658,7 +658,7 @@ def kd_sector(self):
     kd = self.radar.fields['KD']['data'].copy()
     sector_k = np.ones(kd.shape)
     kd_sec = sector['kd_sec']
-    kd_lt = np.ma.where((kd >= -10 & (kd <= kd_sec), 1, 0)
+    kd_lt = np.ma.where((kd >= -10) & (kd <= kd_sec), 1, 0)
     #kd_lt = np.ma.where(kd < kd_sec , 1, 0)
     sec_f = np.logical_and(kd_lt == 1 , sector_wipeout == 1)
     sector_k[sec_f] = 0
