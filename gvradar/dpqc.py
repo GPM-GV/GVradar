@@ -147,7 +147,7 @@ def threshold_qc_dpfields(self):
             dbzfilter.exclude_below('CZ', self.dbz_thresh)
     if self.do_sector == True: dbzfilter.exclude_not_equal('SEC', cos)
     if self.do_rh_sector == True: dbzfilter.exclude_not_equal('SECRH', sec)
-    if self.do_kd_sector == True: dbzfilter.exclude_not_equal('SECKD', sec)
+    if self.do_kd_sector == True: dbzfilter.exclude_not_equal('SECKD', cos)
     if self.do_sw_sector == True: dbzfilter.exclude_not_equal('SECSW', sec) 
     if self.do_sq_sector == True: dbzfilter.exclude_not_equal('SECSQ', sec) 
     if self.do_cos == True: dbzfilter.exclude_not_equal('COS', cos)
