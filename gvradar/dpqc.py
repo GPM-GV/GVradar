@@ -616,7 +616,7 @@ def kd_sector(self):
 	          'rmin':  self.kdrmin * 1000, 'rmax':  self.kdrmax * 1000,
               'azmin': self.kdazmin, 'azmax': self.kdazmax,
 	          'elmin': self.kdelmin, 'elmax': self.kdelmax,
-              'kd_sec': self.kd_sec}
+              'kd_sec_min': self.kd_sec_min, 'kd_sec_max': self.kd_sec_max}
 
     sector_wipeout = np.ma.ones((self.radar.nrays, self.radar.ngates), dtype=int)
 
@@ -657,10 +657,10 @@ def kd_sector(self):
     
     kd = self.radar.fields['KD']['data'].copy()
     sector_k = np.ones(kd.shape)
-    kd_sec = sector['kd_sec']
-    kd_lt = np.ma.where((kd >= -10) & (kd <= kd_sec), 1, 0)
-    #kd_lt = np.ma.where(kd < kd_sec , 1, 0)
-    sec_f = np.logical_and(kd_lt == 1 , sector_wipeout == 1)
+    kd_sec_min = sector['kd_sec_min']
+    kd_sec_max = sector['kd_sec_max']
+    kd_outside = np.ma.where((kd >= kd_sec_min) & (kd <= kd_sec_max), 1, 0)
+    sec_f = np.logical_and(kd_outside == 1 , sector_wipeout == 1)
     sector_k[sec_f] = 0
 
     sector_kd = sector_k
@@ -1292,7 +1292,7 @@ def get_default_thresh_dict():
                            'do_kd_sector': False, 'kdhmin': 0, 'kdhmax': None,
                            'kdrmin': 0, 'kdrmax': 20, 
                            'kdazmin': 0, 'kdazmax': 360, 
-                           'kdelmin': 0, 'kdelmax': 7.0, 'kd_sec': -5.0,
+                           'kdelmin': 0, 'kdelmax': 7.0, 'kd_sec_min': -5.0, 'kd_sec_max': 5.0,
                            'do_sq_sector': False, 'sqhmin': 0, 'sqhmax': None,
                            'sqrmin': 0, 'sqrmax': 20, 
                            'sqazmin': 0, 'sqazmax': 360, 
