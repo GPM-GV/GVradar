@@ -654,21 +654,21 @@ def get_field_info(radar, field):
         vmax=70
         Nbins = 14
         title = 'Corrected Reflectivity [dBZ]'
-        cmap='pyart_NWSRef'
+        cmap=check_cm('NWSRef')
     elif field == 'DZ':
         units='Zh [dBZ]'
         vmin=0
         vmax=70
         Nbins = 14
         title = 'RAW Reflectivity [dBZ]'
-        cmap='pyart_NWSRef'
+        cmap=check_cm('NWSRef')
     elif field == 'DR':
         units='Zdr [dB]'
         vmin=-1
         vmax=3
         Nbins = 16
         title = 'Differential Reflectivity [dB]'
-        cmap='pyart_HomeyerRainbow'
+        cmap=check_cm('HomeyerRainbow')
     elif field == 'VR':
         units='Velocity [m/s]'
         vmin=-20
@@ -676,7 +676,7 @@ def get_field_info(radar, field):
         Nbins = 12
         title = 'Radial Velocity [m/s]'
         #cmap='pyart_balance'
-        cmap='pyart_NWSVel'
+        cmap=check_cm('NWSVel')
     elif field == 'SW':
         units='Spectrum Width'
         vmin=0
@@ -684,70 +684,70 @@ def get_field_info(radar, field):
         Nbins = 12
         title = 'Spectrum Width'
         #cmap='pyart_balance'
-        cmap='pyart_NWS_SPW'    
+        cmap=check_cm('NWS_SPW') 
     elif field == 'corrected_velocity':
         units='Velocity [m/s]'
         vmin=-20
         vmax=20
         Nbins = 12
         title = 'Dealiased Radial Velocity [m/s]'
-        cmap='pyart_NWSVel'
+        cmap=check_cm('NWSVel')
     elif field == 'KD':
         units='Kdp [deg/km]'
         vmin=-2
         vmax=3
         Nbins = 10
         title = 'Specific Differential Phase [deg/km]'
-        cmap='pyart_HomeyerRainbow'
+        cmap=check_cm('HomeyerRainbow')
     elif field == 'KDPB':
         units='Kdp [deg/km]'
         vmin=-2
         vmax=5
         Nbins = 8
         title = 'Specific Differential Phase [deg/km] (Bringi)'
-        cmap='pyart_HomeyerRainbow'
+        cmap=check_cm('HomeyerRainbow')
     elif field == 'PH':
         units='PhiDP [deg]'
         vmin=0
         vmax=360
         Nbins = 36
         title ='Differential Phase [deg]' 
-        cmap='pyart_Carbone42'
+        cmap=check_cm('Carbone42')
     elif field == 'PHM':
         units='PhiDP [deg]'
         vmin=0
         vmax=360
         Nbins = 36
         title ='Differential Phase [deg] Marks' 
-        cmap='pyart_Carbone42'
+        cmap=check_cm('Carbone42')
     elif field == 'PHIDPB':
         units='PhiDP [deg]'
         vmin=0
         vmax=360
         Nbins = 36
         title ='Differential Phase [deg] Bringi' 
-        cmap='pyart_Carbone42'    
+        cmap=check_cm('Carbone42')
     elif field == 'RH':
         units='Correlation'
         vmin=0.7
         vmax=1.0
         Nbins = 12
         title = 'Correlation Coefficient'
-        cmap='pyart_LangRainbow12'
+        cmap=check_cm('LangRainbow12')
     elif field == 'SD':
         units='Std(PhiDP)'
         vmin=0
         vmax=70
         Nbins = 14
         title = 'Standard Deviation of PhiDP'
-        cmap='pyart_NWSRef'
+        cmap=check_cm('NWSRef')
     elif field == 'SQ':
         units='SQI'
         vmin=0
         vmax=1
         Nbins = 10
         title = 'Signal Quality Index'
-        cmap='pyart_LangRainbow12'
+        cmap=check_cm('LangRainbow12')
     elif field == 'FH':
         units='HID'
         vmin=0
@@ -806,7 +806,7 @@ def get_field_info(radar, field):
         Nbins = 0
         title ='HIDRO Rain Rate [mm/hr]'
         #title ='Tropical Rain Rate [mm/hr]'
-        cmap='pyart_RefDiff'
+        cmap=check_cm('RefDiff')
     elif field == 'RP':
         units='PolZR Rain Rate [mm/hr]'
         vmin=1e-2
@@ -814,7 +814,7 @@ def get_field_info(radar, field):
         #Nbins = 20
         Nbins = 0
         title ='PolZR Rain Rate [mm/hr]'
-        cmap='pyart_RefDiff'    
+        cmap=check_cm('RefDiff')  
     elif field == 'RA':
         units='Attenuation Rain Rate [mm/hr]'
         vmin=1e-2
@@ -822,7 +822,7 @@ def get_field_info(radar, field):
         #Nbins = 20
         Nbins = 0
         title ='Attenuation Rain Rate [mm/hr]'
-        cmap='pyart_RefDiff'
+        cmap=check_cm('RefDiff')
     elif field == 'MRC':
         units='HIDRO Method'
         vmin=0
@@ -836,14 +836,14 @@ def get_field_info(radar, field):
         vmax=5
         Nbins = 8
         title ='DM [mm]'
-        cmap='pyart_BlueBrown10'
+        cmap=check_cm('BlueBrown10')
     elif field == 'NW':
         units='Log[Nw, m^-3 mm^-1]'
         vmin=0.5
         vmax=7
         Nbins = 12
         title ='Log[Nw, m^-3 mm^-1]'
-        cmap='pyart_BlueBrown10'
+        cmap=check_cm('BlueBrown10')
 
     return units,vmin,vmax,cmap,title,Nbins
 
@@ -1228,6 +1228,18 @@ class MidpointNormalize(colors.Normalize):
     def inverse(self, value):
         y, x = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
         return np.interp(value, x, y, left=-np.inf, right=np.inf)
+
+# ****************************************************************************************
+
+def check_cm(cmap_name):
+
+    # Handles old and new versions of colormaps 
+    candidates = [cmap_name, f'pyart_{cmap_name}']
+    for name in candidates:
+        if name in plt.colormaps():
+            return name
+        else:
+            return candidates[1]
 
 # ****************************************************************************************
 
