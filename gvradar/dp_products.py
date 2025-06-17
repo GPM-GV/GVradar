@@ -42,7 +42,8 @@ def add_csu_fhc(self):
             fh = csu_fhc.csu_fhc_summer(dz=self.dz, zdr=self.dr, rho=self.rh, kdp=self.kd, use_temp=True,
                                         T=self.radar_T, band=self.radar_band, verbose=False,
                                         use_trap=False, method='hybrid')
-        except:
+        except Exception as e:
+            print(f"An error occurred: {e}")
             print(' ',"No precip FH will be -32767.0", '', sep='\n')
             fh = self.radar.fields['CZ']['data'].copy()      
             fh = (fh * 0) - 32767.0                                
@@ -149,7 +150,8 @@ def add_csu_blended_rain(self):
         rain, method = csu_blended_rain.csu_hidro_rain(dz=self.dz, zdr=self.dr, 
                                                        kdp=self.kd, fhc=self.fh,
                                                        band=self.radar_band)
-    except:
+    except Exception as e:
+        print(f"An error occurred: {e}")
         print(' ',"No precip RC will be -32767.0", '', sep='\n')
         rain = self.radar.fields['CZ']['data'].copy()      
         rain = (rain * 0) - 32767.0                                         
@@ -184,7 +186,8 @@ def add_csu_blended_rain_tropical(self):
         raint, method = csu_blended_rain.calc_blended_rain_tropical(dz=self.dz, zdr=self.dr, 
                                                    kdp=self.kd, fhc=self.fh,
                                                    band=self.radar_band)
-    except:
+    except Exception as e:
+        print(f"An error occurred: {e}")
         print(' ',"No precip RT will be -32767.0", '', sep='\n')
         raint = self.radar.fields['CZ']['data'].copy()      
         raint = (raint * 0) - 32767.0                                         
