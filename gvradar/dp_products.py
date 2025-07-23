@@ -324,7 +324,7 @@ def add_calc_dsd_sband_tokay_2020(self):
         elif (radar_DT >= DT_beg_OLYMPEX) & (radar_DT <= DT_end_OLYMPEX): 
             self.dsd_loc = 'olympex'
         else:
-            self.dsd_loc = 'wff'
+            self.dsd_loc = 'all'
 
     dm, nw = calc_dsd_sband_tokay_2020(self, self.dz, self.dr, loc=self.dsd_loc)
 
