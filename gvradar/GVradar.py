@@ -14,6 +14,7 @@ V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 import pyart
 import sys, os
 import ast
+import numpy as np
 import argparse
 import pathlib
 from gvradar import (dp_products as dp, dpqc as qc, 
@@ -261,6 +262,13 @@ class DP_products:
         
     # Rename fields with GPM, 2-letter IDs (e.g. CZ, DR, KD)
         self.radar, zz = cm.rename_fields_in_radar(self)
+
+    # Check for negative azimuths
+        if self.radar.azimuth['data'][0] < 0:
+            print(f"Fixing Negative Azimuths")
+            self.radar.azimuth['data'] = np.mod(self.radar.azimuth['data'], 360)
+            az = self.radar.get_azimuth(0)
+            print(f"Azimuth Min/Max:  {az.min()} {az.max()}")
 
     # Apply calibration numbers to Reflectivity and ZDR fields
         if self.apply_cal == True:
