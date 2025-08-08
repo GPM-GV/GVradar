@@ -18,7 +18,7 @@ import numpy as np
 import argparse
 import pathlib
 from gvradar import (dp_products as dp, dpqc as qc, 
-                     common as cm, plot_images as pi)
+                     common as cm, plot_images_new as pi)
 #import warnings
 #warnings.filterwarnings("ignore")
 
