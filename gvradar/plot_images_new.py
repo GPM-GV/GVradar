@@ -775,7 +775,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         outdir = os.getcwd()
     
     # Reduce DPI for faster saving while maintaining quality
-    dpi = 120  # Reduced from 150
+    dpi = 150  # Reduced from 150
     
     if num_fields == 1:
         field = fields[0]
@@ -1078,4 +1078,3 @@ def check_cm(cmap_name):
         if name in plt.colormaps():
             return name
     return candidates[1]
-            
