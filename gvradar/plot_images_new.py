@@ -370,7 +370,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
             add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout)
             if num_fields >= 2:
                 plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', 
-                           y=(1.0 + (layout['nrows'] * 0.055)))
+                           y=(1.0 + (layout['nrows'] * 0.155)))
                 
         # Adjust special colorbars
         adjust_special_colorbars(field, display, index)
