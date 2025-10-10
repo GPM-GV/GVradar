@@ -227,7 +227,7 @@ def add_polZR_rr(self):
     else:
         # IF no NW compute with equations
         print('    Calculating PolZR rain rate with computed NW')
-        rp, nw = get_bringi_rainrate(self,rp,self.dz,self.dr,self.kd,self.rh,self.fh)
+        rp, nw, method = get_bringi_rainrate(self,rp,self.dz,self.dr,self.kd,self.rh,self.fh)
 
     # Set fill to zero
     rp = np.ma.filled(rp, fill_value=0.0)
@@ -462,12 +462,27 @@ def get_bringi_rainrate(self,rp,dbz,zdr,kdp,rhv,hid):
 
     zh = 10.**(0.1*dbz)     
     xi_dr = 10.**(0.1*zdr)
+
+    # New
+    # Initialize with default Z-R
+    a1 = 0.017
+    b1 = 0.7143  # Z = 300 R^1.4
+    a_dsd = (1.0/a1)**(1./b1)
+    b_dsd = (1.0/b1)
+    
+    # Default Z-R for pixels above -20 dBZ
+    default_mask = dbz > -20
+    x1 = 0.1*(dbz[default_mask] - 10*np.log10(a_dsd))/b_dsd
+    rp[default_mask] = 10**x1
+    # END New
+
     d0 = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
     dm = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
     nw = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
     logNw = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float)
     mu = np.ones((self.radar.nrays, self.radar.ngates), dtype=float) * 3.0
     beta = 0
+    method = np.zeros_like(dbz, dtype=int)  # 0 = missing
 
     # Light rain rates with noisy Zd
     light_rain = np.logical_and(zdr >= -0.5, zdr < 0.2)
@@ -488,10 +503,31 @@ def get_bringi_rainrate(self,rp,dbz,zdr,kdp,rhv,hid):
     # Calculate the coefficient a' in Z = a' * R^1.5 using the DSD
     # parameters. First, calculate f(mu)
     rp = get_polzr_rainrate(dbz,nw,mu)
+
+    # New
+    # Add IDL-style quality control
+    rhv_thresh = 0.75
+    kdp_thresh = -1.0
     
+    # Apply quality control after calculating rain rates
+    quality_mask = np.logical_or(
+        np.logical_and(rhv < rhv_thresh, kdp < kdp_thresh),
+        rp == 0
+    )
+    
+    # Set poor quality pixels to missing/zero
+    rp[quality_mask] = 0.0
+    # End New
+
     nw = np.log10(nw)
+
+    # Set method values as you process each category
+    method[light_rain] = 2      # Light rain, noisy Zdr
+    method[modest_kdp] = 3      # Light rain w/modest Kdp  
+    method[moderate_rr] = 4     # Moderate rain
+    method[heavy_rr] = 5        # Heavy rain
     
-    return rp, nw
+    return rp, nw, method
 
 # ***************************************************************************************
 
