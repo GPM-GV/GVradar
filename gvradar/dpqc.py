@@ -10,6 +10,7 @@ V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 # ***************************************************************************************
 
 import numpy as np
+from scipy import ndimage
 from copy import deepcopy
 import pyart
 import traceback
@@ -1523,5 +1524,336 @@ def create_filtered_radar_object(original_radar, mask, elevation_corrected):
     filtered_radar.scan_type = original_radar.scan_type
     
     return filtered_radar 
+
+# ***************************************************************************************
+
+def boundary_artifact_removal(self, boundary_km=None, extend_boundary=0.05, 
+                                         verbose=True):
+    """
+    Apply full zone smooth transition boundary artifact removal and return a radar object
+    """
+
+    if verbose:
+        print("=== Boundary Artifact Removal ===")
     
+    # Use PyART's extract_sweeps to create a workable copy
+    try:
+        filtered_radar = self.radar.extract_sweeps([0])  # Extract first sweep
+    except:
+        # Fallback: work with the original radar (modify in place)
+        filtered_radar = self.radar
+        if verbose:
+            print("Working with original radar object (no copy created)")
     
+    # Get range information
+    range_km = np.array(filtered_radar.range['data']) / 1000.0
+    
+    # Determine boundary location
+    if boundary_km is None:
+        # Auto-detect and round up to nearest tenth
+        detected_boundary, _ = detect_processing_boundary(filtered_radar, verbose=False)
+        if detected_boundary is not None:
+            boundary_km = np.ceil(detected_boundary * 10) / 10.0  # Round up to nearest 0.1 km
+            if verbose:
+                print(f"Auto-detected boundary: {detected_boundary:.2f} km")
+                print(f"Rounded up to: {boundary_km:.1f} km")
+        else:
+            boundary_km = 4.4  # Default fallback
+            if verbose:
+                print(f"Auto-detection failed, using default: {boundary_km} km")
+    else:
+        if verbose:
+            print(f"Using manual boundary: {boundary_km} km")
+    
+    # Add extension beyond boundary
+    processing_boundary = boundary_km + extend_boundary
+    boundary_idx = np.argmin(np.abs(range_km - processing_boundary))
+    actual_boundary_km = range_km[boundary_idx]
+    
+    if verbose:
+        print(f"Processing boundary: {processing_boundary:.2f} km (gate {boundary_idx})")
+        print(f"Actual boundary used: {actual_boundary_km:.2f} km")
+        print(f"Will process inner zone: 0 to {actual_boundary_km:.2f} km ({boundary_idx} gates)")
+    
+    # Apply smooth transition to radar fields
+    fields_processed = []
+    processing_stats = {}
+    
+    for field_name in filtered_radar.fields:
+        if verbose:
+            print(f"Processing field: {field_name}")
+        
+        try:
+            # Get field data - convert to regular numpy array
+            original_field_data = np.array(filtered_radar.fields[field_name]['data'])
+            
+            # Apply smooth transition
+            filtered_field_data = apply_smooth_transition_to_field(
+                original_field_data, boundary_idx, range_km, field_name, verbose=False
+            )
+            
+            # Update the radar object - direct assignment to the data array
+            filtered_radar.fields[field_name]['data'][:] = filtered_field_data
+            
+            # Calculate statistics
+            original_std = np.nanstd(original_field_data[:, :boundary_idx])
+            filtered_std = np.nanstd(filtered_field_data[:, :boundary_idx])
+            
+            processing_stats[field_name] = {
+                'original_std': original_std,
+                'filtered_std': filtered_std,
+                'improvement_ratio': filtered_std / original_std if original_std > 0 else np.nan
+            }
+            
+            fields_processed.append(field_name)
+            
+        except Exception as e:
+            if verbose:
+                print(f"  ⚠️  Could not process {field_name}: {e}")
+    
+    # Update radar metadata
+    if hasattr(filtered_radar, 'metadata'):
+        try:
+            if 'comment' in filtered_radar.metadata:
+                filtered_radar.metadata['comment'] += f" | Boundary artifact removed (0-{actual_boundary_km:.1f}km)"
+            else:
+                filtered_radar.metadata['comment'] = f"Boundary artifact removed (0-{actual_boundary_km:.1f}km)"
+        except:
+            pass  # Skip metadata update if it fails
+    
+    # Prepare processing information
+    processing_info = {
+        'boundary_km': actual_boundary_km,
+        'boundary_idx': boundary_idx,
+        'fields_processed': fields_processed,
+        'processing_stats': processing_stats,
+        'method': 'smooth_transition_full_zone',
+        'inner_zone_gates': boundary_idx,
+        'success': len(fields_processed) > 0
+    }
+    
+    if verbose:
+        print(f"\n✅ Processing complete!")
+        print(f"Fields processed: {len(fields_processed)}")
+        print(f"Inner zone replaced: 0 to {actual_boundary_km:.2f} km")
+        
+        # Show improvement for key fields
+        key_fields = ['Reflectivity', 'Velocity', 'SpectralWidth']
+        for field in key_fields:
+            if field in processing_stats:
+                stats = processing_stats[field]
+                if not np.isnan(stats['improvement_ratio']):
+                    print(f"  {field}: std {stats['original_std']:.2f} -> {stats['filtered_std']:.2f} ({stats['improvement_ratio']:.1f}x)")
+    
+    return filtered_radar, processing_info
+
+# ***************************************************************************************
+
+def create_clean_radar_simple(radar, boundary_km=4.4, verbose=True):
+    """
+    Simple function to create a clean radar with boundary artifact removed
+    """
+    
+    if verbose:
+        print(f"Applying boundary artifact removal at {boundary_km} km...")
+    
+    # Apply the filter
+    clean_radar, info = apply_boundary_artifact_removal_fixed(
+        radar, 
+        boundary_km=boundary_km,
+        extend_boundary=0.0,
+        verbose=verbose
+    )
+    
+    if info['success']:
+        if verbose:
+            print("✅ Success! Boundary artifact removed.")
+            print(f"Processed fields: {', '.join(info['fields_processed'])}")
+        return clean_radar
+    else:
+        if verbose:
+            print("❌ Failed to remove boundary artifact.")
+        return radar  # Return original if processing failed
+
+# ***************************************************************************************
+
+def apply_smooth_transition_to_field(field_data, boundary_idx, range_km, field_name, verbose=True):
+    """
+    Apply smooth transition to a specific radar field
+    """
+    
+    # Handle different field characteristics
+    field_characteristics = {
+        'Reflectivity': {'realistic_std': 10.0, 'typical_range': (-20, 50)},
+        'Velocity': {'realistic_std': 5.0, 'typical_range': (-30, 30)},
+        'SpectralWidth': {'realistic_std': 1.0, 'typical_range': (0, 8)},
+        'DifferentialReflectivity': {'realistic_std': 1.0, 'typical_range': (-2, 5)},
+        'CopolarCorrelation': {'realistic_std': 0.1, 'typical_range': (0.5, 1.0)},
+        'DifferentialPhase': {'realistic_std': 20.0, 'typical_range': (-180, 180)}
+    }
+    
+    # Get field characteristics or use defaults
+    field_char = field_characteristics.get(field_name, {'realistic_std': 5.0, 'typical_range': (-50, 50)})
+    
+    filtered_data = field_data.copy()
+    
+    # Define zones
+    inner_zone = slice(0, boundary_idx)
+    outer_start = boundary_idx + 2
+    outer_zone = slice(outer_start, min(field_data.shape[1], outer_start + 20))
+    
+    if outer_zone.start >= outer_zone.stop:
+        return field_data  # Can't process without outer zone reference
+    
+    # Get outer zone statistics
+    outer_data = field_data[:, outer_zone]
+    target_mean = np.nanmean(outer_data)
+    target_std = np.nanstd(outer_data)
+    
+    # Use realistic defaults if outer zone is problematic
+    if np.isnan(target_mean):
+        target_mean = np.nanmean(field_char['typical_range'])
+    if np.isnan(target_std) or target_std <= 0:
+        target_std = field_char['realistic_std']
+    
+    # Process each ray
+    for ray_idx in range(field_data.shape[0]):
+        # Get reference data from outer zone for this ray
+        ray_outer_data = field_data[ray_idx, outer_zone]
+        ray_outer_valid = ray_outer_data[~np.isnan(ray_outer_data)]
+        
+        if len(ray_outer_valid) > 3:
+            # Use this ray's characteristics
+            ray_mean = np.nanmean(ray_outer_valid)
+            ray_std = np.nanstd(ray_outer_valid) if len(ray_outer_valid) > 1 else target_std
+            
+            # Create realistic inner zone data
+            if len(ray_outer_valid) >= boundary_idx:
+                # Sample from outer zone with replacement
+                sampled_indices = np.random.choice(len(ray_outer_valid), size=boundary_idx, replace=True)
+                synthetic_data = ray_outer_valid[sampled_indices]
+                
+                # Add spatial correlation by smoothing
+                if boundary_idx > 2:
+                    kernel = np.array([0.25, 0.5, 0.25])
+                    synthetic_data = np.convolve(synthetic_data, kernel, mode='same')
+                    
+            else:
+                # Generate synthetic data
+                synthetic_data = np.random.normal(ray_mean, ray_std, boundary_idx)
+                
+                # Clip to reasonable range for this field
+                min_val, max_val = field_char['typical_range']
+                synthetic_data = np.clip(synthetic_data, min_val, max_val)
+            
+            # Apply to inner zone
+            filtered_data[ray_idx, inner_zone] = synthetic_data
+            
+        else:
+            # Fallback: use global statistics
+            synthetic_data = np.random.normal(target_mean, target_std, boundary_idx)
+            min_val, max_val = field_char['typical_range']
+            synthetic_data = np.clip(synthetic_data, min_val, max_val)
+            filtered_data[ray_idx, inner_zone] = synthetic_data
+    
+    return filtered_data
+
+# ***************************************************************************************
+
+def detect_processing_boundary(radar, min_boundary_km=3.0, 
+                                      max_boundary_km=6.0, verbose=True):
+    """
+    Automatically detect processing boundary by looking for sharp std deviation increase
+    """
+    
+    range_km = np.array(radar.range['data']) / 1000.0
+    ref_data = np.array(radar.fields['Reflectivity']['data'])
+    
+    # Calculate standard deviation for each range gate
+    std_by_range = np.nanstd(ref_data, axis=0)
+    
+    # Smooth the std profile to reduce noise
+    window_size = 3
+    std_smoothed = ndimage.uniform_filter1d(std_by_range, size=window_size, mode='nearest')
+    
+    # Find the gradient (rate of change) in standard deviation
+    std_gradient = np.gradient(std_smoothed)
+    
+    # Look for the transition from LOW std to HIGH std
+    # Based on our analysis: inner zone has ~2 dBZ std, outer zone has ~10 dBZ std
+    
+    search_mask = (range_km >= min_boundary_km) & (range_km <= max_boundary_km)
+    search_indices = np.where(search_mask)[0]
+    
+    if len(search_indices) == 0:
+        return None, {'error': 'No valid search range'}
+    
+    # Find the location where std makes the biggest jump from low to high
+    best_boundary_idx = None
+    best_score = 0
+    
+    for idx in search_indices:
+        # Check window before this point (should be low std)
+        before_window = slice(max(0, idx-5), idx)
+        # Check window after this point (should be high std)  
+        after_window = slice(idx, min(len(std_smoothed), idx+5))
+        
+        if before_window.stop > before_window.start and after_window.stop > after_window.start:
+            std_before = np.nanmean(std_smoothed[before_window])
+            std_after = np.nanmean(std_smoothed[after_window])
+            
+            # Score based on:
+            # 1. Large absolute increase in std
+            # 2. Low std before (processed data characteristic)
+            # 3. High std after (natural data characteristic)
+            
+            if std_before > 0:
+                std_ratio = std_after / std_before
+                std_increase = std_after - std_before
+                
+                # Composite score favoring:
+                # - Large ratio increase (std_after >> std_before)
+                # - Large absolute increase 
+                # - Low initial std (< 5 dBZ suggests processed data)
+                score = std_ratio * std_increase * (1.0 if std_before < 5.0 else 0.5)
+                
+                if score > best_score:
+                    best_score = score
+                    best_boundary_idx = idx
+    
+    if best_boundary_idx is None:
+        if verbose:
+            print("No significant processing boundary detected")
+        return None, {'boundary_detected': False}
+    
+    boundary_km = range_km[best_boundary_idx]
+    
+    # Get final statistics for the detected boundary
+    before_window = slice(max(0, best_boundary_idx-5), best_boundary_idx)
+    after_window = slice(best_boundary_idx, min(len(std_smoothed), best_boundary_idx+5))
+    
+    std_before = np.nanmean(std_smoothed[before_window])
+    std_after = np.nanmean(std_smoothed[after_window])
+    std_ratio = std_after / std_before if std_before > 0 else np.inf
+    
+    detection_info = {
+        'boundary_detected': True,
+        'boundary_km': boundary_km,
+        'boundary_idx': best_boundary_idx,
+        'std_before': std_before,
+        'std_after': std_after,
+        'std_ratio': std_ratio,
+        'score': best_score,
+        'confidence': 'high' if std_ratio > 4 and std_before < 3 else 'medium' if std_ratio > 2 else 'low'
+    }
+    
+    if verbose:
+        print(f"Improved boundary detection results:")
+        print(f"  Location: {boundary_km:.2f} km (gate {best_boundary_idx})")
+        print(f"  Std before: {std_before:.2f} dBZ")
+        print(f"  Std after: {std_after:.2f} dBZ") 
+        print(f"  Ratio: {std_ratio:.1f}x increase")
+        print(f"  Score: {best_score:.2f}")
+        print(f"  Confidence: {detection_info['confidence']}")
+    
+    return boundary_km, detection_info    

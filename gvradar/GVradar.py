@@ -96,12 +96,13 @@ class QC:
         if self.site not in D3R_list:
             self.radar = qc.calculate_kdp(self)
 
-    # Filter D3R elevations
+    # Filter D3R elevations and 4.4 km artifact
         if self.site in D3R_list:
             self.radar = qc.filter_D3R_el(self, elevation_range=(0, 90), 
                                                       azimuth_range=None, 
                                                       copy_radar=True,
                                                       verbose=True)
+            self.radar = qc.boundary_artifact_removal(self, boundary_km=4.4, verbose=True)
 
     # Create a filter to remove data beyond 200km
         if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\
