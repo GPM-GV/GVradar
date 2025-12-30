@@ -1684,12 +1684,13 @@ def apply_smooth_transition_to_field(field_data, boundary_idx, range_km, field_n
     
     # Handle different field characteristics
     field_characteristics = {
-        'Reflectivity': {'realistic_std': 10.0, 'typical_range': (-20, 50)},
-        'Velocity': {'realistic_std': 5.0, 'typical_range': (-30, 30)},
-        'SpectralWidth': {'realistic_std': 1.0, 'typical_range': (0, 8)},
-        'DifferentialReflectivity': {'realistic_std': 1.0, 'typical_range': (-2, 5)},
-        'CopolarCorrelation': {'realistic_std': 0.1, 'typical_range': (0.5, 1.0)},
-        'DifferentialPhase': {'realistic_std': 20.0, 'typical_range': (-180, 180)}
+        'DZ': {'realistic_std': 10.0, 'typical_range': (-20, 50)},
+        'CZ': {'realistic_std': 10.0, 'typical_range': (-20, 50)},
+        'VR': {'realistic_std': 5.0, 'typical_range': (-30, 30)},
+        'SW': {'realistic_std': 1.0, 'typical_range': (0, 8)},
+        'DR': {'realistic_std': 1.0, 'typical_range': (-2, 5)},
+        'RH': {'realistic_std': 0.1, 'typical_range': (0.5, 1.0)},
+        'PH': {'realistic_std': 20.0, 'typical_range': (-180, 180)}
     }
     
     # Get field characteristics or use defaults
