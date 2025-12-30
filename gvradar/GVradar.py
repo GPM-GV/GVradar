@@ -98,7 +98,7 @@ class QC:
 
     # Filter D3R elevations
         if self.site in D3R_list:
-            self.radar = filter_D3R_el(self, elevation_range=(0, 90), 
+            self.radar = qc.filter_D3R_el(self, elevation_range=(0, 90), 
                                                       azimuth_range=None, 
                                                       copy_radar=True,
                                                       verbose=True)
