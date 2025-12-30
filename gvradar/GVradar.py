@@ -102,7 +102,7 @@ class QC:
                                                       azimuth_range=None, 
                                                       copy_radar=True,
                                                       verbose=True)
-            self.radar = qc.boundary_artifact_removal(self, boundary_km=4.4, verbose=True)
+            self.radar = qc.create_clean_radar(self, boundary_km=4.4, verbose=True)
 
     # Create a filter to remove data beyond 200km
         if self.radar.metadata['original_container'] == 'NEXRAD Level II' or\

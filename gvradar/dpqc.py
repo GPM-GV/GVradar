@@ -1527,7 +1527,7 @@ def create_filtered_radar_object(original_radar, mask, elevation_corrected):
 
 # ***************************************************************************************
 
-def boundary_artifact_removal(self, boundary_km=None, extend_boundary=0.05, 
+def boundary_artifact_removal(radar, boundary_km=None, extend_boundary=0.05, 
                                          verbose=True):
     """
     Apply full zone smooth transition boundary artifact removal and return a radar object
@@ -1538,10 +1538,10 @@ def boundary_artifact_removal(self, boundary_km=None, extend_boundary=0.05,
     
     # Use PyART's extract_sweeps to create a workable copy
     try:
-        filtered_radar = self.radar.extract_sweeps([0])  # Extract first sweep
+        filtered_radar = radar.extract_sweeps([0])  # Extract first sweep
     except:
         # Fallback: work with the original radar (modify in place)
-        filtered_radar = self.radar
+        filtered_radar = radar
         if verbose:
             print("Working with original radar object (no copy created)")
     
@@ -1649,7 +1649,7 @@ def boundary_artifact_removal(self, boundary_km=None, extend_boundary=0.05,
 
 # ***************************************************************************************
 
-def create_clean_radar_simple(radar, boundary_km=4.4, verbose=True):
+def create_clean_radar(self, boundary_km=4.4, verbose=True):
     """
     Simple function to create a clean radar with boundary artifact removed
     """
@@ -1658,8 +1658,8 @@ def create_clean_radar_simple(radar, boundary_km=4.4, verbose=True):
         print(f"Applying boundary artifact removal at {boundary_km} km...")
     
     # Apply the filter
-    clean_radar, info = apply_boundary_artifact_removal_fixed(
-        radar, 
+    clean_radar, info = boundary_artifact_removal(
+        self.radar, 
         boundary_km=boundary_km,
         extend_boundary=0.0,
         verbose=verbose
