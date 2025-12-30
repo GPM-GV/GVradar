@@ -1365,5 +1365,163 @@ def velocity_dealias(self):
         
     return self.radar
     
-# ***************************************************************************************    
+# ***************************************************************************************
+
+def filter_D3R_el(self, elevation_range=(0, 90), 
+                                azimuth_range=None, 
+                                copy_radar=True,
+                                verbose=True):
+    """
+    Filter radar object to include only elevations from 0-90 degrees
+    
+    Parameters:
+    -----------
+    radar : pyart.core.Radar
+        Input radar object
+    elevation_range : tuple, optional
+        (min_elevation, max_elevation) in degrees. Default: (0, 90)
+    azimuth_range : tuple, optional
+        (min_azimuth, max_azimuth) in degrees. If None, all azimuths included
+    copy_radar : bool, optional
+        If True, create copy of radar object. If False, modify in place
+    verbose : bool, optional
+        Print filtering statistics
+        
+    Returns:
+    --------
+    filtered_radar : pyart.core.Radar
+        Filtered radar object
+    """
+    
+    # Get elevation data and correct for 360° scans
+    elevation_deg = np.array(self.radar.elevation['data'])
+    elevation_corrected = elevation_deg.copy()
+    elevation_corrected[elevation_corrected > 180] = elevation_corrected[elevation_corrected > 180] - 360
+    
+    # Get azimuth data if filtering by azimuth
+    azimuth_deg = np.array(self.radar.azimuth['data']) if azimuth_range is not None else None
+    
+    # Create elevation mask
+    min_elev, max_elev = elevation_range
+    elevation_mask = (elevation_corrected >= min_elev) & (elevation_corrected <= max_elev)
+    
+    # Create azimuth mask if specified
+    if azimuth_range is not None:
+        min_az, max_az = azimuth_range
+        if min_az <= max_az:
+            # Normal case: e.g., 90° to 180°
+            azimuth_mask = (azimuth_deg >= min_az) & (azimuth_deg <= max_az)
+        else:
+            # Wrap-around case: e.g., 270° to 90° (crosses 0°)
+            azimuth_mask = (azimuth_deg >= min_az) | (azimuth_deg <= max_az)
+    else:
+        azimuth_mask = np.ones(len(elevation_deg), dtype=bool)
+    
+    # Combine masks
+    combined_mask = elevation_mask & azimuth_mask
+    
+    # Check if any rays remain
+    if not np.any(combined_mask):
+        raise ValueError(f"No rays found in specified range. "
+                        f"Elevation: {elevation_range}, Azimuth: {azimuth_range}")
+    
+    # Print statistics if verbose
+    if verbose:
+        print("=== Radar Forward Filtering Results ===")
+        print(f"Original rays: {len(elevation_deg)}")
+        print(f"Elevation range: {min_elev}° to {max_elev}°")
+        if azimuth_range:
+            print(f"Azimuth range: {azimuth_range[0]}° to {azimuth_range[1]}°")
+        print(f"Rays passing elevation filter: {np.sum(elevation_mask)} ({100*np.sum(elevation_mask)/len(elevation_deg):.1f}%)")
+        if azimuth_range:
+            print(f"Rays passing azimuth filter: {np.sum(azimuth_mask)} ({100*np.sum(azimuth_mask)/len(elevation_deg):.1f}%)")
+        print(f"Final filtered rays: {np.sum(combined_mask)} ({100*np.sum(combined_mask)/len(elevation_deg):.1f}%)")
+        
+        if np.any(combined_mask):
+            final_elevations = elevation_corrected[combined_mask]
+            print(f"Filtered elevation range: {final_elevations.min():.1f}° to {final_elevations.max():.1f}°")
+    
+    # Use PyART's extract_sweeps and manual construction
+    if copy_radar:
+        # Create a new radar object with filtered data
+        filtered_radar = create_filtered_radar_object(self.radar, combined_mask, elevation_corrected)
+    else:
+        # Modify in place - this is more complex and risky, so we'll create a new one anyway
+        filtered_radar = create_filtered_radar_object(self.radar, combined_mask, elevation_corrected)
+        if verbose:
+            print("Note: Created new radar object instead of in-place modification for safety")
+    
+    # Update metadata
+    if 'comment' in filtered_radar.metadata:
+        filtered_radar.metadata['comment'] += f" | Forward filtered: {elevation_range}°"
+    else:
+        filtered_radar.metadata['comment'] = f"Forward filtered: elevation {elevation_range[0]}-{elevation_range[1]}°"
+        
+    if azimuth_range:
+        filtered_radar.metadata['comment'] += f", azimuth {azimuth_range[0]}-{azimuth_range[1]}°"
+    
+    return filtered_radar
+
+# ***************************************************************************************
+
+def create_filtered_radar_object(original_radar, mask, elevation_corrected):
+  
+    """
+    Create a new filtered radar object using PyART's safe methods
+    """
+    
+    # Get filtered indices
+    ray_indices = np.where(mask)[0]
+    
+    # Use PyART's extract_sweeps
+    try:
+        # Start with the first sweep
+        filtered_radar = original_radar.extract_sweeps([0])
+    except:
+        # If extract_sweeps fails, create manually
+        filtered_radar = _create_radar_manually(original_radar, mask, elevation_corrected)
+        return filtered_radar
+    
+    # Get the original sweep limits
+    sweep_start = original_radar.sweep_start_ray_index['data'][0]
+    sweep_end = original_radar.sweep_end_ray_index['data'][0]
+    
+    # Filter coordinate data
+    original_elevation = np.array(original_radar.elevation['data'])
+    original_azimuth = np.array(original_radar.azimuth['data'])
+    
+    # Update basic radar parameters
+    filtered_radar.nrays = np.sum(mask)
+    filtered_radar.sweep_end_ray_index['data'][0] = np.sum(mask) - 1
+    
+    # Update coordinate arrays
+    filtered_radar.elevation['data'] = elevation_corrected[mask]
+    filtered_radar.azimuth['data'] = original_azimuth[mask]
+    
+    # Keep the same range array
+    filtered_radar.range = original_radar.range
+    filtered_radar.ngates = original_radar.ngates
+    
+    # Update all field data
+    for field_name in original_radar.fields:
+        if field_name in filtered_radar.fields:
+            original_field_data = original_radar.fields[field_name]['data']
+            
+            # Handle different data shapes
+            if len(original_field_data.shape) == 1:
+                if len(original_field_data) == len(mask):
+                    filtered_radar.fields[field_name]['data'] = original_field_data[mask]
+            elif len(original_field_data.shape) == 2:
+                if original_field_data.shape[0] == len(mask):
+                    filtered_radar.fields[field_name]['data'] = original_field_data[mask, :]
+                elif original_field_data.shape[0] > len(mask):
+                    # Handle case where we have more data rows than mask elements
+                    filtered_radar.fields[field_name]['data'] = original_field_data[sweep_start:sweep_end+1, :][mask, :]
+    
+    # Copy other important attributes
+    filtered_radar.metadata = original_radar.metadata.copy()
+    filtered_radar.scan_type = original_radar.scan_type
+    
+    return filtered_radar 
+    
     
