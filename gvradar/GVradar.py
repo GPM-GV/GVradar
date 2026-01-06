@@ -91,6 +91,10 @@ class QC:
     # Save raw reflectivity, will be applied to DZ later
         self.radar, zz = cm.rename_fields_in_radar(self)
 
+    # Get PhiDP
+        if self.unfold_phidp == True:
+            self.radar = qc.unfold_phidp(self)
+
     # Get KDP and Std(PhiDP)
         D3R_list = ['KaD3R', 'KuD3R']
         if self.site not in D3R_list:
@@ -181,10 +185,6 @@ class QC:
                                                   
     # Apply gatefilters on DP fields
         self.radar = qc.threshold_qc_dpfields(self)
-        
-    # Get PhiDP
-        if self.unfold_phidp == True:
-            self.radar = qc.unfold_phidp(self)
         
     # Create mask to filter a range/azm/height sector of radar based on SD threshold
         if self.do_sd_sector == True:
