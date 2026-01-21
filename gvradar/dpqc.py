@@ -1673,7 +1673,7 @@ def create_clean_radar(self, boundary_km=4.4, verbose=True):
     else:
         if verbose:
             print("❌ Failed to remove boundary artifact.")
-        return radar  # Return original if processing failed
+        return clean_radar  # Return original if processing failed
 
 # ***************************************************************************************
 
