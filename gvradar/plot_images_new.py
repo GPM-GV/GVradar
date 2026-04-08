@@ -548,7 +548,7 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
     spec = create_gridspec_rhi(layout, fig)
         
     for index, field in enumerate(fields):
-        units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field
+        units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
 
         if Nbins == 0:
             cmap = cmap
