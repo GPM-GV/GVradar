@@ -22,6 +22,62 @@ import matplotlib.image as image
 import time
 
 # ****************************************************************************************
+# Custom Colormaps for Polarimetric Variables
+# ****************************************************************************************
+
+# Refined rhoHV colormap (0.7-1.0 range with white for < 0.7)
+scale_rhohv = [
+    (1.0, 1.0, 1.0),                 # < 0.70 - white (poor quality)
+    (0.7969, 0.9961, 0.9961),        # 0.70 - cyan/white
+    (0.0156, 0.9102, 0.9023),        # 0.75 - bright cyan
+    (0.0039, 0.6211, 0.9531),        # 0.80 - blue-cyan
+    (0.0117, 0, 0.9531),             # 0.85 - blue
+    (0.0078, 0.9883, 0.0078),        # 0.88 - bright green
+    (0.0039, 0.7695, 0.0039),        # 0.90 - green
+    (0, 0.5547, 0),                  # 0.92 - dark green
+    (0.9883, 0.9688, 0.0078),        # 0.94 - yellow
+    (0.8945, 0.7344, 0),             # 0.95 - orange-yellow
+    (0.9883, 0.582, 0),              # 0.96 - orange
+    (0.9883, 0, 0),                  # 0.97 - red
+    (0.8281, 0, 0),                  # 0.98 - dark red
+    (0.7344, 0, 0),                  # 0.985 - darker red
+    (0.6, 0, 0),                     # 0.99 - maroon
+    (0.4, 0, 0),                     # 0.994 - dark maroon
+    (0.2, 0, 0)                      # 0.997-1.0 - very dark red
+]
+
+cbar_limits_rhohv = [
+    0.0, 0.70, 0.75, 0.80, 0.85, 0.88, 0.90, 0.92, 0.94, 
+    0.95, 0.96, 0.97, 0.98, 0.985, 0.99, 0.994, 0.997, 1.00
+]
+
+rhohv_cmap = colors.LinearSegmentedColormap.from_list('rhohv_refined', scale_rhohv)
+rhohv_norm = colors.BoundaryNorm(cbar_limits_rhohv, rhohv_cmap.N)
+
+# Refined ZDR colormap (-2 to 5 dB range)
+scale_zdr = [
+    (0.5, 0, 0.5),           # -2.0 dB - purple (artifacts/vertical ice)
+    (0.3, 0.3, 0.8),         # -1.5 dB - blue-purple
+    (0.2, 0.5, 0.9),         # -1.0 dB - blue
+    (0.5, 0.7, 0.9),         # -0.5 dB - light blue
+    (0.8, 0.8, 0.8),         #  0.0 dB - gray (small/spherical drops)
+    (0.6, 0.9, 0.6),         #  0.5 dB - light green (drizzle)
+    (0.2, 0.8, 0.2),         #  1.0 dB - green (light rain)
+    (0.0, 0.6, 0.0),         #  1.5 dB - dark green (moderate rain)
+    (0.9, 0.9, 0.0),         #  2.0 dB - yellow (heavy rain)
+    (0.9, 0.7, 0.0),         #  2.5 dB - orange-yellow
+    (0.9, 0.5, 0.0),         #  3.0 dB - orange (large drops)
+    (0.9, 0.2, 0.0),         #  3.5 dB - red-orange
+    (0.8, 0.0, 0.0),         #  4.0 dB - red (very large drops/melting)
+    (0.5, 0.0, 0.0),         #  5.0 dB - dark red
+]
+
+cbar_limits_zdr = [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0]
+
+zdr_cmap = colors.LinearSegmentedColormap.from_list('zdr_refined', scale_zdr)
+zdr_norm = colors.BoundaryNorm(cbar_limits_zdr, zdr_cmap.N)
+
+# ****************************************************************************************
 
 class PlottingCache:
     """Cache manager for expensive plotting operations"""
@@ -317,7 +373,8 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
     spec = create_gridspec(layout, fig)
     
     for index, field in enumerate(fields):
-        units, vmin, vmax, cmap, title, Nbins = get_field_info(radar, field)
+        # Updated to get norm parameter
+        units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
         
         if num_fields < 2:
             title = f'{site} {field} {mydate} {mytime} UTC PPI Elev: {elv:2.1f} deg'
@@ -349,6 +406,31 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
+        
+        # Special handling for ZDR with custom norm
+        elif field == 'DR' and norm is not None:
+            display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
+                               resolution='10m', title=title, projection=projection, ax=ax,
+                               cmap=cmap, norm=norm, ticks=cbar_limits_zdr,
+                               colorbar_label=units,
+                               min_lon=coord_data['min_lon'], max_lon=coord_data['max_lon'],
+                               min_lat=coord_data['min_lat'], max_lat=coord_data['max_lat'],
+                               lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
+                               add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
+                               embellish=False, mask_outside=mask_outside)
+        
+        # Special handling for rhoHV with custom norm
+        elif field == 'RH' and norm is not None:
+            display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
+                               resolution='10m', title=title, projection=projection, ax=ax,
+                               cmap=cmap, norm=norm, ticks=cbar_limits_rhohv,
+                               colorbar_label=units,
+                               min_lon=coord_data['min_lon'], max_lon=coord_data['max_lon'],
+                               min_lat=coord_data['min_lat'], max_lat=coord_data['max_lat'],
+                               lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
+                               add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
+                               embellish=False, mask_outside=mask_outside)
+        
         else:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                                resolution='10m', title=title, projection=projection, ax=ax,
@@ -398,7 +480,7 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
     spec = create_gridspec(layout, fig)
     
     for index, field in enumerate(fields):
-        units, vmin, vmax, cmap, title, Nbins = get_field_info(radar, field)
+        units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
         
         if num_fields < 2:
             title = f'{site} {field} {mydate} {mytime} UTC PPI Elev: {elv:2.1f} deg'
@@ -413,9 +495,16 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
         ax = fig.add_subplot(spec[layout['positions'][index]])
         ax.set_facecolor('black')
         
-        display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
-                        colorbar_label=units, mask_outside=mask_outside, title=title,
-                        axislabels_flag=False)
+        # Plot with norm if available
+        if norm is not None:
+            display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
+                            norm=norm, colorbar_label=units, mask_outside=mask_outside, 
+                            title=title, axislabels_flag=False)
+        else:
+            display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap, 
+                            colorbar_label=units, mask_outside=mask_outside, title=title,
+                            axislabels_flag=False)
+                            
         display.set_limits(xlim=[-max_range, max_range], ylim=[-max_range, max_range])
 
         # Add range rings efficiently
@@ -459,7 +548,7 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
     spec = create_gridspec_rhi(layout, fig)
         
     for index, field in enumerate(fields):
-        units, vmin, vmax, cmap, title, Nbins = get_field_info(radar, field)
+        units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field
 
         if Nbins == 0:
             cmap = cmap
@@ -489,6 +578,13 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
             display.plot_rhi(plot_name, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
                            title=title, mask_outside=mask_outside,
                            colorbar_label=units, norm=midnorm, ticks=levels)
+        
+        # Special handling for fields with custom norm
+        elif norm is not None:
+            ticks = cbar_limits_zdr if field == 'DR' else cbar_limits_rhohv
+            display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+                           title=title, mask_outside=mask_outside, 
+                           colorbar_label=units, norm=norm, ticks=ticks)
         else:        
             display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
                            title=title, mask_outside=mask_outside, colorbar_label=units)
@@ -882,8 +978,10 @@ def get_field_info(radar, field):
                'title': 'Corrected Reflectivity [dBZ]', 'cmap': check_cm('NWSRef')},
         'DZ': {'units': 'Zh [dBZ]', 'vmin': 0, 'vmax': 70, 'Nbins': 14,
                'title': 'RAW Reflectivity [dBZ]', 'cmap': check_cm('NWSRef')},
-        'DR': {'units': 'Zdr [dB]', 'vmin': -1, 'vmax': 3, 'Nbins': 16,
-               'title': 'Differential Reflectivity [dB]', 'cmap': check_cm('HomeyerRainbow')},
+        'DR': {'units': 'Zdr [dB]', 'vmin': -2, 'vmax': 5, 'Nbins': 0,
+               'title': 'Differential Reflectivity [dB]', 'cmap': zdr_cmap, 'norm': zdr_norm},
+        'RH': {'units': 'ρHV', 'vmin': 0.0, 'vmax': 1.0, 'Nbins': 0,
+               'title': 'Cross-Correlation Coefficient', 'cmap': rhohv_cmap, 'norm': rhohv_norm},
         'VR': {'units': 'Velocity [m/s]', 'vmin': -20, 'vmax': 20, 'Nbins': 12,
                'title': 'Radial Velocity [m/s]', 'cmap': check_cm('NWSVel')},
         'SW': {'units': 'Spectrum Width', 'vmin': 0, 'vmax': 21, 'Nbins': 12,
@@ -900,8 +998,6 @@ def get_field_info(radar, field):
                 'title': 'Differential Phase [deg] Marks', 'cmap': check_cm('Carbone42')},
         'PHIDPB': {'units': 'PhiDP [deg]', 'vmin': 0, 'vmax': 360, 'Nbins': 36,
                    'title': 'Differential Phase [deg] Bringi', 'cmap': check_cm('Carbone42')},
-        'RH': {'units': 'Correlation', 'vmin': 0.7, 'vmax': 1.0, 'Nbins': 12,
-               'title': 'Correlation Coefficient', 'cmap': check_cm('LangRainbow12')},
         'SD': {'units': 'Std(PhiDP)', 'vmin': 0, 'vmax': 70, 'Nbins': 14,
                'title': 'Standard Deviation of PhiDP', 'cmap': check_cm('NWSRef')},
         'SQ': {'units': 'SQI', 'vmin': 0, 'vmax': 1, 'Nbins': 10,
@@ -937,10 +1033,12 @@ def get_field_info(radar, field):
     # Get configuration or return defaults
     config = field_configs.get(field, {
         'units': 'Unknown', 'vmin': 0, 'vmax': 100, 'Nbins': 10,
-        'title': f'Unknown Field: {field}', 'cmap': 'viridis'
+        'title': f'Unknown Field: {field}', 'cmap': 'viridis', 'norm': None
     })
     
-    return config['units'], config['vmin'], config['vmax'], config['cmap'], config['title'], config['Nbins']
+    # Return
+    return (config['units'], config['vmin'], config['vmax'], config['cmap'], 
+            config['title'], config['Nbins'], config.get('norm', None))
 
 # ****************************************************************************************
 
