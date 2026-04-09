@@ -1026,7 +1026,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
     if outdir == '':
         outdir = os.getcwd()
     
-    dpi = 100
+    dpi = 150
     
     if num_fields == 1:
         field = fields[0]
@@ -1052,8 +1052,6 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
     # FORCE RENDERING BEFORE SAVE
     print(f"    [save] Force rendering with canvas.draw()...")
     t0 = time.time()
-    fig.canvas.draw()
-    print(f"    [save] canvas.draw() took: {time.time()-t0:.2f}s")
     
     # Now save
     print(f"    [save] Starting fig.savefig()...")
