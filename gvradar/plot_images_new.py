@@ -1048,11 +1048,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         outdir_multi = os.path.join(outdir, 'Multi')
         os.makedirs(outdir_multi, exist_ok=True)
         filepath = os.path.join(outdir_multi, png_file)
-    
-    # FORCE RENDERING BEFORE SAVE
-    print(f"    [save] Force rendering with canvas.draw()...")
-    t0 = time.time()
-    
+        
     # Now save
     print(f"    [save] Starting fig.savefig()...")
     t0 = time.time()
