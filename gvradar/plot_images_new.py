@@ -252,6 +252,59 @@ def configure_matplotlib():
 
 configure_matplotlib()
 
+# Global flag to track if warmup has been done
+_plotting_warmed_up = False
+
+# ****************************************************************************************
+
+def warmup_plotting_engine(radar, sweep, max_range):
+    """
+    Warm up PyART plotting engine by creating a dummy single plot.
+    This initializes coordinate transformations and Cartopy projections.
+    Similar to how GVview naturally warms up when showing single plot first.
+    """
+    print("  Warming up plotting engine (first time only)...")
+    warmup_start = time.time()
+    
+    radar_lat = radar.latitude['data'][0]
+    radar_lon = radar.longitude['data'][0]
+    
+    # Create a minimal figure (don't display or save it)
+    projection = ccrs.LambertConformal(radar_lon, radar_lat)
+    
+    # Create dummy figure
+    fig, ax = plt.subplots(1, 1, figsize=(6, 4.5), subplot_kw={'projection': projection})
+    ax.set_facecolor('black')
+    
+    # Create display object and do ONE simple plot to warm up
+    display = pyart.graph.RadarMapDisplay(radar)
+    
+    # Get first available field
+    field = list(radar.fields.keys())[0]
+    
+    # Do a minimal plot_ppi_map to initialize everything
+    try:
+        coord_data = _cache.get_coordinate_transform(radar_lat, radar_lon, max_range)
+        display.plot_ppi_map(field, sweep, 
+                           resolution='10m', 
+                           projection=projection, 
+                           ax=ax,
+                           min_lon=coord_data['min_lon'], 
+                           max_lon=coord_data['max_lon'],
+                           min_lat=coord_data['min_lat'], 
+                           max_lat=coord_data['max_lat'],
+                           add_grid_lines=False, 
+                           lat_0=radar_lat, 
+                           lon_0=radar_lon,
+                           embellish=False)
+    except Exception as e:
+        print(f"    Warmup plot failed (non-critical): {e}")
+    
+    # Close without displaying or saving
+    plt.close(fig)
+    
+    print(f"  Warmup complete in {time.time() - warmup_start:.2f}s")
+
 # ****************************************************************************************
 
 def calculate_layout(num_fields):
@@ -326,6 +379,8 @@ def plot_fields(self):
     Calls plotting programs based on user defined dictionary parameters.
     Optimized version with caching and vectorized operations.
     """
+    global _plotting_warmed_up
+    
     start = time.time()
     
     # Pre-calculate sweep numbers
@@ -361,11 +416,17 @@ def plot_fields(self):
 
     elif self.scan_type == 'PPI':
         print('Plotting PPI images...')
+        
         # Pre-load ALL map features only if needed (cached after first load)
         if not self.plot_fast:
             COUNTIES, STATES, REEFS, MINOR_ISLANDS = _cache.get_map_features()
             OCEAN = _cache.get_ocean_feature()
             LAKES = _cache.get_lakes_feature()
+            
+            # WARM UP plotting engine for multi-panel plots (mimics GVview workflow)
+            if self.plot_multi and len(self.fields_to_plot) > 1 and not _plotting_warmed_up:
+                warmup_plotting_engine(self.radar, sweepn[0], self.max_range)
+                _plotting_warmed_up = True
         else:
             COUNTIES = STATES = REEFS = MINOR_ISLANDS = OCEAN = LAKES = None
             
