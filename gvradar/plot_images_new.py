@@ -541,7 +541,6 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         pos = positions[index]
         ax = fig.add_axes(pos, projection=projection)
         ax.set_facecolor('black')
-        print(f"    - add_subplot: {time.time()-t0:.2f}s")
 
         # Plot the data
         t0 = time.time()
