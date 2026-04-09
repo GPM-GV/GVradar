@@ -1,6 +1,8 @@
 import numpy as np
 import math
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import cartopy.crs as ccrs
@@ -20,9 +22,6 @@ from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from PIL import Image
 import matplotlib.image as image
 import time
-import matplotlib
-print(f"Matplotlib backend: {matplotlib.get_backend()}")
-print(f"Matplotlib version: {matplotlib.__version__}")
 
 # ****************************************************************************************
 # Custom Colormaps for Polarimetric Variables
