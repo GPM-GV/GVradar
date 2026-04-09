@@ -2,8 +2,9 @@ import numpy as np
 import math
 import pandas as pd
 import matplotlib
-matplotlib.use('Agg')
-matplotlib.rcParams['agg.path.chunksize'] = 0  # ← ADD THIS LINE!
+matplotlib.use('Qt5Agg')
+matplotlib.rcParams['backend'] = 'Qt5Agg'
+matplotlib.rcParams['agg.path.chunksize'] = 0
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import cartopy.crs as ccrs
@@ -251,7 +252,7 @@ def configure_matplotlib():
     plt.rcParams.update({
         'font.weight': 'bold',
         'axes.facecolor': 'black',
-        'agg.path.chunksize': 0,  # ← ADD THIS!
+        'agg.path.chunksize': 0,
         'figure.max_open_warning': 0,
         'axes.formatter.useoffset': False
     })
