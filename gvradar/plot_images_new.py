@@ -3,6 +3,7 @@ import math
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
+matplotlib.rcParams['agg.path.chunksize'] = 0  # ← ADD THIS LINE!
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import cartopy.crs as ccrs
@@ -249,7 +250,10 @@ def configure_matplotlib():
     plt.ioff()  # Turn off interactive mode for batch processing
     plt.rcParams.update({
         'font.weight': 'bold',
-        'axes.facecolor': 'black'
+        'axes.facecolor': 'black',
+        'agg.path.chunksize': 0,  # ← ADD THIS!
+        'figure.max_open_warning': 0,
+        'axes.formatter.useoffset': False
     })
 
 configure_matplotlib()
