@@ -20,6 +20,9 @@ from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from PIL import Image
 import matplotlib.image as image
 import time
+import matplotlib
+print(f"Matplotlib backend: {matplotlib.get_backend()}")
+print(f"Matplotlib version: {matplotlib.__version__}")
 
 # ****************************************************************************************
 # Custom Colormaps for Polarimetric Variables
@@ -1005,7 +1008,7 @@ def adjust_special_colorbars(field, display, index):
 
 def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, plot_type, fig, azi=None):
-    """Optimized plot saving with better file handling - DIAGNOSTIC VERSION"""
+    """Optimized plot saving - force rendering"""
     if not png:
         plt.show()
         return
@@ -1017,7 +1020,6 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
     
     dpi = 100
     
-    t0 = time.time()
     if num_fields == 1:
         field = fields[0]
         if plot_type == 'RHI' and azi is not None:
@@ -1039,16 +1041,19 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         os.makedirs(outdir_multi, exist_ok=True)
         filepath = os.path.join(outdir_multi, png_file)
     
-    print(f"    [save] Path setup: {time.time()-t0:.2f}s")
-    
-    # Try saving without bbox_inches='tight'
+    # FORCE RENDERING BEFORE SAVE
+    print(f"    [save] Force rendering with canvas.draw()...")
     t0 = time.time()
+    fig.canvas.draw()
+    print(f"    [save] canvas.draw() took: {time.time()-t0:.2f}s")
+    
+    # Now save
     print(f"    [save] Starting fig.savefig()...")
+    t0 = time.time()
     fig.savefig(filepath, dpi=dpi)
-    print(f"    [save] fig.savefig() COMPLETED: {time.time()-t0:.2f}s ⚠️⚠️⚠️")
+    print(f"    [save] fig.savefig() took: {time.time()-t0:.2f}s")
     
     print(f'  --> {filepath}')
-    print(f"    [save] TOTAL save_plot time: {time.time()-save_start:.2f}s")
 
 # ****************************************************************************************
 
