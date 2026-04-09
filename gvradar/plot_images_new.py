@@ -80,7 +80,7 @@ zdr_norm = colors.BoundaryNorm(cbar_limits_zdr, zdr_cmap.N)
 # ****************************************************************************************
 
 class PlottingCache:
-    """Cache manager for expensive plotting operations"""
+    """Cache manager for expensive plotting operations - optimized like GVview"""
     _instance = None
     
     def __new__(cls):
@@ -91,30 +91,91 @@ class PlottingCache:
     
     def __init__(self):
         if not self._initialized:
-            self._counties_states_cache = None
+            self._map_features_cache = None
             self._logos_cache = {}
             self._field_cache = {}
             self._coordinate_cache = {}
+            self._ocean_cache = None
+            self._lakes_cache = None
             self._initialized = True
     
-    def get_counties_states(self):
-        if self._counties_states_cache is None:
-            self._counties_states_cache = self._load_counties_states()
-        return self._counties_states_cache
+    def get_map_features(self):
+        """Get all map features (counties, states, reefs, minor islands)"""
+        if self._map_features_cache is None:
+            print("Loading map features (first time only)...")
+            start = time.time()
+            self._map_features_cache = self._load_all_map_features()
+            print(f"Map features loaded in {time.time() - start:.2f}s")
+        return self._map_features_cache
     
-    def _load_counties_states(self):
-        county_dir = os.path.dirname(__file__)
-        shapefile_path = os.path.join(county_dir, "shape_files/", "countyl010g.shp")
-        reader = shpreader.Reader(shapefile_path)
-        counties = list(reader.geometries())
-        COUNTIES = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
-
-        STATES = cfeature.NaturalEarthFeature(
-                                    category='cultural',
-                                    name='admin_1_states_provinces_lines',
-                                    scale='10m',
-                                    facecolor='none')
-        return COUNTIES, STATES
+    def get_ocean_feature(self):
+        """Get cached ocean feature"""
+        if self._ocean_cache is None:
+            self._ocean_cache = cfeature.OCEAN.with_scale('10m')
+        return self._ocean_cache
+    
+    def get_lakes_feature(self):
+        """Get cached lakes feature"""
+        if self._lakes_cache is None:
+            self._lakes_cache = cfeature.LAKES.with_scale('10m')
+        return self._lakes_cache
+    
+    def _load_all_map_features(self):
+        """Load counties, states, reefs, and minor islands"""
+        try:
+            base_dir = os.path.dirname(__file__)
+            shapefile_dir = os.path.join(base_dir, "shape_files/")
+            
+            # ==================== Load US Counties ====================
+            COUNTIES = None
+            county_shapefile = os.path.join(shapefile_dir, "countyl010g.shp")
+            if os.path.exists(county_shapefile):
+                try:
+                    reader = shpreader.Reader(county_shapefile)
+                    counties = list(reader.geometries())
+                    COUNTIES = cfeature.ShapelyFeature(counties, ccrs.PlateCarree())
+                except Exception as e:
+                    print(f"⚠️ Could not load counties: {e}")
+    
+            # ==================== Load States ====================
+            STATES = cfeature.NaturalEarthFeature(
+                                        category='cultural',
+                                        name='admin_1_states_provinces_lines',
+                                        scale='10m',
+                                        facecolor='none')
+            
+            # ==================== Load Reefs ====================
+            REEFS = None
+            reef_shapefile = os.path.join(shapefile_dir, "ne_10m_reefs.shp")
+            if os.path.exists(reef_shapefile):
+                try:
+                    reef_reader = shpreader.Reader(reef_shapefile)
+                    reefs = list(reef_reader.geometries())
+                    REEFS = cfeature.ShapelyFeature(reefs, ccrs.PlateCarree())
+                except Exception as e:
+                    print(f"⚠️ Could not load reefs: {e}")
+            
+            # ==================== Load Minor Islands ====================
+            MINOR_ISLANDS = None
+            islands_shapefile = os.path.join(shapefile_dir, "ne_10m_minor_islands.shp")
+            if os.path.exists(islands_shapefile):
+                try:
+                    islands_reader = shpreader.Reader(islands_shapefile)
+                    islands = list(islands_reader.geometries())
+                    MINOR_ISLANDS = cfeature.ShapelyFeature(islands, ccrs.PlateCarree())
+                except Exception as e:
+                    print(f"⚠️ Could not load minor islands: {e}")
+            
+            return COUNTIES, STATES, REEFS, MINOR_ISLANDS
+            
+        except Exception as e:
+            print(f"Error loading shapefiles: {e}")
+            STATES = cfeature.NaturalEarthFeature(
+                                        category='cultural',
+                                        name='admin_1_states_provinces_lines',
+                                        scale='50m',
+                                        facecolor='none')
+            return None, STATES, None, None
     
     def get_logo(self, logo_name):
         if logo_name not in self._logos_cache:
@@ -151,7 +212,8 @@ class PlottingCache:
         return None
     
     def get_coordinate_transform(self, radar_lat, radar_lon, max_range):
-        cache_key = f"{radar_lat}_{radar_lon}_{max_range}"
+        # Use rounded values for stable cache keys
+        cache_key = f"{round(radar_lat, 6)}_{round(radar_lon, 6)}_{int(max_range)}"
         if cache_key not in self._coordinate_cache:
             self._coordinate_cache[cache_key] = self._calculate_coordinates(radar_lat, radar_lon, max_range)
         return self._coordinate_cache[cache_key]
@@ -299,11 +361,13 @@ def plot_fields(self):
 
     elif self.scan_type == 'PPI':
         print('Plotting PPI images...')
-        # Pre-load counties/states only if needed
+        # Pre-load ALL map features only if needed (cached after first load)
         if not self.plot_fast:
-            COUNTIES, STATES = _cache.get_counties_states()
+            COUNTIES, STATES, REEFS, MINOR_ISLANDS = _cache.get_map_features()
+            OCEAN = _cache.get_ocean_feature()
+            LAKES = _cache.get_lakes_feature()
         else:
-            COUNTIES, STATES = None, None
+            COUNTIES = STATES = REEFS = MINOR_ISLANDS = OCEAN = LAKES = None
             
         if self.plot_multi:
             for isweeps in range(len(sweepn)):
@@ -316,7 +380,8 @@ def plot_fields(self):
                                      outdir=self.plot_dir, add_logos=self.add_logos, 
                                      mask_outside=self.mask_outside)
                 else:
-                    plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, 
+                    plot_fields_PPI(self.radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS,
+                                  OCEAN, LAKES, sweep=sweep, 
                                   fields=self.fields_to_plot, max_range=self.max_range, 
                                   png=self.png, outdir=self.plot_dir, 
                                   add_logos=self.add_logos, mask_outside=self.mask_outside)
@@ -335,10 +400,10 @@ def plot_fields(self):
                                          outdir=plot_dir, add_logos=self.add_logos, 
                                          mask_outside=self.mask_outside)
                     else:
-                        plot_fields_PPI(self.radar, COUNTIES, STATES, sweep=sweep, 
-                                      fields=[field], max_range=self.max_range, 
-                                      png=self.png, outdir=plot_dir, 
-                                      add_logos=self.add_logos, 
+                        plot_fields_PPI(self.radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS,
+                                      OCEAN, LAKES, sweep=sweep, fields=[field], 
+                                      max_range=self.max_range, png=self.png, 
+                                      outdir=plot_dir, add_logos=self.add_logos, 
                                       mask_outside=self.mask_outside)
 
     end = time.time()
@@ -346,7 +411,8 @@ def plot_fields(self):
 
 # ****************************************************************************************
 
-def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=150, 
+def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
+                   sweep=0, fields=['CZ'], max_range=150, 
                    mask_outside=True, png=False, outdir='', add_logos=True):
     """Optimized PPI plotting with caching"""
     
@@ -441,18 +507,16 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
         
-        # Add map features efficiently
+        # Add map features efficiently using cached objects
         add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_range, 
-                                  ax, add_logos, fig, num_fields, layout, COUNTIES, STATES)
-
-        # Add special features for specific sites
-        add_site_specific_features(site, ax)
+                                  ax, add_logos, fig, num_fields, layout, 
+                                  COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES)
 
         if index == num_fields - 1:
             add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout)
             if num_fields >= 2:
                 plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', 
-                           y=(1.0 + (0.155)))
+                           y=(1.0 + (0.1)))
                 
         # Adjust special colorbars
         adjust_special_colorbars(field, display, index)
@@ -460,7 +524,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, sweep=0, fields=['CZ'], max_range=1
     # Save plot
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, 'PPI', fig)
-    plt.close()
+    plt.close('all')
 
 # ****************************************************************************************
 
@@ -526,9 +590,9 @@ def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outsid
     
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, 'PPI', fig)
-    plt.close()
+    plt.close('all')
 
-    # ****************************************************************************************
+# ****************************************************************************************
 
 def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False, 
                    outdir='', add_logos=True, mask_outside=True):
@@ -602,7 +666,7 @@ def plot_fields_RHI(radar, sweep=0, fields=['CZ'], ymax=10, xmax=150, png=False,
     
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, 'RHI', fig, azi)
-    plt.close()
+    plt.close('all')
 
 # ****************************************************************************************
 
@@ -625,8 +689,9 @@ def add_range_rings_fast(display, max_range):
 # ****************************************************************************************
 
 def add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_range, 
-                              ax, add_logos, fig, num_fields, layout, COUNTIES, STATES):
-    """Optimized rings and radials with cached coordinates"""
+                              ax, add_logos, fig, num_fields, layout, 
+                              COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES):
+    """Optimized rings and radials with cached coordinates and features"""
     
     coord_data = _cache.get_coordinate_transform(radar_lat, radar_lon, max_range)
     
@@ -647,17 +712,19 @@ def add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_r
     # Add special location markers
     add_location_markers(site, year, display)
     
-    # Add map features efficiently
+    # Add map features efficiently using CACHED objects
     if COUNTIES and STATES:
         ax.add_feature(STATES, facecolor='none', edgecolor='white', lw=0.5)
         ax.add_feature(COUNTIES, facecolor='none', edgecolor='white', lw=0.25)
     
-    ax.add_feature(cfeature.OCEAN.with_scale('10m'), facecolor="#414141")
-    ax.add_feature(cfeature.LAKES.with_scale('10m'), facecolor="#414141", 
-                  edgecolor='white', lw=0.25, zorder=0)
+    # Use cached ocean and lakes features
+    if OCEAN:
+        ax.add_feature(OCEAN, facecolor="#414141")
+    if LAKES:
+        ax.add_feature(LAKES, facecolor="#414141", edgecolor='white', lw=0.25, zorder=0)
 
-    # Add site-specific features
-    add_site_specific_features(site, ax)
+    # Add site-specific features with cached shapefiles
+    add_site_specific_features(site, ax, REEFS, MINOR_ISLANDS)
     
     # Add cartopy grid lines
     add_grid_lines_optimized(ax)
@@ -718,23 +785,17 @@ def add_location_markers(site, year, display):
 
 # ****************************************************************************************
 
-def add_site_specific_features(site, ax):
-    """Add site-specific features efficiently"""
+def add_site_specific_features(site, ax, REEFS=None, MINOR_ISLANDS=None):
+    """Add site-specific features efficiently using cached shapefiles"""
     Brazil_list = ['AL1', 'JG1', 'MC1', 'NT1', 'PE1', 'SF1', 'ST1', 'SV1', 'TM1']
     
     if site == 'KWAJ': 
-        reef_dir = os.path.dirname(__file__)
-        reader = shpreader.Reader(os.path.join(reef_dir, 'shape_files', 'ne_10m_reefs.shp'))
-        reef = list(reader.geometries())
-        REEF = cfeature.ShapelyFeature(reef, ccrs.PlateCarree())
-        ax.add_feature(REEF, facecolor='none', edgecolor='white', lw=0.25)
+        if REEFS:
+            ax.add_feature(REEFS, facecolor='none', edgecolor='white', lw=0.25)
     
     elif site == 'RODN': 
-        island_dir = os.path.dirname(__file__)
-        reader = shpreader.Reader(os.path.join(island_dir, 'shape_files', 'ne_10m_minor_islands.shp'))
-        island = list(reader.geometries())
-        ISLAND = cfeature.ShapelyFeature(island, ccrs.PlateCarree())
-        ax.add_feature(ISLAND, facecolor='none', edgecolor='white', lw=0.25)
+        if MINOR_ISLANDS:
+            ax.add_feature(MINOR_ISLANDS, facecolor='none', edgecolor='white', lw=0.25)
         ax.coastlines(edgecolor='white', lw=0.25)
     
     elif site in Brazil_list:
@@ -870,8 +931,8 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
     if outdir == '':
         outdir = os.getcwd()
     
-    # Reduce DPI for faster saving while maintaining quality
-    dpi = 150  # Reduced from 150
+    # Reduced DPI for faster saving - 100 is plenty for screen viewing
+    dpi = 100
     
     if num_fields == 1:
         field = fields[0]
@@ -1004,6 +1065,8 @@ def get_field_info(radar, field):
                'title': 'Signal Quality Index', 'cmap': check_cm('LangRainbow12')},
         'FH': {'units': 'HID', 'vmin': 0, 'vmax': 11, 'Nbins': 0,
                'title': 'Summer Hydrometeor Identification', 'cmap': cmaphid},
+        'FH2': {'units': 'HID', 'vmin': 0, 'vmax': 11, 'Nbins': 0,
+               'title': 'Summer Hydrometeor Identification', 'cmap': cmaphid},
         'FS': {'units': 'HID', 'vmin': 0, 'vmax': 11, 'Nbins': 0,
                'title': 'Summer Hydrometeor Identification', 'cmap': cmaphid},
         'FW': {'units': 'HID', 'vmin': 0, 'vmax': 8, 'Nbins': 0,
@@ -1023,6 +1086,8 @@ def get_field_info(radar, field):
         'RA': {'units': 'Attenuation Rain Rate [mm/hr]', 'vmin': 1e-2, 'vmax': 3e2, 'Nbins': 0,
                'title': 'Attenuation Rain Rate [mm/hr]', 'cmap': check_cm('RefDiff')},
         'MRC': {'units': 'HIDRO Method', 'vmin': 0, 'vmax': 5, 'Nbins': 0,
+                'title': 'HIDRO Method', 'cmap': cmapmeth},
+        'MRC2': {'units': 'HIDRO Method', 'vmin': 0, 'vmax': 5, 'Nbins': 0,
                 'title': 'HIDRO Method', 'cmap': cmapmeth},
         'DM': {'units': 'DM [mm]', 'vmin': 0.5, 'vmax': 5, 'Nbins': 8,
                'title': 'DM [mm]', 'cmap': check_cm('BlueBrown10')},
@@ -1110,7 +1175,7 @@ def get_radar_info(radar, sweep):
 
 # ****************************************************************************************
 
-# Keep the existing colorbar adjustment functions as they are optimized
+# Colorbar adjustment functions - optimized for repeated use
 def adjust_fhc_colorbar_for_pyart(cb):
     cb.set_ticks(np.arange(0.5, 11, 1.0))
     cb.ax.set_yticklabels(['No Echo', 'Drizzle', 'Rain', 'Ice Crystals', 
@@ -1153,7 +1218,7 @@ def discrete_cmap(N, base_cmap=None):
     base = plt.cm.get_cmap(base_cmap)
     color_list = base(np.linspace(0, 1, N, 0))
     cmap_name = base.name + str(N)
-    return plt.cm.colors.ListedColormap(color_list, color_list, N)
+    return plt.cm.colors.ListedColormap(color_list, cmap_name, N)
 
 class MidpointNormalize(colors.Normalize):
     def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
