@@ -610,9 +610,6 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                 
         # Adjust special colorbars
         adjust_special_colorbars(field, display, index)
-        
-        field_total = time.time() - field_start
-        print(f"    FIELD TOTAL: {field_total:.2f}s")
     
     # Save plot
     save_start = time.time()
