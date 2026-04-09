@@ -286,7 +286,7 @@ def warmup_plotting_engine(radar, sweep, max_range):
     try:
         coord_data = _cache.get_coordinate_transform(radar_lat, radar_lon, max_range)
         display.plot_ppi_map(field, sweep, 
-                           resolution='10m', 
+                           resolution='50m', 
                            projection=projection, 
                            ax=ax,
                            min_lon=coord_data['min_lon'], 
@@ -526,7 +526,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
             midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
             
             display.plot_ppi_map(plot_name, sweep, vmin=vmin, vmax=vmax,
-                               resolution='10m', title=title, projection=projection, ax=ax,
+                               resolution='50m', title=title, projection=projection, ax=ax,
                                cmap=cmap, norm=midnorm, ticks=levels, colorbar_label=units,
                                min_lon=coord_data['min_lon'], max_lon=coord_data['max_lon'],
                                min_lat=coord_data['min_lat'], max_lat=coord_data['max_lat'],
@@ -537,7 +537,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         # Special handling for ZDR with custom norm
         elif field == 'DR' and norm is not None:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
-                               resolution='10m', title=title, projection=projection, ax=ax,
+                               resolution='50m', title=title, projection=projection, ax=ax,
                                cmap=cmap, norm=norm, ticks=cbar_limits_zdr,
                                colorbar_label=units,
                                min_lon=coord_data['min_lon'], max_lon=coord_data['max_lon'],
@@ -549,7 +549,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         # Special handling for rhoHV with custom norm
         elif field == 'RH' and norm is not None:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
-                               resolution='10m', title=title, projection=projection, ax=ax,
+                               resolution='50m', title=title, projection=projection, ax=ax,
                                cmap=cmap, norm=norm, ticks=cbar_limits_rhohv,
                                colorbar_label=units,
                                min_lon=coord_data['min_lon'], max_lon=coord_data['max_lon'],
@@ -560,7 +560,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         
         else:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
-                               resolution='10m', title=title, projection=projection, ax=ax,
+                               resolution='50m', title=title, projection=projection, ax=ax,
                                cmap=cmap, colorbar_label=units,
                                min_lon=coord_data['min_lon'], max_lon=coord_data['max_lon'],
                                min_lat=coord_data['min_lat'], max_lat=coord_data['max_lat'],
