@@ -482,9 +482,7 @@ def plot_fields(self):
 def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                    sweep=0, fields=['CZ'], max_range=150, 
                    mask_outside=True, png=False, outdir='', add_logos=True):
-    """Optimized PPI plotting with caching - DIAGNOSTIC VERSION"""
-    
-    plot_start = time.time()
+    """Optimized PPI plotting with caching"""
     
     # Get radar info once
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
@@ -504,21 +502,30 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     # Set plot parameters once
     set_plot_size_parms_ppi(num_fields)
 
-    # Create figure
-    fig = create_figure(layout)
-    spec = create_gridspec(layout, fig)
+    # Create figure WITHOUT GridSpec
+    fig = plt.figure(figsize=[layout['width'], layout['height']])
+    fig.set_tight_layout(False)  # ← KEY: Disable tight_layout like GVview!
     
-    setup_time = time.time() - plot_start
-    print(f"  Setup time: {setup_time:.2f}s")
+    # Calculate manual subplot positions (instead of GridSpec)
+    positions = []
+    nrows = layout['nrows']
+    ncols = layout['ncols']
+    
+    for row in range(nrows):
+        for col in range(ncols):
+            # Calculate position [left, bottom, width, height]
+            left = col / ncols
+            width = 1.0 / ncols
+            bottom = 1.0 - (row + 1) / nrows
+            height = 1.0 / nrows
+            positions.append([left, bottom, width, height])
     
     for index, field in enumerate(fields):
-        field_start = time.time()
-        print(f"\n  Field {index+1}/{num_fields}: {field}")
-        
+        if index >= len(positions):
+            break
+            
         # Get field info
-        t0 = time.time()
         units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
-        print(f"    - get_field_info: {time.time()-t0:.2f}s")
         
         if num_fields < 2:
             title = f'{site} {field} {mydate} {mytime} UTC PPI Elev: {elv:2.1f} deg'
@@ -530,8 +537,9 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         else:
             cmap = discrete_cmap(Nbins, base_cmap=cmap)
 
-        t0 = time.time()
-        ax = fig.add_subplot(spec[layout['positions'][index]], projection=projection)
+        # Create axes manually with add_axes() instead of GridSpec
+        pos = positions[index]
+        ax = fig.add_axes(pos, projection=projection)
         ax.set_facecolor('black')
         print(f"    - add_subplot: {time.time()-t0:.2f}s")
 
@@ -1048,7 +1056,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         outdir_multi = os.path.join(outdir, 'Multi')
         os.makedirs(outdir_multi, exist_ok=True)
         filepath = os.path.join(outdir_multi, png_file)
-        
+
     # Now save
     print(f"    [save] Starting fig.savefig()...")
     t0 = time.time()
