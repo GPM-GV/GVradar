@@ -581,9 +581,11 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         
         # Add map features
         t0 = time.time()
+        add_heavy_features = (index == 0)  # Only first subplot gets ocean/lakes
         add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_range, 
-                                  ax, add_logos, fig, num_fields, layout, 
-                                  COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES)
+                              ax, add_logos, fig, num_fields, layout, 
+                              COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
+                              add_heavy_features=add_heavy_features)  # Pass the flag
         print(f"    - add_features: {time.time()-t0:.2f}s")
 
         if index == num_fields - 1:
@@ -774,7 +776,8 @@ def add_range_rings_fast(display, max_range):
 
 def add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_range, 
                               ax, add_logos, fig, num_fields, layout, 
-                              COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES):
+                              COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
+                              add_heavy_features=True):  # New parameter
     """Optimized rings and radials with cached coordinates and features"""
     
     coord_data = _cache.get_coordinate_transform(radar_lat, radar_lon, max_range)
@@ -796,16 +799,17 @@ def add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_r
     # Add special location markers
     add_location_markers(site, year, display)
     
-    # Add map features efficiently using CACHED objects
+    # ONLY add heavy features (ocean/lakes) to first subplot
+    if add_heavy_features:
+        if OCEAN:
+            ax.add_feature(OCEAN, facecolor="#414141")
+        if LAKES:
+            ax.add_feature(LAKES, facecolor="#414141", edgecolor='white', lw=0.25, zorder=0)
+    
+    # Add lighter features to ALL subplots
     if COUNTIES and STATES:
         ax.add_feature(STATES, facecolor='none', edgecolor='white', lw=0.5)
         ax.add_feature(COUNTIES, facecolor='none', edgecolor='white', lw=0.25)
-    
-    # Use cached ocean and lakes features
-    if OCEAN:
-        ax.add_feature(OCEAN, facecolor="#414141")
-    if LAKES:
-        ax.add_feature(LAKES, facecolor="#414141", edgecolor='white', lw=0.25, zorder=0)
 
     # Add site-specific features with cached shapefiles
     add_site_specific_features(site, ax, REEFS, MINOR_ISLANDS)
