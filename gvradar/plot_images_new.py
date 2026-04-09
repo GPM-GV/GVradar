@@ -1025,7 +1025,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         
         outdir_daily = outdir
         os.makedirs(outdir_daily, exist_ok=True)
-        fig.savefig(os.path.join(outdir_daily, png_file), dpi=dpi, bbox_inches='tight')
+        fig.savefig(os.path.join(outdir_daily, png_file), dpi=dpi)
         print(f'  --> {os.path.join(outdir_daily, png_file)}')
         
     else:
@@ -1036,7 +1036,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         
         outdir_multi = os.path.join(outdir, 'Multi')
         os.makedirs(outdir_multi, exist_ok=True)
-        fig.savefig(os.path.join(outdir_multi, png_file), dpi=dpi, bbox_inches='tight')
+        fig.savefig(os.path.join(outdir_multi, png_file), dpi=dpi)
         print(f'  --> {os.path.join(outdir_multi, png_file)}')
 
 # ****************************************************************************************
