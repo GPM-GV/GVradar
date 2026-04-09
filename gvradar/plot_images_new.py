@@ -475,7 +475,9 @@ def plot_fields(self):
 def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                    sweep=0, fields=['CZ'], max_range=150, 
                    mask_outside=True, png=False, outdir='', add_logos=True):
-    """Optimized PPI plotting with caching"""
+    """Optimized PPI plotting with caching - DIAGNOSTIC VERSION"""
+    
+    plot_start = time.time()
     
     # Get radar info once
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
@@ -499,9 +501,17 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     fig = create_figure(layout)
     spec = create_gridspec(layout, fig)
     
+    setup_time = time.time() - plot_start
+    print(f"  Setup time: {setup_time:.2f}s")
+    
     for index, field in enumerate(fields):
-        # Updated to get norm parameter
+        field_start = time.time()
+        print(f"\n  Field {index+1}/{num_fields}: {field}")
+        
+        # Get field info
+        t0 = time.time()
         units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
+        print(f"    - get_field_info: {time.time()-t0:.2f}s")
         
         if num_fields < 2:
             title = f'{site} {field} {mydate} {mytime} UTC PPI Elev: {elv:2.1f} deg'
@@ -513,10 +523,13 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         else:
             cmap = discrete_cmap(Nbins, base_cmap=cmap)
 
+        t0 = time.time()
         ax = fig.add_subplot(spec[layout['positions'][index]], projection=projection)
         ax.set_facecolor('black')
+        print(f"    - add_subplot: {time.time()-t0:.2f}s")
 
-        # Handle special rain rate fields with caching
+        # Plot the data
+        t0 = time.time()
         if field in ['RC', 'RP', 'RA']:
             processed_field = _cache.get_processed_field(radar, field)
             plot_name = f"{field}_plot"
@@ -533,8 +546,6 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
-        
-        # Special handling for ZDR with custom norm
         elif field == 'DR' and norm is not None:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                                resolution='50m', title=title, projection=projection, ax=ax,
@@ -545,8 +556,6 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
-        
-        # Special handling for rhoHV with custom norm
         elif field == 'RH' and norm is not None:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                                resolution='50m', title=title, projection=projection, ax=ax,
@@ -557,7 +566,6 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
-        
         else:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                                resolution='50m', title=title, projection=projection, ax=ax,
@@ -567,25 +575,38 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
+        print(f"    - plot_ppi_map: {time.time()-t0:.2f}s ⚠️")
         
-        # Add map features efficiently using cached objects
+        # Add map features
+        t0 = time.time()
         add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_range, 
                                   ax, add_logos, fig, num_fields, layout, 
                                   COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES)
+        print(f"    - add_features: {time.time()-t0:.2f}s")
 
         if index == num_fields - 1:
+            t0 = time.time()
             add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout)
             if num_fields >= 2:
                 plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', 
                            y=(1.0 + (0.1)))
+            print(f"    - add_logo: {time.time()-t0:.2f}s")
                 
         # Adjust special colorbars
         adjust_special_colorbars(field, display, index)
+        
+        field_total = time.time() - field_start
+        print(f"    FIELD TOTAL: {field_total:.2f}s")
     
     # Save plot
+    save_start = time.time()
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, 'PPI', fig)
+    print(f"\n  Save time: {time.time() - save_start:.2f}s")
+    
     plt.close('all')
+    
+    print(f"\n  TOTAL PLOT TIME: {time.time() - plot_start:.2f}s")
 
 # ****************************************************************************************
 
