@@ -1005,17 +1005,19 @@ def adjust_special_colorbars(field, display, index):
 
 def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, plot_type, fig, azi=None):
-    """Optimized plot saving with better file handling"""
+    """Optimized plot saving with better file handling - DIAGNOSTIC VERSION"""
     if not png:
         plt.show()
         return
         
+    save_start = time.time()
+    
     if outdir == '':
         outdir = os.getcwd()
     
-    # Reduced DPI for faster saving - 100 is plenty for screen viewing
     dpi = 100
     
+    t0 = time.time()
     if num_fields == 1:
         field = fields[0]
         if plot_type == 'RHI' and azi is not None:
@@ -1025,8 +1027,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         
         outdir_daily = outdir
         os.makedirs(outdir_daily, exist_ok=True)
-        fig.savefig(os.path.join(outdir_daily, png_file), dpi=dpi)
-        print(f'  --> {os.path.join(outdir_daily, png_file)}')
+        filepath = os.path.join(outdir_daily, png_file)
         
     else:
         if plot_type == 'RHI' and azi is not None:
@@ -1036,8 +1037,18 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         
         outdir_multi = os.path.join(outdir, 'Multi')
         os.makedirs(outdir_multi, exist_ok=True)
-        fig.savefig(os.path.join(outdir_multi, png_file), dpi=dpi)
-        print(f'  --> {os.path.join(outdir_multi, png_file)}')
+        filepath = os.path.join(outdir_multi, png_file)
+    
+    print(f"    [save] Path setup: {time.time()-t0:.2f}s")
+    
+    # Try saving without bbox_inches='tight'
+    t0 = time.time()
+    print(f"    [save] Starting fig.savefig()...")
+    fig.savefig(filepath, dpi=dpi)
+    print(f"    [save] fig.savefig() COMPLETED: {time.time()-t0:.2f}s ⚠️⚠️⚠️")
+    
+    print(f'  --> {filepath}')
+    print(f"    [save] TOTAL save_plot time: {time.time()-save_start:.2f}s")
 
 # ****************************************************************************************
 
