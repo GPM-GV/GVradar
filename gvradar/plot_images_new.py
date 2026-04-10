@@ -372,12 +372,14 @@ def create_figure(layout):
     return plt.figure(figsize=[layout['width'], layout['height']], constrained_layout=False)
 
 def create_gridspec(layout, fig):
-    """Create optimized grid specification"""
+    """Create optimized grid specification with space for title"""
     if layout['ncols'] < 2:
         return plt.GridSpec(ncols=layout['ncols'], nrows=layout['nrows'], figure=fig)
     else:
+        # Leave space at TOP for title and logos
         return plt.GridSpec(ncols=layout['ncols'], nrows=layout['nrows'], figure=fig, 
-                          left=0.0, right=1.0, top=1.0, bottom=0, wspace=0.000000009, hspace=0.15)
+                          left=0.0, right=1.0, top=0.92, bottom=0.0,  # top=0.92 instead of 1.0!
+                          wspace=0.000000009, hspace=0.15)
 
 # ****************************************************************************************
 
@@ -589,7 +591,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     # *** Add title and logos AFTER all plotting ***
     if num_fields >= 2:
         # Title with correct y position (0.98 instead of 1.1)
-        plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=0.98)
+        plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=0.96)
     
     # Use existing logo function
     add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
@@ -606,7 +608,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     print(f"  Save time: {time.time() - save_start:.2f}s")
     print(f"\n  TOTAL: {time.time() - plot_start:.2f}s")
     plt.close('all')
-    
+
 # ****************************************************************************************
 
 def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outside=True, 
@@ -964,19 +966,15 @@ def add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout):
         
         imageboxnasa = OffsetImage(nasalogo, zoom=nasa_zoom)
         imageboxgpm = OffsetImage(gpmlogo, zoom=gpm_zoom)
-        imageboxnasa.image.axes = fig
-        imageboxgpm.image.axes = fig
         
-        # Position factors for different layouts
-        y_positions = {2: 0.1, 3: 0.061, 4: 0.066}
-        y_pos = y_positions.get(ncols, 0.1)
+        # Use figure fraction coordinates consistently
+        abnasa = AnnotationBbox(imageboxnasa, (0.045, 0.98),  # Changed!
+                                xycoords='figure fraction',
+                                frameon=False, box_alignment=(0, 1))
+        abgpm = AnnotationBbox(imageboxgpm, (0.955, 0.98),  # Changed!
+                               xycoords='figure fraction',
+                               frameon=False, box_alignment=(1, 1))
         
-        abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.045, 1+y_pos],
-                                xycoords='figure pixels', boxcoords='figure fraction',
-                                pad=0.0, frameon=False)
-        abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-0.055, 1+y_pos],                               
-                               xycoords='figure pixels', boxcoords='figure fraction',
-                               pad=0.0, frameon=False)
         fig.add_artist(abnasa)
         fig.add_artist(abgpm)
 
