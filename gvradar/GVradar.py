@@ -11,8 +11,9 @@ V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 '''
 # ***************************************************************************************
 
-import pyart
 import sys, os
+import pyart
+os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
 import ast
 import numpy as np
 import argparse
