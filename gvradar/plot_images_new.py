@@ -597,10 +597,10 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
     
     # Pre-render
-    render_start = time.time()
-    print(f"\n  Pre-rendering figure...")
-    fig.canvas.draw()
-    print(f"  Pre-render time: {time.time() - render_start:.2f}s")
+    #render_start = time.time()
+    #print(f"\n  Pre-rendering figure...")
+    #fig.canvas.draw()
+    #print(f"  Pre-render time: {time.time() - render_start:.2f}s")
     
     # Save
     save_start = time.time()
@@ -1079,7 +1079,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
     if outdir == '':
         outdir = os.getcwd()
     
-    dpi = 120
+    dpi = 150
     
     if num_fields == 1:
         field = fields[0]
