@@ -482,51 +482,60 @@ def plot_fields(self):
 def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                    sweep=0, fields=['CZ'], max_range=150, 
                    mask_outside=True, png=False, outdir='', add_logos=True):
-    """Optimized PPI plotting with pre-created axes (like GVview)"""
+    """Match GVview's axes creation pattern"""
     
     plot_start = time.time()
     
-    # Get radar info once
+    # Get radar info
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
-    
-    # Get cached coordinate calculations
     radar_lat = radar.latitude['data'][0]
     radar_lon = radar.longitude['data'][0]
     coord_data = _cache.get_coordinate_transform(radar_lat, radar_lon, max_range)
     
-    projection = ccrs.LambertConformal(radar_lon, radar_lat)
     display = pyart.graph.RadarMapDisplay(radar)
-
-    # Calculate layout once
     num_fields = len(fields)
     layout = calculate_layout(num_fields)
-    
-    # Set plot parameters once
     set_plot_size_parms_ppi(num_fields)
 
     # Create figure
     fig = create_figure(layout)
-    spec = create_gridspec(layout, fig)
     
-    print(f"  Setup time: {time.time() - plot_start:.2f}s")
-    
-    # *** CREATE ALL AXES UPFRONT (like GVview) ***
+    # *** STEP 1: Create REGULAR (non-projected) axes first ***
     axes = []
-    axes_start = time.time()
+    positions = []
     for index in range(num_fields):
-        ax = fig.add_subplot(spec[layout['positions'][index]], projection=projection)
-        ax.set_facecolor('black')
+        # Calculate position (simplified - use your layout logic)
+        row = index // layout['ncols']
+        col = index % layout['ncols']
+        left = col / layout['ncols']
+        bottom = 1.0 - (row + 1) / layout['nrows']
+        width = 1.0 / layout['ncols']
+        height = 1.0 / layout['nrows']
+        pos = [left, bottom, width, height]
+        positions.append(pos)
+        
+        # Create regular axis (no projection yet!)
+        ax = fig.add_axes(pos)
         axes.append(ax)
-    print(f"  All {num_fields} axes created: {time.time() - axes_start:.2f}s")
     
-    # NOW plot to each pre-created axis
+    print(f"  Created {num_fields} regular axes")
+    
+    # *** STEP 2: For each field, REPLACE axis with projected version and plot ***
     for index, field in enumerate(fields):
         field_start = time.time()
         print(f"\n  Field {index+1}/{num_fields}: {field}")
         
-        ax = axes[index]  # Use pre-created axis
+        ax = axes[index]
         
-        # Get field info
+        # REPLACE with projected axis (like GVview does)
+        pos = positions[index]
+        ax.remove()
+        projection = ccrs.LambertConformal(radar_lon, radar_lat)
+        ax = fig.add_axes(pos, projection=projection)
+        ax.set_facecolor('black')
+        axes[index] = ax  # Update the list
+        
+        # Get field info and plot
         units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
         
         if num_fields < 2:
@@ -534,20 +543,16 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         else:
             mytitle = f'{site} {mydate} {mytime} UTC PPI {elv:2.1f} deg'
         
-        if Nbins == 0:
-            cmap = cmap
-        else:
+        if Nbins > 0:
             cmap = discrete_cmap(Nbins, base_cmap=cmap)
 
-        # Handle special rain rate fields with caching
+        # Plot using your existing logic
         if field in ['RC', 'RP', 'RA']:
             processed_field = _cache.get_processed_field(radar, field)
             plot_name = f"{field}_plot"
             radar.add_field(plot_name, processed_field, replace_existing=True)
-            
             levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
             midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
-            
             display.plot_ppi_map(plot_name, sweep, vmin=vmin, vmax=vmax,
                                resolution='50m', title=title, projection=projection, ax=ax,
                                cmap=cmap, norm=midnorm, ticks=levels, colorbar_label=units,
@@ -556,31 +561,24 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
-        
-        # Special handling for ZDR with custom norm
         elif field == 'DR' and norm is not None:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                                resolution='50m', title=title, projection=projection, ax=ax,
-                               cmap=cmap, norm=norm, ticks=cbar_limits_zdr,
-                               colorbar_label=units,
+                               cmap=cmap, norm=norm, ticks=cbar_limits_zdr, colorbar_label=units,
                                min_lon=coord_data['min_lon'], max_lon=coord_data['max_lon'],
                                min_lat=coord_data['min_lat'], max_lat=coord_data['max_lat'],
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
-        
-        # Special handling for rhoHV with custom norm
         elif field == 'RH' and norm is not None:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                                resolution='50m', title=title, projection=projection, ax=ax,
-                               cmap=cmap, norm=norm, ticks=cbar_limits_rhohv,
-                               colorbar_label=units,
+                               cmap=cmap, norm=norm, ticks=cbar_limits_rhohv, colorbar_label=units,
                                min_lon=coord_data['min_lon'], max_lon=coord_data['max_lon'],
                                min_lat=coord_data['min_lat'], max_lat=coord_data['max_lat'],
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
-        
         else:
             display.plot_ppi_map(field, sweep, vmin=vmin, vmax=vmax,
                                resolution='50m', title=title, projection=projection, ax=ax,
@@ -591,37 +589,24 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
         
-        # Add map features efficiently using cached objects
-        add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_range, 
-                                  ax, add_logos, fig, num_fields, layout, 
-                                  COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES)
+        # Add features - CREATE OCEAN/LAKES FRESH (don't use cached)
+        add_rings_radials_optimized_gvstyle(year, site, display, radar_lat, radar_lon, max_range, 
+                                          ax, add_logos, fig, num_fields, layout, 
+                                          COUNTIES, STATES, REEFS, MINOR_ISLANDS)
 
         if index == num_fields - 1:
             add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout)
             if num_fields >= 2:
-                plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', 
-                           y=(1.0 + (0.1)))
+                plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=(1.0 + (0.1)))
                 
-        # Adjust special colorbars
         adjust_special_colorbars(field, display, index)
-        
-        print(f"    Field plot time: {time.time() - field_start:.2f}s")
+        print(f"    Field time: {time.time() - field_start:.2f}s")
     
-    # *** RENDER ONCE AT THE END ***
-    render_start = time.time()
-    print(f"\n  Starting final render...")
-    fig.canvas.draw()
-    print(f"  Final render time: {time.time() - render_start:.2f}s")
-    
-    # Save plot - should be fast now
+    # Save
     save_start = time.time()
-    save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
-             fields, num_fields, 'PPI', fig)
+    save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, fields, num_fields, 'PPI', fig)
     print(f"  Save time: {time.time() - save_start:.2f}s")
-    
     plt.close('all')
-    
-    print(f"\n  TOTAL PLOT TIME: {time.time() - plot_start:.2f}s")
 
 # ****************************************************************************************
 
@@ -826,6 +811,39 @@ def add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_r
     add_site_specific_features(site, ax, REEFS, MINOR_ISLANDS)
     
     # Add cartopy grid lines
+    add_grid_lines_optimized(ax)
+
+# ****************************************************************************************
+def add_rings_radials_optimized_gvstyle(year, site, display, radar_lat, radar_lon, max_range, 
+                                        ax, add_logos, fig, num_fields, layout, 
+                                        COUNTIES, STATES, REEFS, MINOR_ISLANDS):
+    """Add features like GVview - create OCEAN/LAKES fresh"""
+    
+    coord_data = _cache.get_coordinate_transform(radar_lat, radar_lon, max_range)
+    display.plot_cross_hair(10, npts=100)
+    
+    # Range rings
+    rings = range(20, max_range + 20, 20) if site in ['KaD3R', 'KuD3R'] else range(50, max_range + 50, 50)
+    for rng in rings:
+        display.plot_range_ring(rng, line_style='--', lw=0.5, color='white')
+    
+    add_radials_vectorized(display, radar_lat, radar_lon, max_range, coord_data)
+    add_location_markers(site, year, display)
+    
+    # *** CREATE OCEAN/LAKES FRESH - DON'T USE CACHED VERSIONS ***
+    ax.add_feature(cfeature.OCEAN.with_scale('50m'), facecolor="#414141", zorder=0)
+    ax.add_feature(cfeature.LAKES.with_scale('50m'), facecolor="#414141", edgecolor='white', lw=0.25, zorder=0)
+    
+    # Political boundaries
+    ax.add_feature(cfeature.COASTLINE, color='white', linewidth=0.5, zorder=10)
+    ax.add_feature(cfeature.BORDERS, color='white', linewidth=0.5, zorder=10)
+    
+    if STATES:
+        ax.add_feature(STATES, facecolor='none', edgecolor='white', lw=0.5, zorder=10)
+    if COUNTIES:
+        ax.add_feature(COUNTIES, facecolor='none', edgecolor='white', lw=0.25, zorder=10)
+    
+    add_site_specific_features(site, ax, REEFS, MINOR_ISLANDS)
     add_grid_lines_optimized(ax)
 
 # ****************************************************************************************
