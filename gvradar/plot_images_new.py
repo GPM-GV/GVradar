@@ -962,7 +962,8 @@ def add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout):
         # Zoom factors optimized for different layouts
         zoom_factors = {2: 0.035, 3: 0.035, 4: 0.030}
         nasa_zoom = zoom_factors.get(ncols, 0.035) * ncols
-        gpm_zoom = zoom_factors.get(ncols, 0.01) * ncols
+        #gpm_zoom = zoom_factors.get(ncols, 0.01) * ncols
+        gpm_zoom=0.015*ncols
         
         imageboxnasa = OffsetImage(nasalogo, zoom=nasa_zoom)
         imageboxgpm = OffsetImage(gpmlogo, zoom=gpm_zoom)
@@ -1047,7 +1048,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
     if outdir == '':
         outdir = os.getcwd()
     
-    dpi = 150
+    dpi = 120
     
     if num_fields == 1:
         field = fields[0]
@@ -1073,7 +1074,7 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
     # Now save
     print(f"    [save] Starting fig.savefig()...")
     t0 = time.time()
-    fig.savefig(filepath, dpi=dpi)
+    fig.savefig(filepath, dpi=dpi, bbox_inches='tight')
     print(f"    [save] fig.savefig() took: {time.time()-t0:.2f}s")
     
     print(f'  --> {filepath}')
