@@ -830,7 +830,7 @@ def add_rings_radials_optimized_gvstyle(year, site, display, radar_lat, radar_lo
     
     add_radials_vectorized(display, radar_lat, radar_lon, max_range, coord_data)
     add_location_markers(site, year, display)
-    
+    '''
     # *** CREATE OCEAN/LAKES FRESH - DON'T USE CACHED VERSIONS ***
     ax.add_feature(cfeature.OCEAN.with_scale('50m'), facecolor="#414141", zorder=0)
     ax.add_feature(cfeature.LAKES.with_scale('50m'), facecolor="#414141", edgecolor='white', lw=0.25, zorder=0)
@@ -846,6 +846,7 @@ def add_rings_radials_optimized_gvstyle(year, site, display, radar_lat, radar_lo
     
     add_site_specific_features(site, ax, REEFS, MINOR_ISLANDS)
     add_grid_lines_optimized(ax)
+    '''
 
 # ****************************************************************************************
 
