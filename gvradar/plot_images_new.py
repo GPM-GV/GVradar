@@ -885,14 +885,42 @@ def get_radar_info(radar, sweep):
 
     return site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep
 
-def check_cm(cmap_name):
-    """Handle old/new Py-ART colormap naming."""
-    candidates = [cmap_name, f"pyart_{cmap_name}"]
-    for name in candidates:
-        if name in plt.colormaps():
-            return name
-    return candidates[-1]
+def adjust_fhc_colorbar_for_pyart(cb):
+    cb.set_ticks(np.arange(0.5, 11, 1.0))
+    cb.ax.set_yticklabels(['No Echo', 'Drizzle', 'Rain', 'Ice Crystals',
+                          'Aggregates', 'Wet Snow', 'Vertical Ice',
+                          'LD Graupel', 'HD Graupel', 'Hail', 'Big Drops'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
 
+def adjust_fhw_colorbar_for_pyart(cb):
+    cb.set_ticks(np.arange(0.5, 8, 1.0))
+    cb.ax.set_yticklabels(['No Echo', 'Ice Crystals', 'Plates', 'Dendrites',
+                          'Aggregates', 'Wet Snow', 'Frozen Precip', 'Rain'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
+
+def adjust_ec_colorbar_for_pyart(cb):
+    cb.set_ticks(np.arange(1.4, 9, 0.9))
+    cb.ax.set_yticklabels(['Aggregates', 'Ice Crystals', 'Light Rain',
+                          'Rimed Particles', 'Rain', 'Vertically Ice',
+                          'Wet Snow', 'Melting Hail', 'Dry Hail/High Density Graupel'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
+
+def adjust_meth_colorbar_for_pyart(cb, tropical=False):
+    if not tropical:
+        cb.set_ticks(np.arange(1.25, 5, 0.833))
+        cb.ax.set_yticklabels(['R(Kdp, Zdr)', 'R(Kdp)', 'R(Z, Zdr)', 'R(Z)', 'R(Zrain)'])
+    else:
+        cb.set_ticks(np.arange(1.3, 6, 0.85))
+        cb.ax.set_yticklabels(['R(Kdp, Zdr)', 'R(Kdp)', 'R(Z, Zdr)', 'R(Z_all)', 'R(Z_c)', 'R(Z_s)'])
+    cb.ax.set_ylabel('')
+    cb.ax.tick_params(length=0)
+    return cb
 
 def discrete_cmap(N, base_cmap=None):
     """Create an N-bin discrete colormap from the specified input map."""
@@ -901,25 +929,234 @@ def discrete_cmap(N, base_cmap=None):
     cmap_name = base.name + str(N)
     return plt.cm.colors.ListedColormap(color_list, cmap_name, N)
 
-
 class MidpointNormalize(colors.Normalize):
     def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
         self.vcenter = vcenter
         super().__init__(vmin, vmax, clip)
 
     def __call__(self, value, clip=None):
-        x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1.]
-        return np.ma.masked_array(np.interp(value, x, y,
-                                           left=-np.inf, right=np.inf))
+        x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1.0]
+        return np.ma.masked_array(np.interp(value, x, y, left=-np.inf, right=np.inf))
 
     def inverse(self, value):
-        y, x = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
+        y, x = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1.0]
         return np.interp(value, x, y, left=-np.inf, right=np.inf)
 
 def check_cm(cmap_name):
-    """Handles old and new versions of colormaps"""
+    """Handle old/new PyART colormap naming."""
     candidates = [cmap_name, f'pyart_{cmap_name}']
     for name in candidates:
         if name in plt.colormaps():
             return name
-    return candidates[1]
+    return candidates[-1]
+
+# ****************************************************************************************
+# RHI helpers
+# ****************************************************************************************
+
+def calculate_layout_rhi(num_fields):
+    nrows = (num_fields + 1) // 2
+    if num_fields < 2:
+        width = 12
+        height = 3.5
+        ncols = 1
+    else:
+        width = 24
+        height = 3.5 * nrows
+        ncols = 2
+
+    positions = []
+    for y in range(ncols):
+        for x in range(nrows):
+            positions.append((x, y))
+
+    return {'nrows': nrows, 'ncols': ncols, 'width': width,
+            'height': height, 'positions': positions}
+
+def create_figure_rhi(layout):
+    if layout['ncols'] < 2:
+        return plt.figure(figsize=[layout['width'], layout['height']],
+                         constrained_layout=False)
+    else:
+        return plt.figure(figsize=[layout['width'], layout['height']],
+                         constrained_layout=True)
+
+def create_gridspec_rhi(layout, fig):
+    return plt.GridSpec(ncols=layout['ncols'], nrows=layout['nrows'], figure=fig)
+
+def add_range_rings_fast(display, max_range):
+    for rng in range(50, max_range + 50, 50):
+        display.plot_range_ring(rng, col='white', ls='-', lw=0.5)
+
+def set_plot_size_parms_rhi(num_fields):
+    if num_fields < 2:
+        font_config = {
+            'font.size': 8, 'axes.titlesize': 10, 'axes.labelsize': 8,
+            'xtick.labelsize': 6, 'ytick.labelsize': 6,
+            'legend.fontsize': 6, 'figure.titlesize': 10
+        }
+    else:
+        font_config = {
+            'font.size': 12, 'axes.titlesize': 20, 'axes.labelsize': 12,
+            'xtick.labelsize': 12, 'ytick.labelsize': 12,
+            'legend.fontsize': 12, 'figure.titlesize': 20
+        }
+    plt.rcParams.update(font_config)
+
+def annotate_plot_rhi_optimized(ax, fig, num_fields, layout):
+    nasalogo = _cache.get_logo('nasa')
+    gpmlogo = _cache.get_logo('gpm')
+
+    if num_fields < 2:
+        imageboxnasa = OffsetImage(nasalogo, zoom=0.07)
+        imageboxgpm = OffsetImage(gpmlogo, zoom=0.03)
+        imageboxnasa.image.axes = ax
+        imageboxgpm.image.axes = ax
+
+        abnasa = AnnotationBbox(imageboxnasa, [0, 0], xybox=[.065, .915],
+                                xycoords='axes pixels', boxcoords='axes fraction',
+                                pad=-10.0, frameon=False)
+        abgpm = AnnotationBbox(imageboxgpm, [0, 0], xybox=[.93, .925],
+                               xycoords='axes pixels', boxcoords='axes fraction',
+                               pad=0.0, frameon=False)
+        ax.add_artist(abnasa)
+        ax.add_artist(abgpm)
+    else:
+        nrows = layout['nrows']
+        imageboxnasa = OffsetImage(nasalogo, zoom=0.12)
+        imageboxgpm = OffsetImage(gpmlogo, zoom=0.06)
+        imageboxnasa.image.axes = fig
+        imageboxgpm.image.axes = fig
+
+        abnasa = AnnotationBbox(imageboxnasa, [0, 0], xybox=[140, 245 * nrows],
+                                xycoords='figure points', boxcoords='figure points',
+                                pad=0.0, frameon=False)
+        abgpm = AnnotationBbox(imageboxgpm, [0, 0], xybox=[1550, 245 * nrows],
+                               xycoords='figure points', boxcoords='figure points',
+                               pad=0.0, frameon=False)
+        fig.add_artist(abnasa)
+        fig.add_artist(abgpm)
+
+def plot_fields_PPI_QC(radar, sweep=0, fields=('CZ',), max_range=150,
+                       mask_outside=True, png=False, outdir='', add_logos=True):
+    """Fast PPI plotting without Cartopy."""
+    site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep)
+
+    num_fields = len(fields)
+    layout = calculate_layout(num_fields)
+    set_plot_size_parms_ppi(num_fields)
+
+    display = pyart.graph.RadarDisplay(radar)
+    fig = create_figure(layout)
+    spec = create_gridspec(layout, fig)
+
+    for index, field in enumerate(fields):
+        units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
+
+        if num_fields < 2:
+            title = f'{site} {field} {mydate} {mytime} UTC PPI Elev: {elv:2.1f} deg'
+        else:
+            mytitle = f'{site} {mydate} {mytime} UTC PPI {elv:2.1f} deg'
+
+        if Nbins > 0:
+            cmap = discrete_cmap(Nbins, base_cmap=cmap)
+
+        ax = fig.add_subplot(spec[layout['positions'][index]])
+        ax.set_facecolor('black')
+
+        if norm is not None:
+            display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+                            norm=norm, colorbar_label=units, mask_outside=mask_outside,
+                            title=title, axislabels_flag=False)
+        else:
+            display.plot_ppi(field, sweep=sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+                            colorbar_label=units, mask_outside=mask_outside,
+                            title=title, axislabels_flag=False)
+
+        display.set_limits(xlim=[-max_range, max_range], ylim=[-max_range, max_range])
+        add_range_rings_fast(display, max_range)
+        display.plot_grid_lines(col='white', ls=':')
+        display.set_aspect_ratio(aspect_ratio=1.0)
+
+        ax.set_xticklabels('', rotation=0)
+        ax.set_yticklabels('', rotation=90)
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+        if num_fields >= 2:
+            plt.suptitle(mytitle, fontsize=8 * layout['ncols'], weight='bold',
+                        y=(1.0 + (layout['nrows'] * 0.055)))
+
+        adjust_special_colorbars(field, display, index)
+
+    save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
+             list(fields), num_fields, 'PPI', fig)
+    plt.close(fig)
+
+def plot_fields_RHI(radar, sweep=0, fields=('CZ',), ymax=10, xmax=150,
+                   png=False, outdir='', add_logos=True, mask_outside=True):
+    """RHI plotting."""
+    site, mydate, mytime, azi, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep)
+
+    xlim = [0, xmax]
+    ylim = [0, ymax]
+    num_fields = len(fields)
+    layout = calculate_layout_rhi(num_fields)
+
+    set_plot_size_parms_rhi(num_fields)
+    display = pyart.graph.RadarMapDisplay(radar)
+
+    fig = create_figure_rhi(layout)
+    spec = create_gridspec_rhi(layout, fig)
+
+    for index, field in enumerate(fields):
+        units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
+
+        if Nbins > 0:
+            cmap = discrete_cmap(Nbins, base_cmap=cmap)
+
+        if num_fields < 2:
+            title = f'{site} {field} {mydate} {mytime} UTC RHI Azi: {azi:2.1f}'
+        else:
+            mytitle = f'{site} {mydate} {mytime} UTC RHI {azi:2.1f} Azi'
+
+        ax = fig.add_subplot(spec[layout['positions'][index]])
+        ax.set_facecolor('black')
+
+        zero_list = ['RC', 'RP', 'DM', 'NW']
+        if field in zero_list:
+            mask_outside = True
+
+        if field in ('RC', 'RP'):
+            processed_field = _cache.get_processed_field(radar, field)
+            plot_name = f"{field}_plot"
+            radar.add_field(plot_name, processed_field, replace_existing=True)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
+            display.plot_rhi(plot_name, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+                            title=title, mask_outside=mask_outside,
+                            colorbar_label=units, norm=midnorm, ticks=levels)
+        elif norm is not None:
+            ticks = cbar_limits_zdr if field == 'DR' else cbar_limits_rhohv
+            display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+                            title=title, mask_outside=mask_outside,
+                            colorbar_label=units, norm=norm, ticks=ticks)
+        else:
+            display.plot_rhi(field, sweep, vmin=vmin, vmax=vmax, cmap=cmap,
+                            title=title, mask_outside=mask_outside,
+                            colorbar_label=units)
+
+        display.set_limits(xlim, ylim, ax=ax)
+        display.plot_grid_lines(col='white')
+
+        if add_logos:
+            annotate_plot_rhi_optimized(ax, fig, num_fields, layout)
+
+        adjust_special_colorbars(field, display, index)
+
+    if num_fields >= 2:
+        plt.suptitle(mytitle, fontsize=28, weight='bold')
+
+    save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
+             list(fields), num_fields, 'RHI', fig, azi)
+    plt.close(fig)
