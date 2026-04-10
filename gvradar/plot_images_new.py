@@ -482,7 +482,7 @@ def plot_fields(self):
 def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                    sweep=0, fields=['CZ'], max_range=150, 
                    mask_outside=True, png=False, outdir='', add_logos=True):
-    """Match GVview's axes creation pattern"""
+    """Optimized PPI with GVview-style axes creation and proper layout"""
     
     plot_start = time.time()
     
@@ -497,45 +497,40 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     layout = calculate_layout(num_fields)
     set_plot_size_parms_ppi(num_fields)
 
-    # Create figure
+    # Create figure and GridSpec (for proper spacing)
     fig = create_figure(layout)
+    spec = create_gridspec(layout, fig)
     
-    # *** STEP 1: Create REGULAR (non-projected) axes first ***
+    print(f"  Setup time: {time.time() - plot_start:.2f}s")
+    
+    # *** STEP 1: Create REGULAR axes with GridSpec positions ***
     axes = []
     positions = []
     for index in range(num_fields):
-        # Calculate position (simplified - use your layout logic)
-        row = index // layout['ncols']
-        col = index % layout['ncols']
-        left = col / layout['ncols']
-        bottom = 1.0 - (row + 1) / layout['nrows']
-        width = 1.0 / layout['ncols']
-        height = 1.0 / layout['nrows']
-        pos = [left, bottom, width, height]
-        positions.append(pos)
-        
-        # Create regular axis (no projection yet!)
-        ax = fig.add_axes(pos)
+        # Create regular axis at GridSpec position
+        ax = fig.add_subplot(spec[layout['positions'][index]])
         axes.append(ax)
+        # Save the position for later
+        positions.append(ax.get_position())
     
     print(f"  Created {num_fields} regular axes")
     
-    # *** STEP 2: For each field, REPLACE axis with projected version and plot ***
+    # *** STEP 2: For each field, REPLACE with projected axis and plot ***
     for index, field in enumerate(fields):
         field_start = time.time()
         print(f"\n  Field {index+1}/{num_fields}: {field}")
         
+        # REPLACE regular axis with projected version
         ax = axes[index]
-        
-        # REPLACE with projected axis (like GVview does)
         pos = positions[index]
         ax.remove()
-        projection = ccrs.LambertConformal(radar_lon, radar_lat)
-        ax = fig.add_axes(pos, projection=projection)
-        ax.set_facecolor('black')
-        axes[index] = ax  # Update the list
         
-        # Get field info and plot
+        projection = ccrs.LambertConformal(radar_lon, radar_lat)
+        ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height], projection=projection)
+        ax.set_facecolor('black')
+        axes[index] = ax
+        
+        # Get field info
         units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
         
         if num_fields < 2:
@@ -546,7 +541,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         if Nbins > 0:
             cmap = discrete_cmap(Nbins, base_cmap=cmap)
 
-        # Plot using your existing logic
+        # Plot (your existing code)
         if field in ['RC', 'RP', 'RA']:
             processed_field = _cache.get_processed_field(radar, field)
             plot_name = f"{field}_plot"
@@ -589,11 +584,12 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
         
-        # Add features - CREATE OCEAN/LAKES FRESH (don't use cached)
+        # Add features (CREATE OCEAN/LAKES FRESH for performance)
         add_rings_radials_optimized_gvstyle(year, site, display, radar_lat, radar_lon, max_range, 
                                           ax, add_logos, fig, num_fields, layout, 
                                           COUNTIES, STATES, REEFS, MINOR_ISLANDS)
 
+        # Add title and logos on last field
         if index == num_fields - 1:
             add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout)
             if num_fields >= 2:
@@ -606,6 +602,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     save_start = time.time()
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, fields, num_fields, 'PPI', fig)
     print(f"  Save time: {time.time() - save_start:.2f}s")
+    print(f"\n  TOTAL: {time.time() - plot_start:.2f}s")
     plt.close('all')
 
 # ****************************************************************************************
