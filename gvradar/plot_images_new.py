@@ -734,6 +734,104 @@ def set_plot_size_parms_ppi(num_fields):
         }
     plt.rcParams.update(font_config)
 
+def get_field_info(radar, field):
+    """Return plotting metadata for a given field.
+
+    Returns:
+        units, vmin, vmax, cmap, title, Nbins, norm
+    """
+    # HID colormaps
+    hid_colors = ['White', 'LightBlue', 'MediumBlue', 'DarkOrange', 'LightPink',
+                  'Cyan', 'DarkGray', 'Lime', 'Yellow', 'Red', 'Fuchsia']
+    hid_colors_summer = ['White','LightBlue','MediumBlue','Darkorange','LightPink',
+                         'Cyan','DarkGray', 'Lime','Yellow','Red','Fuchsia']
+    hid_colors_winter = ['White','Orange', 'Purple', 'Fuchsia', 'Pink', 'Cyan',
+                         'LightBlue', 'Blue']
+    ec_hid_colors = ['White','LightPink','Darkorange','LightBlue','Lime','MediumBlue','DarkGray',
+                     'Cyan','Red','Yellow']
+
+    cmaphidw = colors.ListedColormap(hid_colors_winter)
+    cmaphid  = colors.ListedColormap(hid_colors_summer)
+    cmaphidec = colors.ListedColormap(ec_hid_colors)
+    cmapmeth = colors.ListedColormap(hid_colors[0:6])
+
+    field_configs = {
+        'CZ': {'units': 'Zh [dBZ]', 'vmin': 0, 'vmax': 70, 'Nbins': 14,
+               'title': 'Corrected Reflectivity [dBZ]', 'cmap': check_cm('NWSRef'), 'norm': None},
+        'DZ': {'units': 'Zh [dBZ]', 'vmin': 0, 'vmax': 70, 'Nbins': 14,
+               'title': 'RAW Reflectivity [dBZ]', 'cmap': check_cm('NWSRef'), 'norm': None},
+
+        'VR': {'units': 'Velocity [m/s]', 'vmin': -20, 'vmax': 20, 'Nbins': 12,
+               'title': 'Radial Velocity [m/s]', 'cmap': check_cm('NWSVel'), 'norm': None},
+        'corrected_velocity': {'units': 'Velocity [m/s]', 'vmin': -20, 'vmax': 20, 'Nbins': 12,
+               'title': 'Dealiased Radial Velocity [m/s]', 'cmap': check_cm('NWSVel'), 'norm': None},
+
+        'SW': {'units': 'Spectrum Width', 'vmin': 0, 'vmax': 21, 'Nbins': 12,
+               'title': 'Spectrum Width', 'cmap': check_cm('NWS_SPW'), 'norm': None},
+
+        'DR': {'units': 'Zdr [dB]', 'vmin': -2, 'vmax': 5, 'Nbins': 0,
+               'title': 'Differential Reflectivity [dB]', 'cmap': zdr_cmap, 'norm': zdr_norm},
+        'RH': {'units': 'ρHV', 'vmin': 0.0, 'vmax': 1.0, 'Nbins': 0,
+               'title': 'Cross-Correlation Coefficient', 'cmap': rhohv_cmap, 'norm': rhohv_norm},
+
+        'KD': {'units': 'Kdp [deg/km]', 'vmin': -2, 'vmax': 3, 'Nbins': 10,
+               'title': 'Specific Differential Phase [deg/km]', 'cmap': check_cm('HomeyerRainbow'), 'norm': None},
+        'KDPB': {'units': 'Kdp [deg/km]', 'vmin': -2, 'vmax': 5, 'Nbins': 8,
+                 'title': 'Specific Differential Phase [deg/km] (Bringi)', 'cmap': check_cm('HomeyerRainbow'), 'norm': None},
+
+        'PH': {'units': 'PhiDP [deg]', 'vmin': 0, 'vmax': 360, 'Nbins': 36,
+               'title': 'Differential Phase [deg]', 'cmap': check_cm('Carbone42'), 'norm': None},
+        'PHM': {'units': 'PhiDP [deg]', 'vmin': 0, 'vmax': 360, 'Nbins': 36,
+                'title': 'Differential Phase [deg] Marks', 'cmap': check_cm('Carbone42'), 'norm': None},
+        'PHIDPB': {'units': 'PhiDP [deg]', 'vmin': 0, 'vmax': 360, 'Nbins': 36,
+                   'title': 'Differential Phase [deg] Bringi', 'cmap': check_cm('Carbone42'), 'norm': None},
+
+        'SD': {'units': 'Std(PhiDP)', 'vmin': 0, 'vmax': 70, 'Nbins': 14,
+               'title': 'Standard Deviation of PhiDP', 'cmap': check_cm('NWSRef'), 'norm': None},
+        'SQ': {'units': 'SQI', 'vmin': 0, 'vmax': 1, 'Nbins': 10,
+               'title': 'Signal Quality Index', 'cmap': check_cm('LangRainbow12'), 'norm': None},
+
+        'FH': {'units': 'HID', 'vmin': 0, 'vmax': 11, 'Nbins': 0,
+               'title': 'Summer Hydrometeor Identification', 'cmap': cmaphid, 'norm': None},
+        'FH2': {'units': 'HID', 'vmin': 0, 'vmax': 11, 'Nbins': 0,
+               'title': 'Summer Hydrometeor Identification', 'cmap': cmaphid, 'norm': None},
+        'FS': {'units': 'HID', 'vmin': 0, 'vmax': 11, 'Nbins': 0,
+               'title': 'Summer Hydrometeor Identification', 'cmap': cmaphid, 'norm': None},
+        'FW': {'units': 'HID', 'vmin': 0, 'vmax': 8, 'Nbins': 0,
+               'title': 'Winter Hydrometeor Identification', 'cmap': cmaphidw, 'norm': None},
+        'NT': {'units': 'HID', 'vmin': 0, 'vmax': 8, 'Nbins': 0,
+               'title': 'No TEMP Winter Hydrometeor Identification', 'cmap': cmaphidw, 'norm': None},
+        'EC': {'units': 'HID', 'vmin': 0, 'vmax': 9, 'Nbins': 0,
+               'title': 'Radar Echo Classification', 'cmap': cmaphidec, 'norm': None},
+
+        'MW': {'units': 'Water Mass [g/m^3]', 'vmin': 0, 'vmax': 3, 'Nbins': 25,
+               'title': 'Water Mass [g/m^3]', 'cmap': 'turbo', 'norm': None},
+        'MI': {'units': 'Ice Mass [g/m^3]', 'vmin': 0, 'vmax': 3, 'Nbins': 25,
+               'title': 'Ice Mass [g/m^3]', 'cmap': 'turbo', 'norm': None},
+
+        'RC': {'units': 'HIDRO Rain Rate [mm/hr]', 'vmin': 1e-2, 'vmax': 3e2, 'Nbins': 0,
+               'title': 'HIDRO Rain Rate [mm/hr]', 'cmap': check_cm('RefDiff'), 'norm': None},
+        'RP': {'units': 'PolZR Rain Rate [mm/hr]', 'vmin': 1e-2, 'vmax': 3e2, 'Nbins': 0,
+               'title': 'PolZR Rain Rate [mm/hr]', 'cmap': check_cm('RefDiff'), 'norm': None},
+        'RA': {'units': 'Attenuation Rain Rate [mm/hr]', 'vmin': 1e-2, 'vmax': 3e2, 'Nbins': 0,
+               'title': 'Attenuation Rain Rate [mm/hr]', 'cmap': check_cm('RefDiff'), 'norm': None},
+
+        'MRC': {'units': 'HIDRO Method', 'vmin': 0, 'vmax': 5, 'Nbins': 0,
+                'title': 'HIDRO Method', 'cmap': cmapmeth, 'norm': None},
+        'MRC2': {'units': 'HIDRO Method', 'vmin': 0, 'vmax': 5, 'Nbins': 0,
+                'title': 'HIDRO Method', 'cmap': cmapmeth, 'norm': None},
+
+        'DM': {'units': 'DM [mm]', 'vmin': 0.5, 'vmax': 5, 'Nbins': 8,
+               'title': 'DM [mm]', 'cmap': check_cm('BlueBrown10'), 'norm': None},
+        'NW': {'units': 'Log[Nw, m^-3 mm^-1]', 'vmin': 0.5, 'vmax': 7, 'Nbins': 12,
+               'title': 'Log[Nw, m^-3 mm^-1]', 'cmap': check_cm('BlueBrown10'), 'norm': None},
+    }
+
+    cfg = field_configs.get(field, None)
+    if cfg is None:
+        return ("Unknown", 0, 100, "viridis", f"Unknown Field: {field}", 10, None)
+
+    return (cfg["units"], cfg["vmin"], cfg["vmax"], cfg["cmap"], cfg["title"], cfg["Nbins"], cfg.get("norm", None))
 
 def get_radar_info(radar, sweep):
     site = ""
