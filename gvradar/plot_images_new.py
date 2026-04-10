@@ -1069,7 +1069,7 @@ def adjust_special_colorbars(field, display, index):
 
 def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, plot_type, fig, azi=None):
-    """Optimized plot saving with AGG backend"""
+    """Save by rendering to Qt canvas first (like GVview does)"""
     if not png:
         plt.show()
         return
@@ -1100,20 +1100,20 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         os.makedirs(outdir_multi, exist_ok=True)
         filepath = os.path.join(outdir_multi, png_file)
 
-    print(f"    [save] Using AGG backend for save...")
+    print(f"    [save] Rendering to Qt canvas first...")
     t0 = time.time()
     
-    # Force AGG backend for saving (optimized for file output)
-    from matplotlib.backends.backend_agg import FigureCanvasAgg
-    canvas = FigureCanvasAgg(fig)
+    # Create Qt canvas and render (fast path like GVview)
+    from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+    canvas = FigureCanvasQTAgg(fig)
+    canvas.draw()  # Render to Qt canvas (should be fast)
     
-    # Set DPI on figure before saving
-    fig.set_dpi(dpi)
+    print(f"    [save] Qt render took: {time.time()-t0:.2f}s")
     
-    # Use print_figure instead of print_png for more options
-    canvas.print_figure(filepath, dpi=dpi, bbox_inches='tight')
-    
-    print(f"    [save] AGG save took: {time.time()-t0:.2f}s")
+    # Now save the rendered canvas
+    t1 = time.time()
+    fig.savefig(filepath, dpi=dpi, bbox_inches='tight')
+    print(f"    [save] File write took: {time.time()-t1:.2f}s")
     print(f'  --> {filepath}')
 
 # ****************************************************************************************
