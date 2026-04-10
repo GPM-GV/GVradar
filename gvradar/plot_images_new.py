@@ -991,7 +991,7 @@ def add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout):
             abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.04, 0.98],
                                     xycoords='figure pixels', boxcoords='figure fraction',
                                     pad=0.0, frameon=False)
-            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.04, 1+0.975],                               
+            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.04, 0.975],                               
                                    xycoords='figure pixels', boxcoords='figure fraction',
                                    pad=0.0, frameon=False)
         else:
