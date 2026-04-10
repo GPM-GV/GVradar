@@ -936,7 +936,7 @@ def add_grid_lines_optimized(ax):
 # ****************************************************************************************
 
 def add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout):
-    """Optimized logo addition with caching"""
+    """Optimized logo addition with caching - using proven positioning"""
     if not add_logos:
         return
         
@@ -959,22 +959,53 @@ def add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout):
         ax.add_artist(abgpm)
     else:
         ncols = layout['ncols']
-        # Zoom factors optimized for different layouts
-        zoom_factors = {2: 0.035, 3: 0.035, 4: 0.030}
-        nasa_zoom = zoom_factors.get(ncols, 0.035) * ncols
-        #gpm_zoom = zoom_factors.get(ncols, 0.01) * ncols
-        gpm_zoom=0.015*ncols
         
-        imageboxnasa = OffsetImage(nasalogo, zoom=nasa_zoom)
-        imageboxgpm = OffsetImage(gpmlogo, zoom=gpm_zoom)
-        
-        # Use figure fraction coordinates consistently
-        abnasa = AnnotationBbox(imageboxnasa, (0.045, 0.98),  
-                                xycoords='figure fraction',
-                                frameon=False, box_alignment=(0, 1))
-        abgpm = AnnotationBbox(imageboxgpm, (0.955, 0.98),  
-                               xycoords='figure fraction',
-                               frameon=False, box_alignment=(1, 1))
+        # Use exact positioning from old working version
+        if ncols == 2:
+            imageboxnasa = OffsetImage(nasalogo, zoom=0.035*ncols)
+            imageboxgpm = OffsetImage(gpmlogo, zoom=0.018*ncols)
+            imageboxnasa.image.axes = fig
+            imageboxgpm.image.axes = fig
+            abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.045, 1+0.1],
+                                    xycoords='figure pixels', boxcoords='figure fraction',
+                                    pad=0.0, frameon=False)
+            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.08, 1+0.1],                               
+                                   xycoords='figure pixels', boxcoords='figure fraction',
+                                   pad=0.0, frameon=False)
+        elif ncols == 3:
+            imageboxnasa = OffsetImage(nasalogo, zoom=0.035*ncols)
+            imageboxgpm = OffsetImage(gpmlogo, zoom=0.0185*ncols)
+            imageboxnasa.image.axes = fig
+            imageboxgpm.image.axes = fig
+            abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.045, 1+0.061],
+                                    xycoords='figure pixels', boxcoords='figure fraction',
+                                    pad=0.0, frameon=False)
+            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.055, 1+0.061],                               
+                                   xycoords='figure pixels', boxcoords='figure fraction',
+                                   pad=0.0, frameon=False)
+        elif ncols == 4:
+            imageboxnasa = OffsetImage(nasalogo, zoom=0.030*ncols)
+            imageboxgpm = OffsetImage(gpmlogo, zoom=0.015*ncols)
+            imageboxnasa.image.axes = fig
+            imageboxgpm.image.axes = fig
+            abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.04, 1+0.066],
+                                    xycoords='figure pixels', boxcoords='figure fraction',
+                                    pad=0.0, frameon=False)
+            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.04, 1+0.061],                               
+                                   xycoords='figure pixels', boxcoords='figure fraction',
+                                   pad=0.0, frameon=False)
+        else:
+            # Default for other column counts
+            imageboxnasa = OffsetImage(nasalogo, zoom=0.035*ncols)
+            imageboxgpm = OffsetImage(gpmlogo, zoom=0.018*ncols)
+            imageboxnasa.image.axes = fig
+            imageboxgpm.image.axes = fig
+            abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.045, 1+0.1],
+                                    xycoords='figure pixels', boxcoords='figure fraction',
+                                    pad=0.0, frameon=False)
+            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.055, 1+0.1],                               
+                                   xycoords='figure pixels', boxcoords='figure fraction',
+                                   pad=0.0, frameon=False)
         
         fig.add_artist(abnasa)
         fig.add_artist(abgpm)
