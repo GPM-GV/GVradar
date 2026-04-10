@@ -591,7 +591,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     # *** Add title and logos AFTER all plotting ***
     if num_fields >= 2:
         # Title with correct y position (0.98 instead of 1.1)
-        plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=0.98)
+        plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=0.99)
     
     # Use existing logo function
     add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
@@ -988,10 +988,10 @@ def add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout):
             imageboxgpm = OffsetImage(gpmlogo, zoom=0.015*ncols)
             imageboxnasa.image.axes = fig
             imageboxgpm.image.axes = fig
-            abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.04, 0.971],  # Changed from 1.066
+            abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.03, 0.975],  # Changed from 1.066
                                     xycoords='figure pixels', boxcoords='figure fraction',
                                     pad=0.0, frameon=False)
-            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.06, 0.970],  # Changed from 1.061
+            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.08, 0.970],  # Changed from 1.061
                                    xycoords='figure pixels', boxcoords='figure fraction',
                                    pad=0.0, frameon=False)
         else:
