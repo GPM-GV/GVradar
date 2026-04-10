@@ -1106,7 +1106,12 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
     # Force AGG backend for saving (optimized for file output)
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     canvas = FigureCanvasAgg(fig)
-    canvas.print_png(filepath, dpi=dpi, bbox_inches='tight')
+    
+    # Set DPI on figure before saving
+    fig.set_dpi(dpi)
+    
+    # Use print_figure instead of print_png for more options
+    canvas.print_figure(filepath, dpi=dpi, bbox_inches='tight')
     
     print(f"    [save] AGG save took: {time.time()-t0:.2f}s")
     print(f'  --> {filepath}')
