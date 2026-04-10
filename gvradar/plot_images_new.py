@@ -591,7 +591,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     # *** Add title and logos AFTER all plotting ***
     if num_fields >= 2:
         # Title with correct y position (0.98 instead of 1.1)
-        plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=0.96)
+        plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=0.98)
     
     # Use existing logo function
     add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
@@ -962,16 +962,16 @@ def add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout):
         # Zoom factors optimized for different layouts
         zoom_factors = {2: 0.035, 3: 0.035, 4: 0.030}
         nasa_zoom = zoom_factors.get(ncols, 0.035) * ncols
-        gpm_zoom = zoom_factors.get(ncols, 0.018) * ncols
+        gpm_zoom = zoom_factors.get(ncols, 0.01) * ncols
         
         imageboxnasa = OffsetImage(nasalogo, zoom=nasa_zoom)
         imageboxgpm = OffsetImage(gpmlogo, zoom=gpm_zoom)
         
         # Use figure fraction coordinates consistently
-        abnasa = AnnotationBbox(imageboxnasa, (0.045, 0.98),  # Changed!
+        abnasa = AnnotationBbox(imageboxnasa, (0.045, 0.98),  
                                 xycoords='figure fraction',
                                 frameon=False, box_alignment=(0, 1))
-        abgpm = AnnotationBbox(imageboxgpm, (0.955, 0.98),  # Changed!
+        abgpm = AnnotationBbox(imageboxgpm, (0.955, 0.98),  
                                xycoords='figure fraction',
                                frameon=False, box_alignment=(1, 1))
         
