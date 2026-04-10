@@ -24,7 +24,7 @@ from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from PIL import Image
 import matplotlib.image as image
 import time
-print(f"Backend being used: {matplotlib.get_backend()}")
+
 # ****************************************************************************************
 # Custom Colormaps for Polarimetric Variables
 # ****************************************************************************************
@@ -1069,13 +1069,11 @@ def adjust_special_colorbars(field, display, index):
 
 def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, plot_type, fig, azi=None):
-    """Optimized plot saving - force rendering"""
+    """Optimized plot saving with AGG backend"""
     if not png:
         plt.show()
         return
         
-    save_start = time.time()
-    
     if outdir == '':
         outdir = os.getcwd()
     
@@ -1102,12 +1100,15 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         os.makedirs(outdir_multi, exist_ok=True)
         filepath = os.path.join(outdir_multi, png_file)
 
-    # Now save
-    print(f"    [save] Starting fig.savefig()...")
+    print(f"    [save] Using AGG backend for save...")
     t0 = time.time()
-    fig.savefig(filepath, dpi=dpi, bbox_inches='tight')
-    print(f"    [save] fig.savefig() took: {time.time()-t0:.2f}s")
     
+    # Force AGG backend for saving (optimized for file output)
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    canvas = FigureCanvasAgg(fig)
+    canvas.print_png(filepath, dpi=dpi, bbox_inches='tight')
+    
+    print(f"    [save] AGG save took: {time.time()-t0:.2f}s")
     print(f'  --> {filepath}')
 
 # ****************************************************************************************
