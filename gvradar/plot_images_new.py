@@ -482,7 +482,9 @@ def plot_fields(self):
 def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                    sweep=0, fields=['CZ'], max_range=150, 
                    mask_outside=True, png=False, outdir='', add_logos=True):
-    """Optimized PPI plotting with caching"""
+    """Optimized PPI plotting with PROGRESSIVE rendering"""
+    
+    plot_start = time.time()
     
     # Get radar info once
     site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep) 
@@ -502,27 +504,15 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     # Set plot parameters once
     set_plot_size_parms_ppi(num_fields)
 
-    # Create figure WITHOUT GridSpec
-    fig = plt.figure(figsize=[layout['width'], layout['height']])
-    fig.set_tight_layout(False)  # ← KEY: Disable tight_layout like GVview!
+    # Create figure
+    fig = create_figure(layout)
+    spec = create_gridspec(layout, fig)
     
-    # Calculate manual subplot positions (instead of GridSpec)
-    positions = []
-    nrows = layout['nrows']
-    ncols = layout['ncols']
-    
-    for row in range(nrows):
-        for col in range(ncols):
-            # Calculate position [left, bottom, width, height]
-            left = col / ncols
-            width = 1.0 / ncols
-            bottom = 1.0 - (row + 1) / nrows
-            height = 1.0 / nrows
-            positions.append([left, bottom, width, height])
+    print(f"  Setup time: {time.time() - plot_start:.2f}s")
     
     for index, field in enumerate(fields):
-        if index >= len(positions):
-            break
+        field_start = time.time()
+        print(f"\n  Field {index+1}/{num_fields}: {field}")
             
         # Get field info
         units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
@@ -537,13 +527,10 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         else:
             cmap = discrete_cmap(Nbins, base_cmap=cmap)
 
-        # Create axes manually with add_axes() instead of GridSpec
-        pos = positions[index]
-        ax = fig.add_axes(pos, projection=projection)
+        ax = fig.add_subplot(spec[layout['positions'][index]], projection=projection)
         ax.set_facecolor('black')
 
-        # Plot the data
-        t0 = time.time()
+        # Plot the field (your existing code)
         if field in ['RC', 'RP', 'RA']:
             processed_field = _cache.get_processed_field(radar, field)
             plot_name = f"{field}_plot"
@@ -589,37 +576,34 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                lon_lines=coord_data['lon_grid'], lat_lines=coord_data['lat_grid'],
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
-        print(f"    - plot_ppi_map: {time.time()-t0:.2f}s ⚠️")
         
         # Add map features
-        t0 = time.time()
-        add_heavy_features = (index == 0)  # Only first subplot gets ocean/lakes
         add_rings_radials_optimized(year, site, display, radar_lat, radar_lon, max_range, 
-                              ax, add_logos, fig, num_fields, layout, 
-                              COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
-                              add_heavy_features=add_heavy_features)  # Pass the flag
-        print(f"    - add_features: {time.time()-t0:.2f}s")
+                                  ax, add_logos, fig, num_fields, layout, 
+                                  COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES)
 
         if index == num_fields - 1:
-            t0 = time.time()
             add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout)
             if num_fields >= 2:
                 plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', 
                            y=(1.0 + (0.1)))
-            print(f"    - add_logo: {time.time()-t0:.2f}s")
                 
-        # Adjust special colorbars
         adjust_special_colorbars(field, display, index)
+        
+        # *** PROGRESSIVE RENDERING - Render this subplot NOW ***
+        t0 = time.time()
+        fig.canvas.draw()
+        print(f"    Progressive render: {time.time()-t0:.2f}s")
+        
+        print(f"    FIELD TOTAL: {time.time() - field_start:.2f}s")
     
-    # Save plot
+    # Save plot - should be fast now since everything is pre-rendered
     save_start = time.time()
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, 'PPI', fig)
-    print(f"\n  Save time: {time.time() - save_start:.2f}s")
+    print(f"  Save time: {time.time() - save_start:.2f}s")
     
     plt.close('all')
-    
-    print(f"\n  TOTAL PLOT TIME: {time.time() - plot_start:.2f}s")
 
 # ****************************************************************************************
 
