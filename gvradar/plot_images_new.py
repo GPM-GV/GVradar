@@ -1,3 +1,7 @@
+import sys
+from PyQt5.QtWidgets import QApplication
+# Create QApplication for batch Qt rendering (like GVview)
+app = QApplication(sys.argv)
 import numpy as np
 import math
 import pandas as pd
@@ -1069,7 +1073,7 @@ def adjust_special_colorbars(field, display, index):
 
 def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, 
              fields, num_fields, plot_type, fig, azi=None):
-    """Save by rendering to Qt canvas first (like GVview does)"""
+    """Save by rendering to hidden Qt window (like GVview does)"""
     if not png:
         plt.show()
         return
@@ -1100,20 +1104,29 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
         os.makedirs(outdir_multi, exist_ok=True)
         filepath = os.path.join(outdir_multi, png_file)
 
-    print(f"    [save] Rendering to Qt canvas first...")
+    print(f"    [save] Rendering via Qt window...")
     t0 = time.time()
     
-    # Create Qt canvas and render (fast path like GVview)
+    # Create Qt application if it doesn't exist
+    from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtCore import Qt
     from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+    import sys
+    
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication(sys.argv)
+    
+    # Create canvas with Qt backend (renders using Qt pipeline)
     canvas = FigureCanvasQTAgg(fig)
-    canvas.draw()  # Render to Qt canvas (should be fast)
+    canvas.draw()  # Render to Qt (should use GPU/optimized path)
     
-    print(f"    [save] Qt render took: {time.time()-t0:.2f}s")
+    print(f"    [save] Qt render: {time.time()-t0:.2f}s")
     
-    # Now save the rendered canvas
+    # Grab the rendered buffer and save
     t1 = time.time()
-    fig.savefig(filepath, dpi=dpi, bbox_inches='tight')
-    print(f"    [save] File write took: {time.time()-t1:.2f}s")
+    canvas.print_figure(filepath, dpi=dpi)
+    print(f"    [save] File write: {time.time()-t1:.2f}s")
     print(f'  --> {filepath}')
 
 # ****************************************************************************************
