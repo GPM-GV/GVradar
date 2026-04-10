@@ -988,10 +988,10 @@ def add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout):
             imageboxgpm = OffsetImage(gpmlogo, zoom=0.015*ncols)
             imageboxnasa.image.axes = fig
             imageboxgpm.image.axes = fig
-            abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.04, 0.970],  # Changed from 1.066
+            abnasa = AnnotationBbox(imageboxnasa, [0,0], xybox=[0.04, 0.971],  # Changed from 1.066
                                     xycoords='figure pixels', boxcoords='figure fraction',
                                     pad=0.0, frameon=False)
-            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.04, 0.970],  # Changed from 1.061
+            abgpm = AnnotationBbox(imageboxgpm, [0,0], xybox=[1-.06, 0.970],  # Changed from 1.061
                                    xycoords='figure pixels', boxcoords='figure fraction',
                                    pad=0.0, frameon=False)
         else:
