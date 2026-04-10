@@ -484,7 +484,7 @@ def plot_fields(self):
 def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                    sweep=0, fields=['CZ'], max_range=150, 
                    mask_outside=True, png=False, outdir='', add_logos=True):
-    """Optimized PPI with GVview-style rendering"""
+    """Optimized PPI with GVview-style rendering - NEW display per field"""
     
     plot_start = time.time()
     
@@ -494,7 +494,9 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     radar_lon = radar.longitude['data'][0]
     coord_data = _cache.get_coordinate_transform(radar_lat, radar_lon, max_range)
     
-    display = pyart.graph.RadarMapDisplay(radar)
+    # DON'T create display here - create fresh for each field!
+    # display = pyart.graph.RadarMapDisplay(radar)
+    
     num_fields = len(fields)
     layout = calculate_layout(num_fields)
     set_plot_size_parms_ppi(num_fields)
@@ -525,6 +527,9 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height], projection=projection)
         ax.set_facecolor('black')
         axes[index] = ax
+        
+        # *** CREATE NEW DISPLAY FOR THIS FIELD (like GVview does) ***
+        display = pyart.graph.RadarMapDisplay(radar)
         
         # Get field info
         units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
@@ -590,20 +595,14 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     
     # *** Add title and logos AFTER all plotting ***
     if num_fields >= 2:
-        # Title with correct y position (0.98 instead of 1.1)
         plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=0.99)
     
     # Use existing logo function
     add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
     
-    # Pre-render
-    #render_start = time.time()
-    #print(f"\n  Pre-rendering figure...")
-    #fig.canvas.draw()
-    #print(f"  Pre-render time: {time.time() - render_start:.2f}s")
-    
     # Save
     save_start = time.time()
+    print(f"\n  Saving...")
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, fields, num_fields, 'PPI', fig)
     print(f"  Save time: {time.time() - save_start:.2f}s")
     print(f"\n  TOTAL: {time.time() - plot_start:.2f}s")
@@ -830,7 +829,7 @@ def add_rings_radials_optimized_gvstyle(year, site, display, radar_lat, radar_lo
     
     add_radials_vectorized(display, radar_lat, radar_lon, max_range, coord_data)
     add_location_markers(site, year, display)
-    '''
+    
     # *** CREATE OCEAN/LAKES FRESH - DON'T USE CACHED VERSIONS ***
     ax.add_feature(cfeature.OCEAN.with_scale('50m'), facecolor="#414141", zorder=0)
     ax.add_feature(cfeature.LAKES.with_scale('50m'), facecolor="#414141", edgecolor='white', lw=0.25, zorder=0)
@@ -846,7 +845,7 @@ def add_rings_radials_optimized_gvstyle(year, site, display, radar_lat, radar_lo
     
     add_site_specific_features(site, ax, REEFS, MINOR_ISLANDS)
     add_grid_lines_optimized(ax)
-    '''
+    
 
 # ****************************************************************************************
 
