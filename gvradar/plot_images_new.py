@@ -482,7 +482,7 @@ def plot_fields(self):
 def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                    sweep=0, fields=['CZ'], max_range=150, 
                    mask_outside=True, png=False, outdir='', add_logos=True):
-    """Optimized PPI with GVview-style axes creation and proper layout"""
+    """Optimized PPI with GVview-style rendering"""
     
     plot_start = time.time()
     
@@ -497,30 +497,29 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     layout = calculate_layout(num_fields)
     set_plot_size_parms_ppi(num_fields)
 
-    # Create figure and GridSpec (for proper spacing)
+    # Create figure
     fig = create_figure(layout)
     spec = create_gridspec(layout, fig)
     
-    print(f"  Setup time: {time.time() - plot_start:.2f}s")
+    # *** Add title NOW (before plotting) ***
+    if num_fields >= 2:
+        mytitle = f'{site} {mydate} {mytime} UTC PPI {elv:2.1f} deg'
+        fig.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=(1.0 + (0.1)))
     
-    # *** STEP 1: Create REGULAR axes with GridSpec positions ***
+    # Create regular axes with GridSpec
     axes = []
     positions = []
     for index in range(num_fields):
-        # Create regular axis at GridSpec position
         ax = fig.add_subplot(spec[layout['positions'][index]])
         axes.append(ax)
-        # Save the position for later
         positions.append(ax.get_position())
     
-    print(f"  Created {num_fields} regular axes")
-    
-    # *** STEP 2: For each field, REPLACE with projected axis and plot ***
+    # Replace with projected axes and plot
     for index, field in enumerate(fields):
         field_start = time.time()
         print(f"\n  Field {index+1}/{num_fields}: {field}")
         
-        # REPLACE regular axis with projected version
+        # Replace with projected axis
         ax = axes[index]
         pos = positions[index]
         ax.remove()
@@ -535,13 +534,11 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         
         if num_fields < 2:
             title = f'{site} {field} {mydate} {mytime} UTC PPI Elev: {elv:2.1f} deg'
-        else:
-            mytitle = f'{site} {mydate} {mytime} UTC PPI {elv:2.1f} deg'
         
         if Nbins > 0:
             cmap = discrete_cmap(Nbins, base_cmap=cmap)
 
-        # Plot (your existing code)
+        # Plot
         if field in ['RC', 'RP', 'RA']:
             processed_field = _cache.get_processed_field(radar, field)
             plot_name = f"{field}_plot"
@@ -584,21 +581,25 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
                                embellish=False, mask_outside=mask_outside)
         
-        # Add features (CREATE OCEAN/LAKES FRESH for performance)
+        # Add features
         add_rings_radials_optimized_gvstyle(year, site, display, radar_lat, radar_lon, max_range, 
                                           ax, add_logos, fig, num_fields, layout, 
                                           COUNTIES, STATES, REEFS, MINOR_ISLANDS)
-
-        # Add title and logos on last field
-        if index == num_fields - 1:
-            add_logo_ppi_optimized(ax, add_logos, fig, num_fields, layout)
-            if num_fields >= 2:
-                plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=(1.0 + (0.1)))
-                
+        
         adjust_special_colorbars(field, display, index)
         print(f"    Field time: {time.time() - field_start:.2f}s")
     
-    # Save
+    # *** Add logos AFTER all fields plotted ***
+    if add_logos:
+        add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
+    
+    # *** PRE-RENDER like GVview does (mimics canvas.draw_idle()) ***
+    render_start = time.time()
+    print(f"\n  Pre-rendering figure...")
+    fig.canvas.draw()
+    print(f"  Pre-render time: {time.time() - render_start:.2f}s")
+    
+    # *** NOW save (should be fast since already rendered) ***
     save_start = time.time()
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, fields, num_fields, 'PPI', fig)
     print(f"  Save time: {time.time() - save_start:.2f}s")
