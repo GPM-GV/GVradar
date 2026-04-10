@@ -590,7 +590,7 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
                                           ax, add_logos, fig, num_fields, layout, 
                                           COUNTIES, STATES, REEFS, MINOR_ISLANDS)
         
-        adjust_special_colorbars(field, display, index)
+        adjust_special_colorbars(field, display, 0)
         print(f"    Field time: {time.time() - field_start:.2f}s")
     
     # *** Add title and logos AFTER all plotting ***
