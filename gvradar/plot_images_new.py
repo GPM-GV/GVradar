@@ -501,11 +501,6 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
     fig = create_figure(layout)
     spec = create_gridspec(layout, fig)
     
-    # *** Add title NOW (before plotting) ***
-    if num_fields >= 2:
-        mytitle = f'{site} {mydate} {mytime} UTC PPI {elv:2.1f} deg'
-        fig.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=(1.0 + (0.1)))
-    
     # Create regular axes with GridSpec
     axes = []
     positions = []
@@ -534,6 +529,8 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         
         if num_fields < 2:
             title = f'{site} {field} {mydate} {mytime} UTC PPI Elev: {elv:2.1f} deg'
+        else:
+            mytitle = f'{site} {mydate} {mytime} UTC PPI {elv:2.1f} deg'
         
         if Nbins > 0:
             cmap = discrete_cmap(Nbins, base_cmap=cmap)
@@ -589,23 +586,27 @@ def plot_fields_PPI(radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS, OCEAN, LAKES,
         adjust_special_colorbars(field, display, index)
         print(f"    Field time: {time.time() - field_start:.2f}s")
     
-    # *** Add logos AFTER all fields plotted ***
-    if add_logos:
-        add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
+    # *** Add title and logos AFTER all plotting ***
+    if num_fields >= 2:
+        # Title with correct y position (0.98 instead of 1.1)
+        plt.suptitle(mytitle, fontsize=8*layout['ncols'], weight='bold', y=0.98)
     
-    # *** PRE-RENDER like GVview does (mimics canvas.draw_idle()) ***
+    # Use existing logo function
+    add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
+    
+    # Pre-render
     render_start = time.time()
     print(f"\n  Pre-rendering figure...")
     fig.canvas.draw()
     print(f"  Pre-render time: {time.time() - render_start:.2f}s")
     
-    # *** NOW save (should be fast since already rendered) ***
+    # Save
     save_start = time.time()
     save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep, fields, num_fields, 'PPI', fig)
     print(f"  Save time: {time.time() - save_start:.2f}s")
     print(f"\n  TOTAL: {time.time() - plot_start:.2f}s")
     plt.close('all')
-
+    
 # ****************************************************************************************
 
 def plot_fields_PPI_QC(radar, sweep=0, fields=['CZ'], max_range=150, mask_outside=True, 
