@@ -1518,7 +1518,11 @@ def twister_data(timeStamp, radar_site):
     url = requestURL.replace(" ","")
 
     rawData = urlopen(url).read()
-    theData = rawData.decode('ascii')
+    try:
+        theData = rawData.decode('utf-8')
+    except UnicodeDecodeError:
+        theData = rawData.decode('latin-1')
+    #theData = rawData.decode('ascii')
     dataArray = theData.split("\n")
 
     start_sounding = model + " Text Sounding"
