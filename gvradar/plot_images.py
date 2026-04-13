@@ -7,11 +7,12 @@ import cartopy.crs as ccrs
 import matplotlib.colors as colors
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import Normalize
-import pyart
 import datetime
 from cftime import date2num, num2date
 import copy
 import os
+import pyart
+os.environ['PYART_QUIET'] = '1'
 import cartopy
 import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader

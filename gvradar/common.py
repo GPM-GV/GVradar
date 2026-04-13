@@ -12,8 +12,9 @@ V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 import numpy as np
 import copy
 from copy import deepcopy
-import pyart
 import os, sys, re
+import pyart
+os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
 import datetime
 from cftime import date2num, num2date
 import gzip
