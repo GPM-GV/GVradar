@@ -3,7 +3,8 @@ import sys
 import math
 import numpy as np
 import matplotlib
-
+import pyart
+os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
 
 # Qt context (batch use)
 from PyQt5.QtWidgets import QApplication
