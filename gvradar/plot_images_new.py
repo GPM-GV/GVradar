@@ -4,6 +4,7 @@ import math
 import numpy as np
 import matplotlib
 
+
 # Qt context (batch use)
 from PyQt5.QtWidgets import QApplication
 _app = QApplication.instance() or QApplication(sys.argv)
@@ -20,10 +21,10 @@ import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
-import pyart
 from PIL import Image
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
 from cftime import date2num, num2date
+import time
 
 
 # ======================================================================================
