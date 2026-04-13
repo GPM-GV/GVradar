@@ -308,67 +308,6 @@ def create_gridspec(layout, fig):
 def plot_fields(self):
     global _plotting_warmed_up
 
-    if self.sweeps_to_plot == "all":
-        sweepn = list(range(len(self.radar.sweep_number["data"][:])))
-    else:
-        sweepn = self.sweeps_to_plot
-
-    if self.scan_type == "PPI":
-        if not self.plot_fast:
-            COUNTIES, STATES, REEFS, MINOR_ISLANDS = _cache.get_map_features()
-            if self.plot_multi and len(self.fields_to_plot) > 1 and not _plotting_warmed_up:
-                warmup_plotting_engine(self.radar, sweepn[0], self.max_range)
-                _plotting_warmed_up = True
-        else:
-            COUNTIES = STATES = REEFS = MINOR_ISLANDS = None
-
-        if self.plot_multi:
-            os.makedirs(self.plot_dir, exist_ok=True)
-            for sweep in sweepn:
-                if self.plot_fast:
-                    plot_fields_PPI_QC(
-                        self.radar, sweep=sweep, fields=self.fields_to_plot,
-                        max_range=self.max_range, png=self.png, outdir=self.plot_dir,
-                        add_logos=self.add_logos, mask_outside=self.mask_outside
-                    )
-                else:
-                    plot_fields_PPI(
-                        self.radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS,
-                        sweep=sweep, fields=self.fields_to_plot, max_range=self.max_range,
-                        mask_outside=self.mask_outside, png=self.png, outdir=self.plot_dir,
-                        add_logos=self.add_logos
-                    )
-
-        if self.plot_single:
-            for field in self.fields_to_plot:
-                plot_dir = os.path.join(self.plot_dir, field)
-                os.makedirs(plot_dir, exist_ok=True)
-                for sweep in sweepn:
-                    if self.plot_fast:
-                        plot_fields_PPI_QC(
-                            self.radar, sweep=sweep, fields=[field],
-                            max_range=self.max_range, png=self.png, outdir=plot_dir,
-                            add_logos=self.add_logos, mask_outside=self.mask_outside
-                        )
-                    else:
-                        plot_fields_PPI(
-                            self.radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS,
-                            sweep=sweep, fields=[field], max_range=self.max_range,
-                            mask_outside=self.mask_outside, png=self.png, outdir=plot_dir,
-                            add_logos=self.add_logos
-                        )
-    else:
-        # Leave your RHI path as-is in your full file (not included here)
-        raise NotImplementedError("RHI path not included in this cleaned snippet.")
-
-
-# ======================================================================================
-# PPI (Map / Cartopy) - GVview-style axis replacement and fresh display per field
-# ======================================================================================
-
-def plot_fields(self):
-    global _plotting_warmed_up
-
     start = time.time()
 
     if self.sweeps_to_plot == "all":
@@ -673,9 +612,8 @@ def save_plot(png, outdir, site, year, month, day, hh, mm, ss, string_csweep,
             png_file = f"{site}_{year}_{month+day}_{hh+mm+ss}_{num_fields}panel_{azi:2.1f}AZ_RHI.png"
         else:
             png_file = f"{site}_{year}_{month+day}_{hh+mm+ss}_{num_fields}panel_sw{string_csweep}_{plot_type}.png"
-        outdir_multi = os.path.join(outdir, "Multi")
-        os.makedirs(outdir_multi, exist_ok=True)
-        filepath = os.path.join(outdir_multi, png_file)
+        os.makedirs(outdir, exist_ok=True)
+        filepath = os.path.join(outdir, png_file)
 
     fig.savefig(filepath, dpi=dpi,bbox_inches='tight')
     print(f"  --> {filepath}")
