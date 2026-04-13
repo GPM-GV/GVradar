@@ -949,6 +949,123 @@ def annotate_plot_rhi_optimized(ax, fig, num_fields, layout):
         fig.add_artist(abnasa)
         fig.add_artist(abgpm)
 
+# ======================================================================================
+# PPI (Map / Cartopy) - GVview-style axis replacement and fresh display per field
+# ======================================================================================
+
+def plot_fields_PPI(
+    radar, COUNTIES, STATES, REEFS, MINOR_ISLANDS,
+    sweep=0, fields=("CZ",), max_range=150,
+    mask_outside=True, png=False, outdir="", add_logos=True
+):
+    site, mydate, mytime, elv, year, month, day, hh, mm, ss, string_csweep = get_radar_info(radar, sweep)
+    radar_lat = radar.latitude["data"][0]
+    radar_lon = radar.longitude["data"][0]
+    coord_data = _cache.get_coordinate_transform(radar_lat, radar_lon, max_range)
+
+    num_fields = len(fields)
+    layout = calculate_layout(num_fields)
+    set_plot_size_parms_ppi(num_fields)
+
+    fig = create_figure(layout)
+    spec = create_gridspec(layout, fig)
+
+    axes = []
+    positions = []
+    for i in range(num_fields):
+        ax0 = fig.add_subplot(spec[layout["positions"][i]])
+        axes.append(ax0)
+        positions.append(ax0.get_position())
+
+    projection = ccrs.LambertConformal(radar_lon, radar_lat)
+
+    for i, field in enumerate(fields):
+        ax = axes[i]
+        pos = positions[i]
+        ax.remove()
+        ax = fig.add_axes([pos.x0, pos.y0, pos.width, pos.height], projection=projection)
+        ax.set_facecolor("black")
+        axes[i] = ax
+
+        display = pyart.graph.RadarMapDisplay(radar)
+
+        units, vmin, vmax, cmap, title, Nbins, norm = get_field_info(radar, field)
+        if num_fields < 2:
+            title = f"{site} {field} {mydate} {mytime} UTC PPI Elev: {elv:2.1f} deg"
+        else:
+            mytitle = f"{site} {mydate} {mytime} UTC PPI {elv:2.1f} deg"
+
+        if Nbins > 0:
+            cmap = discrete_cmap(Nbins, base_cmap=cmap)
+
+        if field in ("RC", "RP", "RA"):
+            processed = _cache.get_processed_field(radar, field)
+            plot_name = f"{field}_plot"
+            radar.add_field(plot_name, processed, replace_existing=True)
+            levels = [0, 5, 10, 15, 20, 25, 100, 150, 200, 250, 300]
+            midnorm = MidpointNormalize(vmin=0, vcenter=25, vmax=300)
+            display.plot_ppi_map(
+                plot_name, sweep, vmin=vmin, vmax=vmax,
+                resolution="50m", title=title, projection=projection, ax=ax,
+                cmap=cmap, norm=midnorm, ticks=levels, colorbar_label=units,
+                min_lon=coord_data["min_lon"], max_lon=coord_data["max_lon"],
+                min_lat=coord_data["min_lat"], max_lat=coord_data["max_lat"],
+                lon_lines=coord_data["lon_grid"], lat_lines=coord_data["lat_grid"],
+                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
+                embellish=False, mask_outside=mask_outside,
+            )
+        elif field == "DR" and norm is not None:
+            display.plot_ppi_map(
+                field, sweep, vmin=vmin, vmax=vmax,
+                resolution="50m", title=title, projection=projection, ax=ax,
+                cmap=cmap, norm=norm, ticks=cbar_limits_zdr, colorbar_label=units,
+                min_lon=coord_data["min_lon"], max_lon=coord_data["max_lon"],
+                min_lat=coord_data["min_lat"], max_lat=coord_data["max_lat"],
+                lon_lines=coord_data["lon_grid"], lat_lines=coord_data["lat_grid"],
+                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
+                embellish=False, mask_outside=mask_outside,
+            )
+        elif field == "RH" and norm is not None:
+            display.plot_ppi_map(
+                field, sweep, vmin=vmin, vmax=vmax,
+                resolution="50m", title=title, projection=projection, ax=ax,
+                cmap=cmap, norm=norm, ticks=cbar_limits_rhohv, colorbar_label=units,
+                min_lon=coord_data["min_lon"], max_lon=coord_data["max_lon"],
+                min_lat=coord_data["min_lat"], max_lat=coord_data["max_lat"],
+                lon_lines=coord_data["lon_grid"], lat_lines=coord_data["lat_grid"],
+                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
+                embellish=False, mask_outside=mask_outside,
+            )
+        else:
+            display.plot_ppi_map(
+                field, sweep, vmin=vmin, vmax=vmax,
+                resolution="50m", title=title, projection=projection, ax=ax,
+                cmap=cmap, colorbar_label=units,
+                min_lon=coord_data["min_lon"], max_lon=coord_data["max_lon"],
+                min_lat=coord_data["min_lat"], max_lat=coord_data["max_lat"],
+                lon_lines=coord_data["lon_grid"], lat_lines=coord_data["lat_grid"],
+                add_grid_lines=False, lat_0=radar_lat, lon_0=radar_lon,
+                embellish=False, mask_outside=mask_outside,
+            )
+
+        add_rings_radials_optimized_gvstyle(
+            year, site, display, radar_lat, radar_lon, max_range,
+            ax, COUNTIES, STATES, REEFS, MINOR_ISLANDS
+        )
+
+        adjust_special_colorbars(field, display, 0)
+
+    if num_fields >= 2:
+        plt.suptitle(mytitle, fontsize=8 * layout["ncols"], weight="bold", y=0.99)
+
+    add_logo_ppi_optimized(axes[-1], add_logos, fig, num_fields, layout)
+
+    save_plot(
+        png, outdir, site, year, month, day, hh, mm, ss,
+        string_csweep, list(fields), num_fields, "PPI", fig
+    )
+    plt.close(fig)
+
 def plot_fields_PPI_QC(radar, sweep=0, fields=('CZ',), max_range=150,
                        mask_outside=True, png=False, outdir='', add_logos=True):
     """Fast PPI plotting without Cartopy."""
