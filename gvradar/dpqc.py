@@ -13,8 +13,8 @@ import numpy as np
 import os
 from scipy import ndimage
 from copy import deepcopy
-import pyart
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
+import pyart
 import traceback
 from gvradar import common as cm
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,

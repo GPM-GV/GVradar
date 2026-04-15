@@ -13,8 +13,8 @@ import numpy as np
 import copy
 from copy import deepcopy
 import os, sys, re
-import pyart
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
+import pyart
 import datetime
 from cftime import date2num, num2date
 import gzip

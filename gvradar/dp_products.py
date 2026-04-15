@@ -12,8 +12,8 @@ V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 from __future__ import print_function
 import numpy as np
 import os
-import pyart
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
+import pyart
 import datetime
 from scipy.special import gamma
 from gvradar import (common as cm, plot_images as pi)

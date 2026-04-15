@@ -11,8 +11,8 @@ import datetime
 from cftime import date2num, num2date
 import copy
 import os
-import pyart
 os.environ['PYART_QUIET'] = '1'
+import pyart
 import cartopy
 import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader
