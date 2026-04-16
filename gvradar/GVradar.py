@@ -99,7 +99,13 @@ class QC:
     # Get KDP and Std(PhiDP)
         D3R_list = ['KaD3R', 'KuD3R']
         if self.site not in D3R_list:
-            self.radar = qc.calculate_kdp(self)
+            # If no KDP, calculate field
+            if 'KD' not in self.radar.fields.keys():  
+                self.radar = dp.get_kdp(self)
+                #self.radar = qc.calculate_kdp(self)
+            elif self.get_Bringi_kdp:
+                self.radar = dp.get_kdp(self)
+                #self.radar = qc.calculate_kdp(self)
 
     # Filter D3R elevations and 4.4 km artifact
         if self.site in D3R_list:
