@@ -1107,6 +1107,15 @@ def calculate_kdp(self):
             window=4
             std_gate=15
             nfilter=1
+            thsd=25
+        elif self.SC_KDP:
+            print('    Using SC Kdp...')
+            DZ = self.radar.fields['DZ']['data'].copy()
+            DP = self.radar.fields['PH']['data'].copy()
+            window=4
+            std_gate=15
+            nfilter=1
+            thsd=18
         else:
             try:
                 DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
@@ -1117,6 +1126,9 @@ def calculate_kdp(self):
             window=4
             std_gate=15
             nfilter=1
+            thsd=25
+
+        print(f'KDP thresholds window: {window}, std_gate: {std_gate}, nfilter: {nfilter}, thsd: {thsd}')
 
         # Range needs to be supplied as a variable, with same shape as DZ
         rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
@@ -1124,7 +1136,7 @@ def calculate_kdp(self):
 
         try:
             KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
-                                                        thsd=25, gs=gate_spacing, 
+                                                        thsd=thsd, gs=gate_spacing, 
                                                         window=window, nfilter=nfilter, 
                                                         std_gate=std_gate)                                                 
         except Exception as e:
@@ -1268,6 +1280,7 @@ def get_default_thresh_dict():
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
                            'get_GV_SD':  False, 'SD_window': 15,
                            'get_Bringi_kdp': False,
+                           'SC_KDP': False,
                            'noKDP':  False,
                            'unfold_phidp': True,
                            'merge_sp': True,
