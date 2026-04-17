@@ -100,10 +100,10 @@ class QC:
         D3R_list = ['KaD3R', 'KuD3R']
         if self.site not in D3R_list:
             # If no KDP, calculate field
-            if 'KD' not in self.radar.fields.keys():  
+            if self.get_Bringi_kdp:
                 self.radar = dp.get_kdp(self)
                 #self.radar = qc.calculate_kdp(self)
-            elif self.get_Bringi_kdp:
+            elif 'KD' not in self.radar.fields.keys():  
                 self.radar = dp.get_kdp(self)
                 #self.radar = qc.calculate_kdp(self)
 
