@@ -1135,7 +1135,8 @@ def calculate_kdp(self):
             PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
             STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
 
-        if 'KD' not in self.radar.fields.keys():
+        #if 'KD' not in self.radar.fields.keys():
+        if self.get_Bringi_kdp:
             self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
 		        units='deg/km',
 		        long_name='Specific Differential Phase (Bringi)',
