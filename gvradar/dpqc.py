@@ -1112,6 +1112,10 @@ def calculate_kdp(self):
             print('    Using SC Kdp...')
             DZ = self.radar.fields['DZ']['data'].copy()
             DP = self.radar.fields['PH']['data'].copy()
+            # Add debug print to verify:
+            print(f'    DZ type: {type(DZ)}')
+            print(f'    DZ is masked: {isinstance(DZ, np.ma.MaskedArray)}')
+            print(f'    DZ masked count: {np.ma.count_masked(DZ)}')
             window=4
             std_gate=15
             nfilter=1
