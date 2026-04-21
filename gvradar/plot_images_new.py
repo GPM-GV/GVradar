@@ -1,19 +1,14 @@
 import os
 import sys
 import math
+import time
 import numpy as np
-import matplotlib
+
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
-import pyart
 
-# Qt context (batch use)
-from PyQt5.QtWidgets import QApplication
-_app = QApplication.instance() or QApplication(sys.argv)
-
-# Matplotlib backend setup
-matplotlib.use("Qt5Agg")
-matplotlib.rcParams["backend"] = "Qt5Agg"
-matplotlib.rcParams["agg.path.chunksize"] = 0
+import matplotlib
+matplotlib.use('Agg')
+matplotlib.rcParams['agg.path.chunksize'] = 0
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -21,12 +16,10 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-
-from PIL import Image
 from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+from PIL import Image
 from cftime import date2num, num2date
-import time
-
+import pyart
 
 # ======================================================================================
 # Colormaps / Norms
