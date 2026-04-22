@@ -297,7 +297,7 @@ class DP_products:
         self.dr = self.radar.fields['DR']['data'].copy()
         self.kd = self.radar.fields['KD']['data'].copy()
         self.rh = self.radar.fields['RH']['data'].copy()
-        self.sq = self.radar.fields['RH']['data'].copy()
+        self.sq = self.radar.fields['SQ']['data'].copy()
         if 'ZZ' in self.radar.fields.keys():
             self.zz = self.radar.fields['ZZ']['data'].copy()
         else:

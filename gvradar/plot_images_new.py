@@ -6,17 +6,18 @@ import numpy as np
 
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
 
-import matplotlib
-matplotlib.use('Agg')
-matplotlib.rcParams['agg.path.chunksize'] = 0
-
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import matplotlib.colors as colors
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import Normalize
+from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-from matplotlib.offsetbox import AnnotationBbox, OffsetImage
+
 from PIL import Image
 from cftime import date2num, num2date
 import pyart
