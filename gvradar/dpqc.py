@@ -1112,10 +1112,6 @@ def calculate_kdp(self):
             print('    Using SC Kdp...')
             DZ = self.radar.fields['DZ']['data'].copy()
             DP = self.radar.fields['PH']['data'].copy()
-            # Add debug print to verify:
-            print(f'    DZ type: {type(DZ)}')
-            print(f'    DZ is masked: {isinstance(DZ, np.ma.MaskedArray)}')
-            print(f'    DZ masked count: {np.ma.count_masked(DZ)}')
             window=4
             std_gate=15
             nfilter=1
@@ -1132,7 +1128,7 @@ def calculate_kdp(self):
             nfilter=1
             thsd=25
 
-        print(f'KDP thresholds window: {window}, std_gate: {std_gate}, nfilter: {nfilter}, thsd: {thsd}')
+        print(f'        KDP thresholds window: {window}, std_gate: {std_gate}, nfilter: {nfilter}, thsd: {thsd}')
 
         # Range needs to be supplied as a variable, with same shape as DZ
         rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])

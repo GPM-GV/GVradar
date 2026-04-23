@@ -475,118 +475,205 @@ def get_uwy_archive(self):
 # ***************************************************************************************
 
 def rename_fields_in_radar(self):
-
     """
-    Rename fields we want to keep with GPM, 2-letter IDs (e.g. CZ, DR, KD)
-    Written by: David B. Wolff, NASA/WFF
+    Rename fields we want to keep with GPM 2-letter IDs (e.g. CZ, DR, KD)
 
-    Parameters:
-    -----------
-    radar: pyart radar object
-    old_fields: List of current field names that we want to change
-    new_fields: List of field names we want to change the name to
-
-    Return:
-    -------
-    radar: radar with more succinct field names
-
-    """    
-    print('', "Renaming radar fields...", sep='\n')
+    Returns:
+    --------
+    tuple: (radar, zz_field) - radar with renamed fields and reference field
+    """
+    print('\nRenaming radar fields...')
     print(self.radar.fields.keys())
-    if 'PHIDP2' in self.radar.fields.keys():
-        old_fields = ['DBZ2', 'VEL2', 'WIDTH2', 'ZDR2', 'PHIDP2', 'RHOHV2', 'SQI2']
-        new_fields = ['DZ',     'VR',    'SW',   'DR', 'PH',     'RH',     'SQ']
-    if 'KDP2' in self.radar.fields.keys():
-        old_fields = ['DBZ2', 'VEL2', 'WIDTH2', 'ZDR2', 'KDP2', 'PHIDP2', 'RHOHV2', 'SQI2']
-        new_fields = ['DZ',     'VR',    'SW',   'DR',   'KD',   'PH',     'RH',     'SQ']
-    elif 'SQI' in self.radar.fields.keys():
-        old_fields = ['DBZ', 'VEL', 'WIDTH', 'ZDR', 'KDP', 'PHIDP', 'SQI', 'RHOHV']
-        new_fields = ['DZ',  'VR',   'SW',   'DR',  'KD',   'PH',    'SQ',    'RH']    
-    elif 'DBZ' in self.radar.fields.keys():
-        old_fields = ['DBZ', 'VEL', 'WIDTH', 'ZDR', 'KDP', 'PHIDP', 'RHOHV']
-        new_fields = ['DZ',  'VR',   'SW',   'DR',  'KD',   'PH',     'RH']
-    elif 'MaskSecondTrip' in self.radar.fields.keys():
-        old_fields = ['ReflectivityHV', 'Velocity', 'SpectralWidth', 
-                      'DifferentialReflectivity', 'DifferentialPhase', 
-                      'CopolarCorrelation']
-        new_fields = ['DZ', 'VR', 'SW', 'DR', 'PH', 'RH']
-    elif 'reflectivity' in self.radar.fields.keys():
-        old_fields = ['differential_phase', 'velocity', 'spectrum_width', 'reflectivity', 'differential_reflectivity', 'cross_correlation_ratio']
-        new_fields = ['PH',     'VR',     'SW',   'DZ',   'DR', 'RH']
-    elif 'REF' in self.radar.fields.keys():
-        old_fields = ['SW', 'PHI', 'ZDR', 'REF', 'VEL', 'RHO']
-        new_fields = ['SW', 'PH' , 'DR' , 'DZ' , 'VR' , 'RH' ]
-    elif 'radar_echo_classification' in self.radar.fields.keys():
-        old_fields = ['radar_echo_classification', 'radar_estimated_rain_rate', 'D0', 'NW', 'velocity', 
-         'corrected_velocity', 'total_power', 'corrected_reflectivity', 'cross_correlation_ratio', 
-         'differential_reflectivity', 'corrected_differential_reflectivity', 'differential_phase', 
-         'corrected_differential_phase', 'corrected_specific_differential_phase', 'spectrum_width', 
-         'signal_to_noise_ratio']
-        new_fields = ['radar_echo_classification', 'RR', 'D0', 'NW', 'velocity', 
-         'VR', 'total_power', 'CZ', 'RH', 
-         'differential_reflectivity', 'DR', 'differential_phase', 
-         'PH', 'corrected_specific_differential_phase', 'SW', 
-         'signal_to_noise_ratio']
-    elif 'ZC' in self.radar.fields.keys():
-        old_fields = ['SN', 'ZH', 'ZD', 'RH', 'PH', 'KD', 'VE', 'ZC', 'ZB', 'DO', 'NW', 'RR', 'CM', 'HC']
-        new_fields = ['SN', 'DZ', 'ZDR', 'RH', 'PH', 'KD', 'VR', 'CZ', 'DR', 'DO', 'NW', 'RR', 'CM', 'HC']
-    elif 'DBZH' in self.radar.fields.keys():
-        old_fields = ['DBZH', 'TH', 'RHOHV', 'UPHIDP', 'WRADH', 'PHIDP', 'ZDR', 'KDP', 'SQIH', 'VRADH']
-        new_fields = ['DZ',   'TH', 'RH',    'UPHIDP', 'WRADH', 'PH',    'DR',  'KD',  'SQ', 'VR'] 
-    elif 'ZZ' in self.radar.fields.keys():
-        old_fields = ['ZZ']
-        new_fields = ['DZ']    
-    elif 'DZ' in self.radar.fields.keys():
-        old_fields = []
-        new_fields = []
-    elif 'CZ' in self.radar.fields.keys():
-        old_fields = []
-        new_fields = []
+    
+    # Define all field mapping configurations
+    FIELD_MAPPINGS = [
+        {
+            'identifier': 'KDP2',  # Check most specific first
+            'old_fields': ['DBZ2', 'VEL2', 'WIDTH2', 'ZDR2', 'KDP2', 'PHIDP2', 'RHOHV2', 'SQI2'],
+            'new_fields': ['DZ',   'VR',   'SW',     'DR',   'KD',   'PH',     'RH',     'SQ']
+        },
+        {
+            'identifier': 'PHIDP2',
+            'old_fields': ['DBZ2', 'VEL2', 'WIDTH2', 'ZDR2', 'PHIDP2', 'RHOHV2', 'SQI2'],
+            'new_fields': ['DZ',   'VR',   'SW',     'DR',   'PH',     'RH',     'SQ']
+        },
+        {
+            'identifier': 'SQI',
+            'old_fields': ['DBZ', 'VEL', 'WIDTH', 'ZDR', 'KDP', 'PHIDP', 'SQI', 'RHOHV'],
+            'new_fields': ['DZ',  'VR',  'SW',    'DR',  'KD',  'PH',    'SQ',  'RH']
+        },
+        {
+            'identifier': 'MaskSecondTrip',
+            'old_fields': ['ReflectivityHV', 'Velocity', 'SpectralWidth', 
+                          'DifferentialReflectivity', 'DifferentialPhase', 'CopolarCorrelation'],
+            'new_fields': ['DZ', 'VR', 'SW', 'DR', 'PH', 'RH']
+        },
+        {
+            'identifier': 'reflectivity',
+            'old_fields': ['differential_phase', 'velocity', 'spectrum_width', 'reflectivity', 
+                          'differential_reflectivity', 'cross_correlation_ratio'],
+            'new_fields': ['PH', 'VR', 'SW', 'DZ', 'DR', 'RH']
+        },
+        {
+            'identifier': 'REF',
+            'old_fields': ['SW', 'PHI', 'ZDR', 'REF', 'VEL', 'RHO'],
+            'new_fields': ['SW', 'PH',  'DR',  'DZ',  'VR',  'RH']
+        },
+        {
+            'identifier': 'radar_echo_classification',
+            'old_fields': ['radar_echo_classification', 'radar_estimated_rain_rate', 'D0', 'NW', 
+                          'velocity', 'corrected_velocity', 'total_power', 'corrected_reflectivity', 
+                          'cross_correlation_ratio', 'differential_reflectivity', 
+                          'corrected_differential_reflectivity', 'differential_phase', 
+                          'corrected_differential_phase', 'corrected_specific_differential_phase', 
+                          'spectrum_width', 'signal_to_noise_ratio'],
+            'new_fields': ['radar_echo_classification', 'RR', 'D0', 'NW', 'velocity', 'VR', 
+                          'total_power', 'CZ', 'RH', 'differential_reflectivity', 'DR', 
+                          'differential_phase', 'PH', 'corrected_specific_differential_phase', 
+                          'SW', 'signal_to_noise_ratio']
+        },
+        {
+            'identifier': 'ZC',
+            'old_fields': ['SN', 'ZH', 'ZD',  'RH', 'PH', 'KD', 'VE', 'ZC', 'ZB', 'DO', 'NW', 'RR', 'CM', 'HC'],
+            'new_fields': ['SN', 'DZ', 'ZDR', 'RH', 'PH', 'KD', 'VR', 'CZ', 'DR', 'DO', 'NW', 'RR', 'CM', 'HC']
+        },
+        {
+            'identifier': 'DBZH',
+            'old_fields': ['DBZH', 'TH', 'RHOHV', 'UPHIDP', 'WRADH', 'PHIDP', 'ZDR', 'KDP', 'SQIH', 'VRADH'],
+            'new_fields': ['DZ',   'TH', 'RH',    'UPHIDP', 'WRADH', 'PH',    'DR',  'KD',  'SQ',   'VR']
+        },
+        {
+            'identifier': 'ZZ',
+            'old_fields': ['ZZ'],
+            'new_fields': ['DZ']
+        },
+        {
+            'identifier': 'DBZ',  # Check after more specific DBZ variants
+            'old_fields': ['DBZ', 'VEL', 'WIDTH', 'ZDR', 'KDP', 'PHIDP', 'RHOHV'],
+            'new_fields': ['DZ',  'VR',  'SW',    'DR',  'KD',  'PH',    'RH']
+        },
+        {
+            'identifier': 'DZ',  # Already renamed
+            'old_fields': [],
+            'new_fields': []
+        },
+        {
+            'identifier': 'CZ',  # Already renamed
+            'old_fields': [],
+            'new_fields': []
+        }
+    ]
+    
+    # Find matching field mapping
+    mapping = self._find_field_mapping(FIELD_MAPPINGS)
+    
+    # Rename fields
+    self._apply_field_mapping(mapping['old_fields'], mapping['new_fields'])
+    
+    # Add or retrieve corrected reflectivity field
+    zz = self._handle_corrected_reflectivity()
+    
+    print(self.radar.fields.keys(), '\n')
+    return self.radar, zz
 
-    # Change names of old fields to new fields using pop
-    nl = len(old_fields)
-    for i in range(0,nl):
-        old_field = old_fields[i]
-        new_field = new_fields[i]
-        self.radar.fields[new_field] = self.radar.fields.pop(old_field)
-        i += 1  
+# ***************************************************************************************
 
-    # Add Corrected Reflectivity field
-    if ('CZ') not in self.radar.fields.keys():
-#        if self.site == 'NPOL' or self.site == 'KWAJ':
-        if self.site == 'KWAJ':
-            zz = deepcopy(self.radar.fields['DBT2'])
-            cz = self.radar.fields['DBT2']['data'].copy()
-            self.radar = add_field_to_radar_object(cz, self.radar, field_name='CZ', 
-                                         units='dBZ',
-                                         long_name='Corrected Reflectivity', 
-                                         standard_name='Corrected Reflectivity', 
-                                         dz_field='DZ')
-        elif self.site == 'KaD3R' or self.site == 'KuD3R':
-            zz = deepcopy(self.radar.fields['DZ'])
-            cz_dict = {'data': zz['data'], 'units': '', 'long_name': 'CZ',
-                       '_FillValue': -32767.0, 'standard_name': 'CZ'}
-            self.radar.add_field('CZ', cz_dict, replace_existing=True)
-        else: 
-            zz = deepcopy(self.radar.fields['DZ'])
-            cz = self.radar.fields['DZ']['data'].copy()
-            self.radar = add_field_to_radar_object(cz, self.radar, field_name='CZ', 
-                                         units='dBZ',
-                                         long_name='Corrected Reflectivity', 
-                                         standard_name='Corrected Reflectivity', 
-                                         dz_field='DZ')
-         
-        print(self.radar.fields.keys(), '', sep='\n')
-        return self.radar, zz
-    else:
-        if self.site == 'CPOL':
-            zz = deepcopy(self.radar.fields['CZ'])
+def _find_field_mapping(self, mappings):
+    """Find the appropriate field mapping based on available fields."""
+    current_fields = self.radar.fields.keys()
+    
+    for mapping in mappings:
+        if mapping['identifier'] in current_fields:
+            return mapping
+    
+    # Default fallback
+    print("Warning: No matching field mapping found. Using empty mapping.")
+    return {'old_fields': [], 'new_fields': []}
+
+# ***************************************************************************************
+
+def _apply_field_mapping(self, old_fields, new_fields):
+    """Rename fields from old names to new names."""
+    for old_field, new_field in zip(old_fields, new_fields):
+        if old_field in self.radar.fields:
+            self.radar.fields[new_field] = self.radar.fields.pop(old_field)
         else:
-            zz = deepcopy(self.radar.fields['DZ'])
-        
-        print(self.radar.fields.keys(), '', sep='\n')
-        return self.radar, zz
+            print(f"Warning: Expected field '{old_field}' not found in radar data.")
 
+# ***************************************************************************************
+
+def _handle_corrected_reflectivity(self):
+    """
+    Add or retrieve corrected reflectivity (CZ) field and return raw reflectivity reference.
+    
+    Returns:
+    --------
+    dict: zz - Deep copy of raw reflectivity field (preserved for later QC comparison)
+    
+    Notes:
+    ------
+    - zz: Raw reflectivity field (complete field dict with metadata) - preserved as baseline
+    - CZ: Starts as copy of raw data, will undergo quality control later in GVradar pipeline
+    """
+    
+    # If CZ already exists, return appropriate raw reference field
+    if 'CZ' in self.radar.fields:
+        # For CPOL, CZ is already the raw field
+        # For others, DZ is the raw field
+        raw_field = 'CZ' if self.site == 'CPOL' else 'DZ'
+        return deepcopy(self.radar.fields[raw_field])
+    
+    # Determine source field for CZ creation
+    source_field = self._get_cz_source_field()
+    
+    # Create deep copy of raw reflectivity field (preserves metadata)
+    # This will be returned as reference to original/raw data
+    zz = deepcopy(self.radar.fields[source_field])
+    
+    # Create CZ field based on site
+    if self.site in ['KaD3R', 'KuD3R']:
+        # For D3R radars, use simplified field dict
+        cz_dict = {
+            'data': zz['data'],  # Copy of raw data - will be QC'd later
+            'units': '',
+            'long_name': 'CZ',
+            '_FillValue': -32767.0,
+            'standard_name': 'CZ'
+        }
+        self.radar.add_field('CZ', cz_dict, replace_existing=True)
+    else:
+        # For other radars, copy the data array (not the full field dict)
+        # This copy will undergo quality control later
+        cz = self.radar.fields[source_field]['data'].copy()
+        self.radar = add_field_to_radar_object(
+            cz, self.radar, 
+            field_name='CZ',
+            units='dBZ',
+            long_name='Corrected Reflectivity',
+            standard_name='Corrected Reflectivity',
+            dz_field='DZ'
+        )
+    
+    # Return the raw reflectivity field for later reference/comparison
+    return zz
+
+# ***************************************************************************************
+
+def _get_cz_source_field(self):
+    """
+    Determine which field to use as source for CZ creation.
+    
+    Returns:
+    --------
+    str: Field name to use as raw reflectivity source
+    """
+    if self.site == 'KWAJ' and 'DBT2' in self.radar.fields:
+        return 'DBT2'
+    elif 'DZ' in self.radar.fields:
+        return 'DZ'
+    else:
+        raise ValueError("Cannot determine source field for CZ creation. No DZ or DBT2 field found.")
+        
 # ***************************************************************************************
  
 def remove_undesirable_fields(self):
