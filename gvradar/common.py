@@ -477,11 +477,14 @@ def get_uwy_archive(self):
 def rename_fields_in_radar(self):
     """
     Rename fields we want to keep with GPM 2-letter IDs (e.g. CZ, DR, KD)
-    Written by: David B. Wolff, NASA/WFF
+
+    Parameters:
+    -----------
+    self: QC object containing radar data and site information
 
     Returns:
     --------
-    tuple: (radar, zz_field) - radar with renamed fields and reference field
+    tuple: (radar, zz_field) - radar with renamed fields and raw reflectivity reference
     """
     print('\nRenaming radar fields...')
     print(self.radar.fields.keys())
@@ -566,53 +569,51 @@ def rename_fields_in_radar(self):
     ]
     
     # Find matching field mapping
-    mapping = self._find_field_mapping(FIELD_MAPPINGS)
-    print(f"DEBUG: Selected mapping with identifier: {mapping.get('identifier', 'NONE')}")
-    print(f"DEBUG: Old fields to rename: {mapping['old_fields']}")
+    mapping = _find_field_mapping(self.radar, FIELD_MAPPINGS)
     
     # Rename fields
-    self._apply_field_mapping(mapping['old_fields'], mapping['new_fields'])
+    _apply_field_mapping(self.radar, mapping['old_fields'], mapping['new_fields'])
     
     # Add or retrieve corrected reflectivity field
-    zz = self._handle_corrected_reflectivity()
+    zz = _handle_corrected_reflectivity(self.radar, self.site)
     
     print(self.radar.fields.keys(), '\n')
     return self.radar, zz
 
-
-def _find_field_mapping(self, mappings):
-    """Find the appropriate field mapping based on available fields."""
-    current_fields = self.radar.fields.keys()
-    print(f"DEBUG: Looking for mapping match in fields: {current_fields}")
-    
-    for mapping in mappings:
-        identifier = mapping['identifier']
-        if identifier in current_fields:
-            print(f"DEBUG: Found match with identifier '{identifier}'")
-            return mapping
-        else:
-            print(f"DEBUG: Identifier '{identifier}' not found")
-    
-    # Default fallback
-    print("WARNING: No matching field mapping found. Using empty mapping.")
-    return {'identifier': 'NONE', 'old_fields': [], 'new_fields': []}
-
-
-def _apply_field_mapping(self, old_fields, new_fields):
-    """Rename fields from old names to new names."""
-    print(f"DEBUG: Attempting to rename {len(old_fields)} fields")
-    for old_field, new_field in zip(old_fields, new_fields):
-        if old_field in self.radar.fields:
-            self.radar.fields[new_field] = self.radar.fields.pop(old_field)
-            print(f"DEBUG: Renamed '{old_field}' -> '{new_field}'")
-        else:
-            print(f"WARNING: Expected field '{old_field}' not found in radar data.")
-            
 # ***************************************************************************************
 
-def _handle_corrected_reflectivity(self):
+def _find_field_mapping(radar, mappings):
+    """Find the appropriate field mapping based on available fields."""
+    current_fields = radar.fields.keys()
+    
+    for mapping in mappings:
+        if mapping['identifier'] in current_fields:
+            return mapping
+    
+    # Default fallback
+    print("Warning: No matching field mapping found. Using empty mapping.")
+    return {'old_fields': [], 'new_fields': []}
+
+# ***************************************************************************************
+
+def _apply_field_mapping(radar, old_fields, new_fields):
+    """Rename fields from old names to new names."""
+    for old_field, new_field in zip(old_fields, new_fields):
+        if old_field in radar.fields:
+            radar.fields[new_field] = radar.fields.pop(old_field)
+        else:
+            print(f"Warning: Expected field '{old_field}' not found in radar data.")
+
+# ***************************************************************************************
+
+def _handle_corrected_reflectivity(radar, site):
     """
     Add or retrieve corrected reflectivity (CZ) field and return raw reflectivity reference.
+    
+    Parameters:
+    -----------
+    radar: PyART radar object
+    site: Radar site name string
     
     Returns:
     --------
@@ -625,36 +626,30 @@ def _handle_corrected_reflectivity(self):
     """
     
     # If CZ already exists, return appropriate raw reference field
-    if 'CZ' in self.radar.fields:
-        # For CPOL, CZ is already the raw field
-        # For others, DZ is the raw field
-        raw_field = 'CZ' if self.site == 'CPOL' else 'DZ'
-        return deepcopy(self.radar.fields[raw_field])
+    if 'CZ' in radar.fields:
+        raw_field = 'CZ' if site == 'CPOL' else 'DZ'
+        return deepcopy(radar.fields[raw_field])
     
     # Determine source field for CZ creation
-    source_field = self._get_cz_source_field()
+    source_field = _get_cz_source_field(radar, site)
     
     # Create deep copy of raw reflectivity field (preserves metadata)
-    # This will be returned as reference to original/raw data
-    zz = deepcopy(self.radar.fields[source_field])
+    zz = deepcopy(radar.fields[source_field])
     
     # Create CZ field based on site
-    if self.site in ['KaD3R', 'KuD3R']:
-        # For D3R radars, use simplified field dict
+    if site in ['KaD3R', 'KuD3R']:
         cz_dict = {
-            'data': zz['data'],  # Copy of raw data - will be QC'd later
+            'data': zz['data'],
             'units': '',
             'long_name': 'CZ',
             '_FillValue': -32767.0,
             'standard_name': 'CZ'
         }
-        self.radar.add_field('CZ', cz_dict, replace_existing=True)
+        radar.add_field('CZ', cz_dict, replace_existing=True)
     else:
-        # For other radars, copy the data array (not the full field dict)
-        # This copy will undergo quality control later
-        cz = self.radar.fields[source_field]['data'].copy()
-        self.radar = add_field_to_radar_object(
-            cz, self.radar, 
+        cz = radar.fields[source_field]['data'].copy()
+        radar = add_field_to_radar_object(
+            cz, radar, 
             field_name='CZ',
             units='dBZ',
             long_name='Corrected Reflectivity',
@@ -662,22 +657,26 @@ def _handle_corrected_reflectivity(self):
             dz_field='DZ'
         )
     
-    # Return the raw reflectivity field for later reference/comparison
     return zz
 
 # ***************************************************************************************
 
-def _get_cz_source_field(self):
+def _get_cz_source_field(radar, site):
     """
     Determine which field to use as source for CZ creation.
+    
+    Parameters:
+    -----------
+    radar: PyART radar object
+    site: Radar site name string
     
     Returns:
     --------
     str: Field name to use as raw reflectivity source
     """
-    if self.site == 'KWAJ' and 'DBT2' in self.radar.fields:
+    if site == 'KWAJ' and 'DBT2' in radar.fields:
         return 'DBT2'
-    elif 'DZ' in self.radar.fields:
+    elif 'DZ' in radar.fields:
         return 'DZ'
     else:
         raise ValueError("Cannot determine source field for CZ creation. No DZ or DBT2 field found.")
