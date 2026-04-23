@@ -1149,6 +1149,7 @@ def calculate_kdp(self):
 
         #if 'KD' not in self.radar.fields.keys():
         if self.get_Bringi_kdp:
+            print('    Bringi Kdp ADDED...')
             self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
 		        units='deg/km',
 		        long_name='Specific Differential Phase (Bringi)',
