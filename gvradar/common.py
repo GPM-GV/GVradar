@@ -477,6 +477,7 @@ def get_uwy_archive(self):
 def rename_fields_in_radar(self):
     """
     Rename fields we want to keep with GPM 2-letter IDs (e.g. CZ, DR, KD)
+    Written by: David B. Wolff, NASA/WFF
 
     Returns:
     --------
@@ -566,6 +567,8 @@ def rename_fields_in_radar(self):
     
     # Find matching field mapping
     mapping = self._find_field_mapping(FIELD_MAPPINGS)
+    print(f"DEBUG: Selected mapping with identifier: {mapping.get('identifier', 'NONE')}")
+    print(f"DEBUG: Old fields to rename: {mapping['old_fields']}")
     
     # Rename fields
     self._apply_field_mapping(mapping['old_fields'], mapping['new_fields'])
@@ -576,30 +579,35 @@ def rename_fields_in_radar(self):
     print(self.radar.fields.keys(), '\n')
     return self.radar, zz
 
-# ***************************************************************************************
 
 def _find_field_mapping(self, mappings):
     """Find the appropriate field mapping based on available fields."""
     current_fields = self.radar.fields.keys()
+    print(f"DEBUG: Looking for mapping match in fields: {current_fields}")
     
     for mapping in mappings:
-        if mapping['identifier'] in current_fields:
+        identifier = mapping['identifier']
+        if identifier in current_fields:
+            print(f"DEBUG: Found match with identifier '{identifier}'")
             return mapping
+        else:
+            print(f"DEBUG: Identifier '{identifier}' not found")
     
     # Default fallback
-    print("Warning: No matching field mapping found. Using empty mapping.")
-    return {'old_fields': [], 'new_fields': []}
+    print("WARNING: No matching field mapping found. Using empty mapping.")
+    return {'identifier': 'NONE', 'old_fields': [], 'new_fields': []}
 
-# ***************************************************************************************
 
 def _apply_field_mapping(self, old_fields, new_fields):
     """Rename fields from old names to new names."""
+    print(f"DEBUG: Attempting to rename {len(old_fields)} fields")
     for old_field, new_field in zip(old_fields, new_fields):
         if old_field in self.radar.fields:
             self.radar.fields[new_field] = self.radar.fields.pop(old_field)
+            print(f"DEBUG: Renamed '{old_field}' -> '{new_field}'")
         else:
-            print(f"Warning: Expected field '{old_field}' not found in radar data.")
-
+            print(f"WARNING: Expected field '{old_field}' not found in radar data.")
+            
 # ***************************************************************************************
 
 def _handle_corrected_reflectivity(self):
@@ -673,7 +681,7 @@ def _get_cz_source_field(self):
         return 'DZ'
     else:
         raise ValueError("Cannot determine source field for CZ creation. No DZ or DBT2 field found.")
-        
+
 # ***************************************************************************************
  
 def remove_undesirable_fields(self):
