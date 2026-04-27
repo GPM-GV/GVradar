@@ -524,6 +524,13 @@ def rename_fields_in_radar(self):
             'new_fields': ['SW', 'PH',  'DR',  'DZ',  'VR',  'RH']
         },
         {
+            'identifier': 'specific_differential_phase',
+            'old_fields': ['specific_differential_phase', 'differential_phase', 'cross_correlation_ratio', 
+                            'velocity', 'spectrum_width', 'differential_reflectivity', 'reflectivity', 
+                            'unfiltered_reflectivity', 'uncorrected_differential_phase'],
+            'new_fields': ['KD', 'PH', 'RH', 'VR', 'SW', 'DR', 'CZ', 'DZ', 'UP']                
+        }
+        {
             'identifier': 'radar_echo_classification',
             'old_fields': ['radar_echo_classification', 'radar_estimated_rain_rate', 'D0', 'NW', 
                           'velocity', 'corrected_velocity', 'total_power', 'corrected_reflectivity', 
