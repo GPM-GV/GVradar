@@ -513,6 +513,13 @@ def rename_fields_in_radar(self):
             'new_fields': ['DZ', 'VR', 'SW', 'DR', 'PH', 'RH']
         },
         {
+            'identifier': 'specific_differential_phase',
+            'old_fields': ['specific_differential_phase', 'differential_phase', 'cross_correlation_ratio', 
+                            'velocity', 'spectrum_width', 'differential_reflectivity', 'reflectivity', 
+                            'unfiltered_reflectivity', 'uncorrected_differential_phase'],
+            'new_fields': ['KD', 'PH', 'RH', 'VR', 'SW', 'DR', 'CZ', 'DZ', 'UP']                
+        },
+        {
             'identifier': 'reflectivity',
             'old_fields': ['differential_phase', 'velocity', 'spectrum_width', 'reflectivity', 
                           'differential_reflectivity', 'cross_correlation_ratio'],
@@ -522,13 +529,6 @@ def rename_fields_in_radar(self):
             'identifier': 'REF',
             'old_fields': ['SW', 'PHI', 'ZDR', 'REF', 'VEL', 'RHO'],
             'new_fields': ['SW', 'PH',  'DR',  'DZ',  'VR',  'RH']
-        },
-        {
-            'identifier': 'specific_differential_phase',
-            'old_fields': ['specific_differential_phase', 'differential_phase', 'cross_correlation_ratio', 
-                            'velocity', 'spectrum_width', 'differential_reflectivity', 'reflectivity', 
-                            'unfiltered_reflectivity', 'uncorrected_differential_phase'],
-            'new_fields': ['KD', 'PH', 'RH', 'VR', 'SW', 'DR', 'CZ', 'DZ', 'UP']                
         },
         {
             'identifier': 'radar_echo_classification',
