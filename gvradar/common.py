@@ -529,7 +529,7 @@ def rename_fields_in_radar(self):
                             'velocity', 'spectrum_width', 'differential_reflectivity', 'reflectivity', 
                             'unfiltered_reflectivity', 'uncorrected_differential_phase'],
             'new_fields': ['KD', 'PH', 'RH', 'VR', 'SW', 'DR', 'CZ', 'DZ', 'UP']                
-        }
+        },
         {
             'identifier': 'radar_echo_classification',
             'old_fields': ['radar_echo_classification', 'radar_estimated_rain_rate', 'D0', 'NW', 
