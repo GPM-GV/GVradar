@@ -410,6 +410,7 @@ class DP_products:
             cm.output_grid(self)
 
 def print_welcome():
+    from datetime import datetime
     print("\n" + "="*70)
     print(" GVradar".center(70))
     print(" Global Precipitation Measurement (GPM)".center(70))
