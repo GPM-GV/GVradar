@@ -407,7 +407,18 @@ class DP_products:
 
     # Write xarray Grid file
         if self.output_grid == True:
-            cm.output_grid(self)  
+            cm.output_grid(self)
+
+def print_welcome():
+    print("\n" + "="*70)
+    print(" GVradar".center(70))
+    print(" Global Precipitation Measurement (GPM)".center(70))
+    print(" Ground Validation (GV) Radar Processing Software".center(70))
+    print("="*70)
+    print(f" Version: 1.5.0 | Date: {datetime.now().strftime('%Y-%m-%d')}".center(70))
+    print("="*70)
+    print(f" Contact:  jason.l.pippitt@nasa.gov".center(70))
+    print("="*70 + "\n")
  
 # *******************************************  M  A  I  N  **************************************************
 
@@ -457,5 +468,5 @@ if __name__ == '__main__':
         d = DP_products(file, radar, **kwargs_product)
         d.run_DP_products()
 
-print('Done.', '', sep='\n')
+print_welcome()
 
