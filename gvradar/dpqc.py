@@ -1147,10 +1147,8 @@ def calculate_kdp(self):
                   f'self_const_weight={self_const_weight}')
             
             try:
-                from pyart.retrieve import phase_proc_lp
-                
                 # Run phase_proc_lp
-                phidp_proc, kdp_proc = phase_proc_lp(
+                phidp_proc, kdp_proc = pyart.correct.phase_proc_lp(
                     self.radar,
                     window_len=window_len,
                     proc=1,  # Number of iterations (1 is usually sufficient)
