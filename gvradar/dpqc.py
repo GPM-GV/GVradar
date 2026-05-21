@@ -1127,40 +1127,64 @@ def calculate_kdp(self):
             # Set parameters based on site/mode
             if self.SC_KDP:
                 print('    KPOL SC Kdp parameters...')
-                window_len = 30      # gates (optimal for SC at 250m resolution)
-                self_const_weight = 60000.0  # Default - works well for rain
+                window_len = 30          # gates (optimal for SC at 250m resolution)
+                self_const = 60000.0     # Default weight for self-consistency
+                low_z = 10.0             # Minimum Z threshold
+                high_z = 53.0            # Maximum Z threshold
+                fzl = 4000.0             # Freezing level (m)
                 
             elif self.NPOL_SC_KDP:
                 print('    NPOL SC Kdp parameters...')
-                window_len = 35      # gates (slightly larger for NPOL 5km window)
-                self_const_weight = 60000.0
+                window_len = 35          # gates (default, slightly larger for NPOL)
+                self_const = 60000.0
+                low_z = 10.0
+                high_z = 53.0
+                fzl = 4000.0
                 
             elif self.site in std_list:
                 window_len = 30
-                self_const_weight = 60000.0
+                self_const = 60000.0
+                low_z = 10.0
+                high_z = 53.0
+                fzl = 4000.0
                 
             else:
-                window_len = 30      # Default for stratiform rain
-                self_const_weight = 60000.0
+                window_len = 35          # PyART default
+                self_const = 60000.0     # PyART default
+                low_z = 10.0
+                high_z = 53.0
+                fzl = 4000.0
             
             print(f'        phase_proc_lp parameters: window_len={window_len}, '
-                  f'self_const_weight={self_const_weight}')
+                  f'self_const={self_const}, low_z={low_z}, high_z={high_z}')
             
             try:
-                # Run phase_proc_lp
+                # Run phase_proc_lp with proper parameters
                 phidp_proc, kdp_proc = pyart.correct.phase_proc_lp(
                     self.radar,
-                    window_len=window_len,
-                    proc=1,  # Number of iterations (1 is usually sufficient)
-                    self_const=self_const_weight,
-                    coef=0.914,  # Default Z-KDP coefficient for S-band
-                    fzl=4000.0,  # Freezing level (m) - adjust if known
-                    doc=-10,  # Threshold for low quality data removal
-                    gatefilter=None,
-                    phidp_field=self.phi_field_name,
+                    offset=0.0,                    # System phase offset
+                    debug=False,
+                    self_const=self_const,         # Self-consistency weight
+                    low_z=low_z,                   # Min Z threshold
+                    high_z=high_z,                 # Max Z threshold (removes hail)
+                    min_phidp=0.01,                # Min PhiDP for processing
+                    min_ncp=0.5,                   # Min NCP if available
+                    min_rhv=0.8,                   # Min RhoHV threshold
+                    fzl=fzl,                       # Freezing level height (m)
+                    sys_phase=0.0,                 # System phase
+                    overide_sys_phase=False,       # Don't override sys_phase
+                    nowrap=None,                   # PhiDP wrapping threshold
+                    really_verbose=False,
+                    LP_solver='cvxopt',            # Linear programming solver
                     refl_field=self.ref_field_name,
-                    ncp_field=None,
+                    ncp_field=None,                # NCP field if available
                     rhv_field='RH' if 'RH' in self.radar.fields else None,
+                    phidp_field=self.phi_field_name,
+                    kdp_field='KD',                # Output KDP field name
+                    unf_field=None,                # Unfolded PhiDP field
+                    window_len=window_len,         # Sobel filter window length
+                    proc=1,                        # Number of iterations
+                    coef=0.914                     # Z-KDP coefficient for S-band
                 )
                 
                 # Extract the processed fields
@@ -1175,19 +1199,31 @@ def calculate_kdp(self):
                 # Calculate local std dev along range
                 STDPHIB = np.zeros_like(PHIDPB)
                 for ray_idx in range(self.radar.nrays):
-                    valid_data = ~np.ma.getmaskarray(PHIDPB[ray_idx, :])
-                    if np.sum(valid_data) > window_size:
-                        # Rolling std dev
-                        local_mean = uniform_filter1d(PHIDPB[ray_idx, :].filled(0), 
-                                                     size=window_size, mode='nearest')
-                        local_sq_mean = uniform_filter1d(PHIDPB[ray_idx, :].filled(0)**2, 
-                                                        size=window_size, mode='nearest')
-                        STDPHIB[ray_idx, :] = np.sqrt(np.maximum(local_sq_mean - local_mean**2, 0))
+                    phidp_ray = PHIDPB[ray_idx, :]
+                    
+                    # Handle masked arrays
+                    if np.ma.is_masked(phidp_ray):
+                        valid_data = ~np.ma.getmaskarray(phidp_ray)
+                        if np.sum(valid_data) > window_size:
+                            phidp_filled = phidp_ray.filled(0)
+                        else:
+                            continue
+                    else:
+                        phidp_filled = phidp_ray
+                    
+                    # Rolling std dev
+                    local_mean = uniform_filter1d(phidp_filled, 
+                                                 size=window_size, mode='nearest')
+                    local_sq_mean = uniform_filter1d(phidp_filled**2, 
+                                                    size=window_size, mode='nearest')
+                    STDPHIB[ray_idx, :] = np.sqrt(np.maximum(local_sq_mean - local_mean**2, 0))
                 
                 print('    PyART phase_proc_lp completed successfully')
                 
-            except ImportError:
-                print('    ERROR: PyART not available. Falling back to CSU Bringi method.')
+            except ImportError as e:
+                print(f'    ERROR: Required library not available: {e}')
+                print('    (phase_proc_lp requires cvxopt or another LP solver)')
+                print('    Falling back to CSU Bringi method.')
                 kdp_method = 'bringi'
                 
             except Exception as e:
@@ -1215,14 +1251,14 @@ def calculate_kdp(self):
                 window = 4
                 std_gate = 11      # Dave's original default (NOT 15)
                 nfilter = 1
-                thsd = 25          # S-band standard
+                thsd = 25          # S-band standard (NOT 18)
                 
             elif self.NPOL_SC_KDP:
                 print('    NPOL SC Kdp parameters...')
                 window = 5         # NPOL should use window=5 per Dave's comment
-                std_gate = 11      # Dave's original default
+                std_gate = 11      # Dave's original default (NOT 15)
                 nfilter = 1
-                thsd = 25          # Use standard S-band, not 12
+                thsd = 25          # S-band standard (NOT 12)
                 
             else:
                 window = 4
