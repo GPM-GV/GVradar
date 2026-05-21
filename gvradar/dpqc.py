@@ -1118,8 +1118,12 @@ def calculate_kdp(self):
             thsd=18
         elif self.NPOL_SC_KDP:
             print('    NPOL SC Kdp...')
-            DZ = self.radar.fields['DZ']['data'].copy()
-            DP = self.radar.fields['PH']['data'].copy()
+            try:
+                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+            except:
+                DZ = self.radar.fields['DZ']['data'].copy()
+                DP = self.radar.fields['PH']['data'].copy()
             window=5
             std_gate=11
             nfilter=1
