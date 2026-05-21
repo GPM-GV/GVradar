@@ -1132,7 +1132,6 @@ def calculate_kdp(self):
                 low_z = 10.0             # Minimum Z threshold
                 high_z = 53.0            # Maximum Z threshold
                 fzl = 4000.0             # Freezing level (m)
-                min_ncp = 0.5            # Min NCP threshold
                 
             elif self.NPOL_SC_KDP:
                 print('    NPOL SC Kdp parameters...')
@@ -1141,7 +1140,6 @@ def calculate_kdp(self):
                 low_z = 10.0
                 high_z = 53.0
                 fzl = 4000.0
-                min_ncp = 0.5
                 
             elif self.site in std_list:
                 window_len = 30
@@ -1149,7 +1147,6 @@ def calculate_kdp(self):
                 low_z = 10.0
                 high_z = 53.0
                 fzl = 4000.0
-                min_ncp = 0.5
                 
             else:
                 window_len = 35          # PyART default
@@ -1157,7 +1154,6 @@ def calculate_kdp(self):
                 low_z = 10.0
                 high_z = 53.0
                 fzl = 4000.0
-                min_ncp = 0.5
             
             # Check for available fields to avoid KeyError
             # NCP field detection
@@ -1169,9 +1165,24 @@ def calculate_kdp(self):
                     print(f'        Found NCP field: {ncp_name}')
                     break
             
+            # If no NCP field exists, create a dummy one
+            # PyART's phase_proc_lp has internal defaults that still look for NCP
             if ncp_field_name is None:
-                print('        WARNING: No NCP field found, setting min_ncp=0.0')
-                min_ncp = 0.0  # Disable NCP filtering if field doesn't exist
+                print('        WARNING: No NCP field found - creating dummy NCP field (all 1.0)')
+                ncp_field_name = 'normalized_coherent_power'
+                
+                # Create dummy NCP field filled with 1.0 (perfect quality)
+                dummy_ncp = np.ones((self.radar.nrays, self.radar.ngates), dtype=np.float32)
+                ncp_dict = {
+                    'data': dummy_ncp,
+                    'units': 'unitless',
+                    'long_name': 'Normalized Coherent Power (dummy)',
+                    'standard_name': 'normalized_coherent_power',
+                    'valid_min': 0.0,
+                    'valid_max': 1.0,
+                    'comment': 'Dummy field created for phase_proc_lp - all values set to 1.0'
+                }
+                self.radar.add_field(ncp_field_name, ncp_dict, replace_existing=True)
             
             # RhoHV field detection
             rhv_field_name = None
@@ -1187,7 +1198,7 @@ def calculate_kdp(self):
             
             print(f'        phase_proc_lp parameters: window_len={window_len}, '
                   f'self_const={self_const}, low_z={low_z}, high_z={high_z}')
-            print(f'        NCP field: {ncp_field_name}, min_ncp={min_ncp}')
+            print(f'        NCP field: {ncp_field_name}')
             print(f'        RhoHV field: {rhv_field_name}')
             
             try:
@@ -1200,7 +1211,7 @@ def calculate_kdp(self):
                     low_z=low_z,                   # Min Z threshold
                     high_z=high_z,                 # Max Z threshold (removes hail)
                     min_phidp=0.01,                # Min PhiDP for processing
-                    min_ncp=min_ncp,               # Min NCP (disabled if field doesn't exist)
+                    min_ncp=0.0,                   # Min NCP (set to 0 to not filter)
                     min_rhv=0.8,                   # Min RhoHV threshold
                     fzl=fzl,                       # Freezing level height (m)
                     sys_phase=0.0,                 # System phase
@@ -1209,7 +1220,7 @@ def calculate_kdp(self):
                     really_verbose=False,
                     LP_solver='cvxopt',            # Linear programming solver
                     refl_field=self.ref_field_name,
-                    ncp_field=ncp_field_name,      # Use detected NCP field or None
+                    ncp_field=ncp_field_name,      # Use detected or dummy NCP field
                     rhv_field=rhv_field_name,      # Use detected RhoHV field or None
                     phidp_field=self.phi_field_name,
                     kdp_field='KD',                # Output KDP field name
@@ -1223,8 +1234,14 @@ def calculate_kdp(self):
                 KDPB = kdp_proc['data']
                 PHIDPB = phidp_proc['data']
                 
+                # Remove dummy NCP field if we created it
+                if 'normalized_coherent_power' in self.radar.fields:
+                    ncp_data = self.radar.fields['normalized_coherent_power']['data']
+                    if isinstance(ncp_data, np.ndarray) and np.all(ncp_data == 1.0):
+                        print('        Removing dummy NCP field')
+                        self.radar.fields.pop('normalized_coherent_power', None)
+                
                 # Calculate standard deviation of PhiDP for SD field
-                # Use a simple rolling window std dev as approximation
                 from scipy.ndimage import uniform_filter1d
                 window_size = 11  # gates for std calculation
                 
@@ -1263,7 +1280,7 @@ def calculate_kdp(self):
                 import traceback
                 traceback.print_exc()
                 print('    Falling back to CSU Bringi method.')
-                kdp_method = 'bringi'            
+                kdp_method = 'bringi'        
         
         # ============================================================================
         # CSU BRINGI METHOD (Original)
