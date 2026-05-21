@@ -1132,6 +1132,7 @@ def calculate_kdp(self):
                 low_z = 10.0             # Minimum Z threshold
                 high_z = 53.0            # Maximum Z threshold
                 fzl = 4000.0             # Freezing level (m)
+                min_ncp = 0.5            # Min NCP threshold
                 
             elif self.NPOL_SC_KDP:
                 print('    NPOL SC Kdp parameters...')
@@ -1140,6 +1141,7 @@ def calculate_kdp(self):
                 low_z = 10.0
                 high_z = 53.0
                 fzl = 4000.0
+                min_ncp = 0.5
                 
             elif self.site in std_list:
                 window_len = 30
@@ -1147,6 +1149,7 @@ def calculate_kdp(self):
                 low_z = 10.0
                 high_z = 53.0
                 fzl = 4000.0
+                min_ncp = 0.5
                 
             else:
                 window_len = 35          # PyART default
@@ -1154,9 +1157,38 @@ def calculate_kdp(self):
                 low_z = 10.0
                 high_z = 53.0
                 fzl = 4000.0
+                min_ncp = 0.5
+            
+            # Check for available fields to avoid KeyError
+            # NCP field detection
+            ncp_field_name = None
+            ncp_candidates = ['NCP', 'normalized_coherent_power', 'NC', 'NCOH']
+            for ncp_name in ncp_candidates:
+                if ncp_name in self.radar.fields:
+                    ncp_field_name = ncp_name
+                    print(f'        Found NCP field: {ncp_name}')
+                    break
+            
+            if ncp_field_name is None:
+                print('        WARNING: No NCP field found, setting min_ncp=0.0')
+                min_ncp = 0.0  # Disable NCP filtering if field doesn't exist
+            
+            # RhoHV field detection
+            rhv_field_name = None
+            rhv_candidates = ['RH', 'RHOHV', 'correlation_coefficient', 'copol_correlation_coeff']
+            for rhv_name in rhv_candidates:
+                if rhv_name in self.radar.fields:
+                    rhv_field_name = rhv_name
+                    print(f'        Found RhoHV field: {rhv_name}')
+                    break
+            
+            if rhv_field_name is None:
+                print('        WARNING: No RhoHV field found')
             
             print(f'        phase_proc_lp parameters: window_len={window_len}, '
                   f'self_const={self_const}, low_z={low_z}, high_z={high_z}')
+            print(f'        NCP field: {ncp_field_name}, min_ncp={min_ncp}')
+            print(f'        RhoHV field: {rhv_field_name}')
             
             try:
                 # Run phase_proc_lp with proper parameters
@@ -1168,7 +1200,7 @@ def calculate_kdp(self):
                     low_z=low_z,                   # Min Z threshold
                     high_z=high_z,                 # Max Z threshold (removes hail)
                     min_phidp=0.01,                # Min PhiDP for processing
-                    min_ncp=0.5,                   # Min NCP if available
+                    min_ncp=min_ncp,               # Min NCP (disabled if field doesn't exist)
                     min_rhv=0.8,                   # Min RhoHV threshold
                     fzl=fzl,                       # Freezing level height (m)
                     sys_phase=0.0,                 # System phase
@@ -1177,8 +1209,8 @@ def calculate_kdp(self):
                     really_verbose=False,
                     LP_solver='cvxopt',            # Linear programming solver
                     refl_field=self.ref_field_name,
-                    ncp_field=None,                # NCP field if available
-                    rhv_field='RH' if 'RH' in self.radar.fields else None,
+                    ncp_field=ncp_field_name,      # Use detected NCP field or None
+                    rhv_field=rhv_field_name,      # Use detected RhoHV field or None
                     phidp_field=self.phi_field_name,
                     kdp_field='KD',                # Output KDP field name
                     unf_field=None,                # Unfolded PhiDP field
@@ -1231,7 +1263,7 @@ def calculate_kdp(self):
                 import traceback
                 traceback.print_exc()
                 print('    Falling back to CSU Bringi method.')
-                kdp_method = 'bringi'
+                kdp_method = 'bringi'            
         
         # ============================================================================
         # CSU BRINGI METHOD (Original)
