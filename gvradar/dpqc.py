@@ -1123,7 +1123,7 @@ def calculate_kdp(self):
             window=5
             std_gate=11
             nfilter=1
-            thsd=25
+            thsd=12
         else:
             try:
                 DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
