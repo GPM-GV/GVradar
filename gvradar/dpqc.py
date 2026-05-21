@@ -1120,7 +1120,7 @@ def calculate_kdp(self):
             print('    NPOL SC Kdp...')
             DZ = self.radar.fields['DZ']['data'].copy()
             DP = self.radar.fields['PH']['data'].copy()
-            window=4
+            window=5
             std_gate=11
             nfilter=1
             thsd=25
