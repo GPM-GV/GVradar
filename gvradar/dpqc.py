@@ -1071,33 +1071,30 @@ def unfold_phidp(self):
 
 # ***************************************************************************************
 
+# ***************************************************************************************
+
 def calculate_kdp(self):
     """
-    Wrapper for calculating Kdp using either:
-    1) csu_kdp.calc_kdp_bringi from CSU_RadarTools (original)
-    2) phase_proc_lp from PyART (recommended for self-consistency)
+    Calculate Kdp using CSU Bringi method with corrected parameters.
+    
+    Parameters corrected based on:
+    - Dave Marks' original defaults (std_gate=11, not 15)
+    - Reimel & Kumjian (2021) best practices
+    - Site-specific optimizations
     
     Parameters:
     -----------
     radar: pyart radar object
     ref_field_name: name of reflectivity field (should be QC'd)
     phi_field_name: name of PhiDP field (should be unfolded)
-    kdp_method: 'bringi' or 'phase_proc_lp' (default: 'bringi')
 
     Return
     ------
-    radar: radar object with KD (Kdp), PHIDPB (filtered PhiDP), and SD/STDPHIB fields added
-
-    NOTE: 
-    - Bringi: KDPB, PHIDPB, STDPHIB from CSU RadarTools
-    - phase_proc_lp: KD, PHIDPB from PyART (more stable for SC work)
+    radar: radar object with KD (Kdp), PHIDPB (filtered PhiDP), and SD fields added
     """
     
     if not self.noKDP:
-        # Determine which method to use
-        kdp_method = getattr(self, 'kdp_method', 'bringi')  # Default to bringi for backward compatibility
-        
-        print(f'    Getting new Kdp using {kdp_method.upper()} method...')
+        print('    Calculating Kdp using CSU Bringi method...')
         
         # ============================================================================
         # Extract data fields
@@ -1116,234 +1113,68 @@ def calculate_kdp(self):
             DP = self.radar.fields['PH']['data'].copy()
         
         # ============================================================================
-        # Set parameters based on site and method
+        # Set parameters based on site/mode
         # ============================================================================
-        if kdp_method.lower() == 'phase_proc_lp':
-            # ========================================================================
-            # PYART PHASE_PROC_LP METHOD (Recommended for SC)
-            # ========================================================================
-            print('    Using PyART phase_proc_lp algorithm (optimal for SC)...')
+        
+        if self.site in std_list:
+            window = 4
+            std_gate = 15
+            nfilter = 1
+            thsd = 25
             
-            # Set parameters based on site/mode
-            if self.SC_KDP:
-                print('    KPOL SC Kdp parameters...')
-                window_len = 30          # gates (optimal for SC at 250m resolution)
-                self_const = 60000.0     # Default weight for self-consistency
-                low_z = 10.0             # Minimum Z threshold
-                high_z = 53.0            # Maximum Z threshold
-                fzl = 4000.0             # Freezing level (m)
-                
-            elif self.NPOL_SC_KDP:
-                print('    NPOL SC Kdp parameters...')
-                window_len = 35          # gates (default, slightly larger for NPOL)
-                self_const = 60000.0
-                low_z = 10.0
-                high_z = 53.0
-                fzl = 4000.0
-                
-            elif self.site in std_list:
-                window_len = 30
-                self_const = 60000.0
-                low_z = 10.0
-                high_z = 53.0
-                fzl = 4000.0
-                
-            else:
-                window_len = 35          # PyART default
-                self_const = 60000.0     # PyART default
-                low_z = 10.0
-                high_z = 53.0
-                fzl = 4000.0
+        elif self.SC_KDP:
+            print('    Using KPOL SC-optimized Kdp parameters...')
+            window = 4
+            std_gate = 11
+            nfilter = 1
+            thsd = 25 
             
-            # Check for available fields to avoid KeyError
-            # NCP field detection
-            ncp_field_name = None
-            ncp_candidates = ['NCP', 'normalized_coherent_power', 'NC', 'NCOH']
-            for ncp_name in ncp_candidates:
-                if ncp_name in self.radar.fields:
-                    ncp_field_name = ncp_name
-                    print(f'        Found NCP field: {ncp_name}')
-                    break
+        elif self.NPOL_SC_KDP:
+            print('    Using NPOL SC-optimized Kdp parameters...')
+            window = 5         
+            std_gate = 11      
+            nfilter = 1
+            thsd = 25      
             
-            # If no NCP field exists, create a dummy one
-            # PyART's phase_proc_lp has internal defaults that still look for NCP
-            if ncp_field_name is None:
-                print('        WARNING: No NCP field found - creating dummy NCP field (all 1.0)')
-                ncp_field_name = 'normalized_coherent_power'
-                
-                # Create dummy NCP field filled with 1.0 (perfect quality)
-                dummy_ncp = np.ones((self.radar.nrays, self.radar.ngates), dtype=np.float32)
-                ncp_dict = {
-                    'data': dummy_ncp,
-                    'units': 'unitless',
-                    'long_name': 'Normalized Coherent Power (dummy)',
-                    'standard_name': 'normalized_coherent_power',
-                    'valid_min': 0.0,
-                    'valid_max': 1.0,
-                    'comment': 'Dummy field created for phase_proc_lp - all values set to 1.0'
-                }
-                self.radar.add_field(ncp_field_name, ncp_dict, replace_existing=True)
-            
-            # RhoHV field detection
-            rhv_field_name = None
-            rhv_candidates = ['RH', 'RHOHV', 'correlation_coefficient', 'copol_correlation_coeff']
-            for rhv_name in rhv_candidates:
-                if rhv_name in self.radar.fields:
-                    rhv_field_name = rhv_name
-                    print(f'        Found RhoHV field: {rhv_name}')
-                    break
-            
-            if rhv_field_name is None:
-                print('        WARNING: No RhoHV field found')
-            
-            print(f'        phase_proc_lp parameters: window_len={window_len}, '
-                  f'self_const={self_const}, low_z={low_z}, high_z={high_z}')
-            print(f'        NCP field: {ncp_field_name}')
-            print(f'        RhoHV field: {rhv_field_name}')
-            
-            try:
-                # Run phase_proc_lp with proper parameters
-                phidp_proc, kdp_proc = pyart.correct.phase_proc_lp(
-                    self.radar,
-                    offset=0.0,                    # System phase offset
-                    debug=False,
-                    self_const=self_const,         # Self-consistency weight
-                    low_z=low_z,                   # Min Z threshold
-                    high_z=high_z,                 # Max Z threshold (removes hail)
-                    min_phidp=0.01,                # Min PhiDP for processing
-                    min_ncp=0.0,                   # Min NCP (set to 0 to not filter)
-                    min_rhv=0.8,                   # Min RhoHV threshold
-                    fzl=fzl,                       # Freezing level height (m)
-                    sys_phase=0.0,                 # System phase
-                    overide_sys_phase=False,       # Don't override sys_phase
-                    nowrap=None,                   # PhiDP wrapping threshold
-                    really_verbose=False,
-                    LP_solver='cvxopt',            # Linear programming solver
-                    refl_field=self.ref_field_name,
-                    ncp_field=ncp_field_name,      # Use detected or dummy NCP field
-                    rhv_field=rhv_field_name,      # Use detected RhoHV field or None
-                    phidp_field=self.phi_field_name,
-                    kdp_field='KD',                # Output KDP field name
-                    unf_field=None,                # Unfolded PhiDP field
-                    window_len=window_len,         # Sobel filter window length
-                    proc=1,                        # Number of iterations
-                    coef=0.914                     # Z-KDP coefficient for S-band
-                )
-                
-                # Extract the processed fields
-                KDPB = kdp_proc['data']
-                PHIDPB = phidp_proc['data']
-                
-                # Remove dummy NCP field if we created it
-                if 'normalized_coherent_power' in self.radar.fields:
-                    ncp_data = self.radar.fields['normalized_coherent_power']['data']
-                    if isinstance(ncp_data, np.ndarray) and np.all(ncp_data == 1.0):
-                        print('        Removing dummy NCP field')
-                        self.radar.fields.pop('normalized_coherent_power', None)
-                
-                # Calculate standard deviation of PhiDP for SD field
-                from scipy.ndimage import uniform_filter1d
-                window_size = 11  # gates for std calculation
-                
-                # Calculate local std dev along range
-                STDPHIB = np.zeros_like(PHIDPB)
-                for ray_idx in range(self.radar.nrays):
-                    phidp_ray = PHIDPB[ray_idx, :]
-                    
-                    # Handle masked arrays
-                    if np.ma.is_masked(phidp_ray):
-                        valid_data = ~np.ma.getmaskarray(phidp_ray)
-                        if np.sum(valid_data) > window_size:
-                            phidp_filled = phidp_ray.filled(0)
-                        else:
-                            continue
-                    else:
-                        phidp_filled = phidp_ray
-                    
-                    # Rolling std dev
-                    local_mean = uniform_filter1d(phidp_filled, 
-                                                 size=window_size, mode='nearest')
-                    local_sq_mean = uniform_filter1d(phidp_filled**2, 
-                                                    size=window_size, mode='nearest')
-                    STDPHIB[ray_idx, :] = np.sqrt(np.maximum(local_sq_mean - local_mean**2, 0))
-                
-                print('    PyART phase_proc_lp completed successfully')
-                
-            except ImportError as e:
-                print(f'    ERROR: Required library not available: {e}')
-                print('    (phase_proc_lp requires cvxopt or another LP solver)')
-                print('    Falling back to CSU Bringi method.')
-                kdp_method = 'bringi'
-                
-            except Exception as e:
-                print(f"    ERROR in phase_proc_lp: {e}")
-                import traceback
-                traceback.print_exc()
-                print('    Falling back to CSU Bringi method.')
-                kdp_method = 'bringi'        
+        else:
+            window = 4
+            std_gate = 15
+            nfilter = 1
+            thsd = 25
+        
+        print(f'        Bringi parameters: window={window}km, std_gate={std_gate}, '
+              f'nfilter={nfilter}, thsd={thsd}')
         
         # ============================================================================
-        # CSU BRINGI METHOD (Original)
+        # Calculate Kdp using CSU Bringi method
         # ============================================================================
-        if kdp_method.lower() == 'bringi':
-            print('    Using CSU Bringi calc_kdp_bringi algorithm...')
+        
+        # Range needs to be supplied as a variable, with same shape as DZ
+        rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+        gate_spacing = self.radar.range['meters_between_gates']
+        
+        try:
+            KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(
+                dp=DP, 
+                dz=DZ, 
+                rng=rng2d/1000.0,
+                thsd=thsd, 
+                gs=gate_spacing,
+                window=window, 
+                nfilter=nfilter,
+                std_gate=std_gate
+            )
             
-            # Set parameters based on site/mode
-            if self.site in std_list:
-                window = 4
-                std_gate = 15
-                nfilter = 1
-                thsd = 25
-                
-            elif self.SC_KDP:
-                print('    KPOL SC Kdp parameters...')
-                window = 4
-                std_gate = 11      # Dave's original default (NOT 15)
-                nfilter = 1
-                thsd = 25          # S-band standard (NOT 18)
-                
-            elif self.NPOL_SC_KDP:
-                print('    NPOL SC Kdp parameters...')
-                window = 5         # NPOL should use window=5 per Dave's comment
-                std_gate = 11      # Dave's original default (NOT 15)
-                nfilter = 1
-                thsd = 25          # S-band standard (NOT 12)
-                
-            else:
-                window = 4
-                std_gate = 15
-                nfilter = 1
-                thsd = 25
+            print('    CSU Bringi calc_kdp_bringi completed successfully')
             
-            print(f'        Bringi parameters: window={window}km, std_gate={std_gate}, '
-                  f'nfilter={nfilter}, thsd={thsd}')
-            
-            # Range needs to be supplied as a variable, with same shape as DZ
-            rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
-            gate_spacing = self.radar.range['meters_between_gates']
-            
-            try:
-                KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(
-                    dp=DP, 
-                    dz=DZ, 
-                    rng=rng2d/1000.0,
-                    thsd=thsd, 
-                    gs=gate_spacing,
-                    window=window, 
-                    nfilter=nfilter,
-                    std_gate=std_gate
-                )
-                
-                print('    CSU Bringi calc_kdp_bringi completed successfully')
-                
-            except Exception as e:
-                print(f"    ERROR in CSU Bringi: {e}")
-                import traceback
-                traceback.print_exc()
-                print('    Could not retrieve Kdp - filling with missing values')
-                KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-                PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-                STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+        except Exception as e:
+            print(f"    ERROR in CSU Bringi: {e}")
+            import traceback
+            traceback.print_exc()
+            print('    Could not retrieve Kdp - filling with missing values')
+            KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+            PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+            STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
         
         # ============================================================================
         # Add fields to radar object
@@ -1351,24 +1182,24 @@ def calculate_kdp(self):
         
         # Add KD (Kdp) field
         if self.get_Bringi_kdp:
-            print(f'    Adding Kdp field (method: {kdp_method})...')
+            print('    Adding Kdp field...')
             self.radar = cm.add_field_to_radar_object(
                 KDPB, self.radar, 
                 field_name='KD',
                 units='deg/km',
-                long_name=f'Specific Differential Phase ({kdp_method})',
+                long_name='Specific Differential Phase (Bringi)',
                 standard_name='Specific Differential Phase',
                 dz_field=self.ref_field_name
             )
         
         # Add filtered PhiDP field
         if self.unfold_phidp == False:
-            print(f'    Adding filtered PhiDP field (method: {kdp_method})...')
+            print('    Adding filtered PhiDP field...')
             self.radar = cm.add_field_to_radar_object(
                 PHIDPB, self.radar,
                 field_name='PHIDPB', 
                 units='deg',
-                long_name=f'Filtered Differential Phase ({kdp_method})',
+                long_name='Filtered Differential Phase (Bringi)',
                 standard_name='Filtered Differential Phase',
                 dz_field=self.ref_field_name
             )
@@ -1378,17 +1209,19 @@ def calculate_kdp(self):
             print('    Retrieving GPMGV SD')
             self.radar = get_SD(self)
         else:
-            print(f'    Adding SD field (method: {kdp_method})...')
+            print('    Adding SD field...')
             self.radar = cm.add_field_to_radar_object(
                 STDPHIB, self.radar,
                 field_name='SD', 
                 units='deg',
-                long_name=f'STD Differential Phase ({kdp_method})',
+                long_name='STD Differential Phase (Bringi)',
                 standard_name='STD Differential Phase',
                 dz_field=self.ref_field_name
             )
     
     return self.radar
+
+# ***************************************************************************************
 
 # ***************************************************************************************
 
