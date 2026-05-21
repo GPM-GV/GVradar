@@ -1109,13 +1109,21 @@ def calculate_kdp(self):
             nfilter=1
             thsd=25
         elif self.SC_KDP:
-            print('    Using SC Kdp...')
+            print('    KPOL SC Kdp...')
             DZ = self.radar.fields['DZ']['data'].copy()
             DP = self.radar.fields['PH']['data'].copy()
             window=4
             std_gate=15
             nfilter=1
             thsd=18
+        elif self.NPOL_SC_KDP:
+            print('    NPOL SC Kdp...')
+            DZ = self.radar.fields['DZ']['data'].copy()
+            DP = self.radar.fields['PH']['data'].copy()
+            window=4
+            std_gate=11
+            nfilter=1
+            thsd=25
         else:
             try:
                 DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
@@ -1282,6 +1290,7 @@ def get_default_thresh_dict():
                            'get_GV_SD':  False, 'SD_window': 15,
                            'get_Bringi_kdp': False,
                            'SC_KDP': False,
+                           'NPOL_SC_KDP': False,
                            'noKDP':  False,
                            'unfold_phidp': True,
                            'merge_sp': True,
