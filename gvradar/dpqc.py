@@ -150,7 +150,6 @@ def threshold_qc_dpfields(self):
             dbzfilter.exclude_below('CZ', self.dbz_thresh)
     if self.do_sector == True: dbzfilter.exclude_not_equal('SEC', cos)
     if self.do_rh_sector == True: dbzfilter.exclude_not_equal('SECRH', sec)
-    if self.do_kd_sector == True: dbzfilter.exclude_not_equal('SECKD', sec)
     if self.do_sw_sector == True: dbzfilter.exclude_not_equal('SECSW', sec) 
     if self.do_sq_sector == True: dbzfilter.exclude_not_equal('SECSQ', sec) 
     if self.do_cos == True: dbzfilter.exclude_not_equal('COS', cos)
@@ -249,6 +248,7 @@ def threshold_qc_calfields(self):
     # Apply sector thresholds regardless of temp 
     if self.do_sd_sector == True: secfilter.exclude_not_equal('SECSD', sec)
     if self.do_ph_sector == True: secfilter.exclude_not_equal('SECPH', sec)
+    if self.do_kd_sector == True: secfilter.exclude_not_equal('SECKD', sec)
     
     # Apply gate filters to radar
     for fld in self.radar.fields:
@@ -1071,16 +1071,9 @@ def unfold_phidp(self):
 
 # ***************************************************************************************
 
-# ***************************************************************************************
-
 def calculate_kdp(self):
     """
-    Calculate Kdp using CSU Bringi method with corrected parameters.
-    
-    Parameters corrected based on:
-    - Dave Marks' original defaults (std_gate=11, not 15)
-    - Reimel & Kumjian (2021) best practices
-    - Site-specific optimizations
+    Calculate Kdp using CSU Bringi method with user parameters.
     
     Parameters:
     -----------
@@ -1088,258 +1081,108 @@ def calculate_kdp(self):
     ref_field_name: name of reflectivity field (should be QC'd)
     phi_field_name: name of PhiDP field (should be unfolded)
 
+    User-configurable parameters (set before calling):
+    - self.kd_window: Filter window size in km (default: 4)
+    - self.kd_std_gate: Number of gates for std dev calculation (default: 15)
+    - self.kd_nfilter: Number of filter iterations (default: 1)
+    - self.kd_thsd: Phase standard deviation threshold (default: 25 for S-band)
+    
+    Recommended values:
+    - S-band stratiform (SC work): window=4-5, std_gate=11, thsd=25
+    - S-band convective: window=3-4, std_gate=11, thsd=25
+    - C-band: window=3-4, std_gate=11, thsd=18-20
+    - X-band: window=2-3, std_gate=11, thsd=12-15
+
     Return
     ------
     radar: radar object with KD (Kdp), PHIDPB (filtered PhiDP), and SD fields added
     """
-    
-    if not self.noKDP:
-        print('    Calculating Kdp using CSU Bringi method...')
+
+    print('    Calculating Kdp using CSU Bringi method...')
         
-        # ============================================================================
-        # Extract data fields
-        # ============================================================================
-        std_list = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1']
+    # Extract data fields        
+    try:
+        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+    except:
+        DZ = self.radar.fields[self.ref_field_name]['data'].copy()
+        DP = self.radar.fields[self.phi_field_name]['data'].copy()
         
-        try:
-            if self.site in std_list:
-                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-            else:
-                DZ = self.radar.fields[self.ref_field_name]['data'].copy()
-                DP = self.radar.fields[self.phi_field_name]['data'].copy()
-        except:
-            DZ = self.radar.fields['DZ']['data'].copy()
-            DP = self.radar.fields['PH']['data'].copy()
-        
-        # ============================================================================
-        # Set parameters based on site/mode
-        # ============================================================================
-        
-        if self.site in std_list:
-            window = 4
-            std_gate = 15
-            nfilter = 1
-            thsd = 25
+    # Set parameters based on user input
+    window = self.kd_window
+    std_gate = self.kd_std_gate
+    nfilter = self.kd_nfilter
+    thsd = self.kd_thsd
             
-        elif self.SC_KDP:
-            print('    Using KPOL SC-optimized Kdp parameters...')
-            window = 4
-            std_gate = 11
-            nfilter = 1
-            thsd = 25 
+    print(f'        Bringi parameters: window={window}km, std_gate={std_gate}, '
+            f'nfilter={nfilter}, thsd={thsd}')
+        
+    # Calculate Kdp using CSU Bringi method
+        
+    # Range needs to be supplied as a variable, with same shape as DZ
+    rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
+    gate_spacing = self.radar.range['meters_between_gates']
+        
+    try:
+        KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(
+            dp=DP, 
+            dz=DZ, 
+            rng=rng2d/1000.0,
+            thsd=thsd, 
+            gs=gate_spacing,
+            window=window, 
+            nfilter=nfilter,
+            std_gate=std_gate
+        )
             
-        elif self.NPOL_SC_KDP:
-            print('    Using NPOL SC-optimized Kdp parameters...')
-            window = 5         
-            std_gate = 11      
-            nfilter = 1
-            thsd = 25      
+        print('    CSU Bringi calc_kdp_bringi completed successfully')
             
-        else:
-            window = 4
-            std_gate = 15
-            nfilter = 1
-            thsd = 25
+    except Exception as e:
+        print(f"    ERROR in CSU Bringi: {e}")
+        traceback.print_exc()
+        print('    Could not retrieve Kdp - filling with missing values')
+        KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+        PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
+        STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
         
-        print(f'        Bringi parameters: window={window}km, std_gate={std_gate}, '
-              f'nfilter={nfilter}, thsd={thsd}')
+    # Add fields to radar object
+    # Add KD (Kdp) field
+    if self.get_Bringi_kdp:
+        print('    Adding Bringi Kdp field to radar object...')
+        self.radar = cm.add_field_to_radar_object(
+            KDPB, self.radar, 
+            field_name='KD',
+            units='deg/km',
+            long_name='Specific Differential Phase (Bringi)',
+            standard_name='Specific Differential Phase',
+            dz_field=self.ref_field_name
+        )
         
-        # ============================================================================
-        # Calculate Kdp using CSU Bringi method
-        # ============================================================================
-        
-        # Range needs to be supplied as a variable, with same shape as DZ
-        rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
-        gate_spacing = self.radar.range['meters_between_gates']
-        
-        try:
-            KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(
-                dp=DP, 
-                dz=DZ, 
-                rng=rng2d/1000.0,
-                thsd=thsd, 
-                gs=gate_spacing,
-                window=window, 
-                nfilter=nfilter,
-                std_gate=std_gate
-            )
-            
-            print('    CSU Bringi calc_kdp_bringi completed successfully')
-            
-        except Exception as e:
-            print(f"    ERROR in CSU Bringi: {e}")
-            import traceback
-            traceback.print_exc()
-            print('    Could not retrieve Kdp - filling with missing values')
-            KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-            PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-            STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-        
-        # ============================================================================
-        # Add fields to radar object
-        # ============================================================================
-        
-        # Add KD (Kdp) field
-        if self.get_Bringi_kdp:
-            print('    Adding Kdp field...')
-            self.radar = cm.add_field_to_radar_object(
-                KDPB, self.radar, 
-                field_name='KD',
-                units='deg/km',
-                long_name='Specific Differential Phase (Bringi)',
-                standard_name='Specific Differential Phase',
-                dz_field=self.ref_field_name
-            )
-        
-        # Add filtered PhiDP field
-        if self.unfold_phidp == False:
-            print('    Adding filtered PhiDP field...')
-            self.radar = cm.add_field_to_radar_object(
-                PHIDPB, self.radar,
-                field_name='PHIDPB', 
-                units='deg',
-                long_name='Filtered Differential Phase (Bringi)',
-                standard_name='Filtered Differential Phase',
-                dz_field=self.ref_field_name
-            )
-        
-        # Add SD field
-        if self.get_GV_SD:
-            print('    Retrieving GPMGV SD')
-            self.radar = get_SD(self)
-        else:
-            print('    Adding SD field...')
-            self.radar = cm.add_field_to_radar_object(
-                STDPHIB, self.radar,
-                field_name='SD', 
-                units='deg',
-                long_name='STD Differential Phase (Bringi)',
-                standard_name='STD Differential Phase',
-                dz_field=self.ref_field_name
-            )
-    
-    return self.radar
-
-# ***************************************************************************************
-
-# ***************************************************************************************
-
-def calculate_kdp_old(self):
-
-    """
-    Wrapper for calculating Kdp using csu_kdp.calc_kdp_bringi from CSU_RadarTools
-    Thank Timothy Lang et al.
-    Parameters:
-    -----------
-    radar: pyart radar object
-    ref_field_name: name of reflectivty field (should be QC'd)
-    phi_field_name: name of PhiDP field (should be unfolded)
-
-    Return
-    ------
-    radar: radar object with KDPB, PHIDPB and STDPHIDP added to original
-
-    NOTE: KDPB: Bringi Kdp, PHIDPB: Bringi-filtered PhiDP, STDPHIB: Std-dev of PhiDP
-    """
-
-#    DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-#    DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-#    DZ = self.radar.fields[self.ref_field_name]['data'].copy()
-#    DP = self.radar.fields[self.phi_field_name]['data'].copy()
-
-    if not self.noKDP:
-        print('    Getting new Kdp...')
-        std_list  = ['AL1','JG1','MC1','NT1','PE1','SF1','ST1','SV1','TM1']
-        if self.site in std_list:
-            try:
-                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-            except:  
-                DZ = self.radar.fields['DZ']['data'].copy()
-                DP = self.radar.fields['PH']['data'].copy()
-            window=4
-            std_gate=15
-            nfilter=1
-            thsd=25
-        elif self.SC_KDP:
-            print('    KPOL SC Kdp...')
-            DZ = self.radar.fields['DZ']['data'].copy()
-            DP = self.radar.fields['PH']['data'].copy()
-            window=4
-            std_gate=15
-            nfilter=1
-            thsd=18
-        elif self.NPOL_SC_KDP:
-            print('    NPOL SC Kdp...')
-            try:
-                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-            except:
-                DZ = self.radar.fields['DZ']['data'].copy()
-                DP = self.radar.fields['PH']['data'].copy()
-            window=5
-            std_gate=11
-            nfilter=1
-            thsd=12
-        else:
-            try:
-                DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-                DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-            except:
-                DZ = self.radar.fields['DZ']['data'].copy()
-                DP = self.radar.fields['PH']['data'].copy()
-            window=4
-            std_gate=15
-            nfilter=1
-            thsd=25
-
-        print(f'        KDP thresholds window: {window}, std_gate: {std_gate}, nfilter: {nfilter}, thsd: {thsd}')
-
-        # Range needs to be supplied as a variable, with same shape as DZ
-        rng2d, az2d = np.meshgrid(self.radar.range['data'], self.radar.azimuth['data'])
-        gate_spacing = self.radar.range['meters_between_gates']
-
-        try:
-            KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(dp=DP, dz=DZ, rng=rng2d/1000.0, 
-                                                        thsd=thsd, gs=gate_spacing, 
-                                                        window=window, nfilter=nfilter, 
-                                                        std_gate=std_gate)                                                 
-        except Exception as e:
-            print("An error occurred:", e)
-            traceback.print_exc()
-            print('    CSU Radar Tools could not retrieve Kdp...')
-            KDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-            PHIDPB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-            STDPHIB = np.zeros((self.radar.nrays, self.radar.ngates), dtype=float) - 32767.0
-
-        #if 'KD' not in self.radar.fields.keys():
-        if self.get_Bringi_kdp:
-            print('    Bringi Kdp ADDED...')
-            self.radar = cm.add_field_to_radar_object(KDPB, self.radar, field_name='KD', 
-		        units='deg/km',
-		        long_name='Specific Differential Phase (Bringi)',
-		        standard_name='Specific Differential Phase (Bringi)',
-		        dz_field=self.ref_field_name)
-
+    # Add filtered PhiDP field
     if self.unfold_phidp == False:
-        print('    Retrieving CSU PH')
-        self.radar = cm.add_field_to_radar_object(PHIDPB, self.radar, 
-		    field_name='PHIDPB', units='deg',
-		    long_name='Differential Phase (Bringi)',
-		    standard_name='Differential Phase (Bringi)',
-		    dz_field=self.ref_field_name)
-    
+        self.radar = cm.add_field_to_radar_object(
+            PHIDPB, self.radar,
+            field_name='PHIDPB', 
+            units='deg',
+            long_name='Filtered Differential Phase (Bringi)',
+            standard_name='Filtered Differential Phase',
+            dz_field=self.ref_field_name
+        )
+        
+    # Add SD field
     if self.get_GV_SD:
         print('    Retrieving GPMGV SD')
         self.radar = get_SD(self)
     else:
-        print('    Retrieving CSU SD')
-        self.radar = cm.add_field_to_radar_object(STDPHIB, self.radar, 
-		    field_name='SD', units='deg',
-		    long_name='STD Differential Phase (Bringi)',
-		    standard_name='STD Differential Phase (Bringi)',
-		    dz_field=self.ref_field_name)
+        print('    Adding SD field...')
+        self.radar = cm.add_field_to_radar_object(
+            STDPHIB, self.radar,
+            field_name='SD', 
+            units='deg',
+            long_name='STD Differential Phase (Bringi)',
+            standard_name='STD Differential Phase',
+            dz_field=self.ref_field_name
+        )
     
     return self.radar
 
@@ -1446,11 +1289,8 @@ def get_default_thresh_dict():
                            'do_ph': False, 'ph_thresh': 80.0, 'max_phidp_diff': 360,
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
                            'get_GV_SD':  False, 'SD_window': 15,
-                           'kdp_method': 'bringi',
                            'get_Bringi_kdp': False,
-                           'SC_KDP': False,
-                           'NPOL_SC_KDP': False,
-                           'noKDP':  False,
+                           'kd_window': 4, 'kd_std_gate': 15, 'kd_nfilter': 1, 'kd_thsd': 25,
                            'unfold_phidp': True,
                            'merge_sp': True,
                            'dealias_velocity': False,

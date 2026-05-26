@@ -96,11 +96,6 @@ class QC:
         if self.unfold_phidp == True:
             self.radar = qc.unfold_phidp(self)
 
-    # Get KDP and Std(PhiDP)
-        D3R_list = ['KaD3R', 'KuD3R']
-        if self.site not in D3R_list:
-            self.radar = qc.calculate_kdp(self)
-
     # Filter D3R elevations and 4.4 km artifact
         if self.site in D3R_list:
             self.radar = qc.filter_D3R_el(self, elevation_range=(0, 90), 
@@ -180,6 +175,11 @@ class QC:
     # Apply SW filter
         if self.do_sw_mask == True:
             self.radar = qc.apply_SW_mask(self)
+
+    # Get KDP and Std(PhiDP)
+        D3R_list = ['KaD3R', 'KuD3R']
+        if self.site not in D3R_list:
+           self.radar = qc.calculate_kdp(self)
 
     # Apply CSU_RT filters
         self.radar = qc.csu_filters(self)
