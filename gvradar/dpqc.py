@@ -998,6 +998,71 @@ def ph_sector(self):
 # ***************************************************************************************
 
 def unfold_phidp(self):
+    """
+    Unfold PhiDP for NPOL (0-360° range system).
+    Fixed index mapping issue from original Dave Marks version.
+    """
+    print('    Unfolding PhiDP...')
+
+    BAD_DATA = -32767.0
+    FIRST_GATE = 5000  # meters (5 km)
+    MAX_PHIDP_DIFF = self.max_phidp_diff  # Typically 40-60° for S-band
+    PHASE_WRAP = 360.0  # ← CORRECT for NPOL's 0-360° system
+
+    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
+    gate_spacing = self.radar.range['meters_between_gates']
+    start_gate = int(FIRST_GATE / gate_spacing)  # 5000m / 150m = 33 gates
+    nrays = phm_field.data.shape[0]
+
+    print(f'        Unfolding params: start_gate={start_gate}, '
+          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
+
+    for iray in range(nrays):
+        gate_data = phm_field.data[iray].copy()
+        ngates = gate_data.shape[0]
+        
+        # FIXED: Work directly on full array, not compressed version
+        # Track cumulative unwrap offset
+        cumulative_unwrap = 0.0
+        
+        # Create validity mask
+        valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+        
+        # Process gates from start_gate to end
+        for igate in range(start_gate, ngates-1):
+            # Skip if either current or next gate is invalid
+            if not valid_mask[igate] or not valid_mask[igate+1]:
+                continue
+            
+            # Calculate gate-to-gate difference
+            diff = gate_data[igate+1] - gate_data[igate]
+            
+            # Detect forward wrap (large negative jump: 350° → 5°)
+            if diff < 0.0 and abs(diff) >= MAX_PHIDP_DIFF:
+                cumulative_unwrap += PHASE_WRAP
+                gate_data[igate+1] += cumulative_unwrap
+            # Apply existing unwrap to this gate
+            elif cumulative_unwrap > 0:
+                gate_data[igate+1] += cumulative_unwrap
+        
+        # Set invalid gates to BAD_DATA
+        gate_data[~valid_mask] = BAD_DATA
+        
+        # Replace in field
+        phm_field.data[iray] = gate_data
+
+    self.radar = cm.add_field_to_radar_object(
+        phm_field, self.radar, 
+        field_name='PH',
+        units='deg',
+        long_name='Unfolded Differential Phase (Marks-fixed)',
+        standard_name='Differential Phase',
+        dz_field=self.ref_field_name
+    )
+    
+    return self.radar
+
+def unfold_phidp_old(self):
 
     """
     Function for unfolding phidp
