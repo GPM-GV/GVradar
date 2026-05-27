@@ -1014,7 +1014,7 @@ def unfold_phidp(self):
     BAD_DATA = -32767.0
     FIRST_GATE = 5000  # meters (5 km)
     MAX_PHIDP_DIFF = self.max_phidp_diff
-    PHASE_WRAP = 360.0
+    PHASE_WRAP = self.phase_wrap
 
     phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
 
@@ -1361,12 +1361,12 @@ def get_default_thresh_dict():
                            'do_kdp': False, 'kdp_min': -2.0, 'kdp_max': 7.0, 
                            'do_sq': False, 'sq_thresh': 0.45, 
                            'do_sd': True, 'sd_thresh': 18.0, 'sd_thresh_max': 0,
-                           'do_ph': False, 'ph_thresh': 80.0, 'max_phidp_diff': 360,
+                           'do_ph': False, 'ph_thresh': 80.0,
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
                            'get_GV_SD':  False, 'SD_window': 15,
                            'get_Bringi_kdp': False,
                            'kd_window': 4, 'kd_std_gate': 15, 'kd_nfilter': 1, 'kd_thsd': 25,
-                           'unfold_phidp': True,
+                           'unfold_phidp': True, 'max_phidp_diff': 360, 'phase_wrap': 360,
                            'merge_sp': True,
                            'dealias_velocity': False,
                            'do_sw_mask': False,
