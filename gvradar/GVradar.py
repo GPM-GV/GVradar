@@ -20,8 +20,8 @@ import argparse
 import pathlib
 from gvradar import (dp_products as dp, dpqc as qc, 
                      common as cm, plot_images_new as pi)
-import warnings
-warnings.filterwarnings("ignore")
+#import warnings
+#warnings.filterwarnings("ignore")
 
 # ***************************************************************************************
 
@@ -92,7 +92,7 @@ class QC:
     # Save raw reflectivity, will be applied to DZ later
         self.radar, zz = cm.rename_fields_in_radar(self)
 
-    # Get PhiDP
+    # Unfold PhiDP
         if self.unfold_phidp == True:
             self.radar = qc.unfold_phidp(self)
 

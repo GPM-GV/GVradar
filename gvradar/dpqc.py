@@ -10,7 +10,7 @@ V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 # ***************************************************************************************
 
 import numpy as np
-import os, sys
+import os
 from scipy import ndimage
 from copy import deepcopy
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
@@ -1016,7 +1016,7 @@ def unfold_phidp(self):
 
     print(f'        Unfolding params: start_gate={start_gate}, '
           f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
-    sys.stdout.flush()
+    
     for iray in range(nrays):
         gate_data = phm_field.data[iray].copy()
         ngates = gate_data.shape[0]
