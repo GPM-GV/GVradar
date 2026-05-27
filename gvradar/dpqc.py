@@ -1033,7 +1033,15 @@ def unfold_phidp(self):
             unfolded_phase_field='PH'      # Your standard field name
         )
         
-        self.radar = unfolded_radar
+        self.radar = cm.add_field_to_radar_object(
+            unfolded_radar, self.radar, 
+            field_name='PH',
+            units='deg',
+            long_name='Unfolded Differential Phase',
+            standard_name='Differential Phase',
+            dz_field=self.ref_field_name
+        )
+
         print('    PyART PhiDP unfolding completed successfully')
         
     except Exception as e:
@@ -1042,7 +1050,7 @@ def unfold_phidp(self):
         traceback.print_exc()
         
         # Use the fixed simple method above
-        self.radar = self._simple_unfold_phidp_fixed()
+        self.radar = unfold_phidp_new()
     
     return self.radar
 
