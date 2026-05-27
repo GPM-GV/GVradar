@@ -20,8 +20,8 @@ import argparse
 import pathlib
 from gvradar import (dp_products as dp, dpqc as qc, 
                      common as cm, plot_images_new as pi)
-#import warnings
-#warnings.filterwarnings("ignore")
+import warnings
+warnings.filterwarnings("ignore")
 
 # ***************************************************************************************
 
@@ -97,6 +97,7 @@ class QC:
             self.radar = qc.unfold_phidp(self)
 
     # Filter D3R elevations and 4.4 km artifact
+        D3R_list = ['KaD3R', 'KuD3R']
         if self.site in D3R_list:
             self.radar = qc.filter_D3R_el(self, elevation_range=(0, 90), 
                                                       azimuth_range=None, 
@@ -177,7 +178,6 @@ class QC:
             self.radar = qc.apply_SW_mask(self)
 
     # Get KDP and Std(PhiDP)
-        D3R_list = ['KaD3R', 'KuD3R']
         if self.site not in D3R_list:
            self.radar = qc.calculate_kdp(self)
 
