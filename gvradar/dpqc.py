@@ -999,8 +999,63 @@ def ph_sector(self):
 
 def unfold_phidp(self):
     """
+    Unfold PhiDP using PyART's robust Sobel method.
+    Configured for NPOL's 0-360° phase system.
+    """
+    print('    Unfolding PhiDP using PyART Sobel method...')
+    
+    try:
+        # Create gatefilter for quality control
+        gatefilter = pyart.filters.GateFilter(self.radar)
+        
+        # Exclude low RhoHV (clutter, noise)
+        if 'RH' in self.radar.fields:
+            gatefilter.exclude_below('RH', 0.7)
+        
+        # Exclude very low reflectivity
+        if 'CZ' in self.radar.fields:
+            gatefilter.exclude_below('CZ', 0.0)
+        
+        # Run PyART's region-based unfolding
+        # For NPOL: 0-360° range → nyquist_phase = 180°
+        unfolded_radar = pyart.correct.dealias_unwrap_phase(
+            self.radar,
+            unwrap_unit='sweep',
+            nyquist_phase=180.0,           # ← 360° / 2 for NPOL
+            check_nyquist_uniform=True,
+            gatefilter=gatefilter,
+            rays_wrap_around=False,        # NPOL is sector scan
+            keep_original=False,
+            set_limits=True,
+            skip_checks=False,
+            phase_field='differential_phase',
+            unfolded_phase_field='PH'      # Your standard field name
+        )
+        
+        self.radar = unfolded_radar
+        print('    PyART PhiDP unfolding completed successfully')
+        
+    except Exception as e:
+        print(f'    WARNING: PyART unfolding failed: {e}')
+        print('    Falling back to simple gate-to-gate method')
+        traceback.print_exc()
+        
+        # Use the fixed simple method above
+        self.radar = self._simple_unfold_phidp_fixed()
+    
+    return self.radar
+
+def unfold_phidp_new(self):
+    """
     Unfold PhiDP for NPOL (0-360° range system).
-    Fixed index mapping issue from original Dave Marks version.
+
+    Parameters:
+    radar: pyart radar object
+    ref_field_name: name of reflectivty field (should be QC'd)
+    phi_field_name: name of PhiDP field (should be unfolded)
+
+    Return
+    radar: radar object with unfolded PHM field included
     """
     print('    Unfolding PhiDP...')
 
@@ -1010,12 +1065,15 @@ def unfold_phidp(self):
     PHASE_WRAP = 360.0
 
     phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
+
+    # Get gate spacing info and determine start gate for unfolding
+    # Start at 5 km from radar to avoid clutter gates with bad phase 
     gate_spacing = self.radar.range['meters_between_gates']
-    start_gate = int(FIRST_GATE / gate_spacing)  # 5000m / 150m = 33 gates
+    start_gate = int(FIRST_GATE / gate_spacing)
     nrays = phm_field.data.shape[0]
 
-    print(f'        Unfolding params: start_gate={start_gate}, '
-          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
+    print(f'        Unfolding params: start_gate= {start_gate}, '
+          f'max_diff= {MAX_PHIDP_DIFF}°, wrap= {PHASE_WRAP}°')
     
     for iray in range(nrays):
         gate_data = phm_field.data[iray].copy()
@@ -1055,7 +1113,7 @@ def unfold_phidp(self):
         phm_field, self.radar, 
         field_name='PH',
         units='deg',
-        long_name='Unfolded Differential Phase (Marks-fixed)',
+        long_name='Unfolded Differential Phase',
         standard_name='Differential Phase',
         dz_field=self.ref_field_name
     )
@@ -1081,7 +1139,7 @@ def unfold_phidp_old(self):
 
     BAD_DATA       = -32767.0        # Fill in bad data values
     FIRST_GATE     = 5000           # First gate to begin unfolding
-    MAX_PHIDP_DIFF = self.max_phidp_diff          # Set maximum phidp gate-to-gate difference allowed
+    MAX_PHIDP_DIFF = self.max_phidp_diff  # Set maximum phidp gate-to-gate difference allowed
 
     # Copy current PhiDP field to phm_field
     phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
