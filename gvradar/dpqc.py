@@ -1024,8 +1024,8 @@ def unfold_phidp(self):
     start_gate = int(FIRST_GATE / gate_spacing)
     nrays = phm_field.data.shape[0]
 
-    print(f'        Unfolding params: start_gate= {start_gate}, '
-          f'max_diff= {MAX_PHIDP_DIFF}°, wrap= {PHASE_WRAP}°')
+    print(f'        Unfolding params: start_gate={start_gate}, '
+          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
     
     for iray in range(nrays):
         gate_data = phm_field.data[iray].copy()
@@ -1359,7 +1359,7 @@ def get_default_thresh_dict():
                            'do_rh': True, 'rh_thresh': 0.72,
                            'do_zdr': True, 'dr_min': -6.0, 'dr_max': 4.0, 
                            'do_kdp': False, 'kdp_min': -2.0, 'kdp_max': 7.0, 
-                           'do_sq': False, 'sq_thresh': 0.45, 
+                           'do_sq': False, 'sq_thresh': 0.45, 'sq_height': 4.4,
                            'do_sd': True, 'sd_thresh': 18.0, 'sd_thresh_max': 0,
                            'do_ph': False, 'ph_thresh': 80.0,
                            'do_ap': True, 'ap_dbz': 45, 'ap_zdr': 3,
