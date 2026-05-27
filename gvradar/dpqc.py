@@ -1028,7 +1028,8 @@ def unfold_phidp(self):
             keep_original=False,
             set_limits=True,
             skip_checks=False,
-            phase_field='differential_phase',
+            vel_field='VR',
+            phase_field='PH',
             unfolded_phase_field='PH'      # Your standard field name
         )
         
