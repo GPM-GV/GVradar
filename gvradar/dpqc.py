@@ -10,7 +10,7 @@ V1.5 - 02/02/2024 - update by Jason Pippitt NASA/GSFC/SSAI
 # ***************************************************************************************
 
 import numpy as np
-import os
+import os, sys
 from scipy import ndimage
 from copy import deepcopy
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
@@ -1006,8 +1006,8 @@ def unfold_phidp(self):
 
     BAD_DATA = -32767.0
     FIRST_GATE = 5000  # meters (5 km)
-    MAX_PHIDP_DIFF = self.max_phidp_diff  # Typically 40-60° for S-band
-    PHASE_WRAP = 360.0  # ← CORRECT for NPOL's 0-360° system
+    MAX_PHIDP_DIFF = self.max_phidp_diff
+    PHASE_WRAP = 360.0
 
     phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
     gate_spacing = self.radar.range['meters_between_gates']
@@ -1016,12 +1016,12 @@ def unfold_phidp(self):
 
     print(f'        Unfolding params: start_gate={start_gate}, '
           f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
-
+    sys.stdout.flush()
     for iray in range(nrays):
         gate_data = phm_field.data[iray].copy()
         ngates = gate_data.shape[0]
         
-        # FIXED: Work directly on full array, not compressed version
+        # Work directly on full array
         # Track cumulative unwrap offset
         cumulative_unwrap = 0.0
         
