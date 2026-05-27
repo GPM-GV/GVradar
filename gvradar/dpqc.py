@@ -999,63 +999,6 @@ def ph_sector(self):
 
 def unfold_phidp(self):
     """
-    Unfold PhiDP using PyART's robust Sobel method.
-    Configured for NPOL's 0-360° phase system.
-    """
-    print('    Unfolding PhiDP using PyART Sobel method...')
-    
-    try:
-        # Create gatefilter for quality control
-        gatefilter = pyart.filters.GateFilter(self.radar)
-        
-        # Exclude low RhoHV (clutter, noise)
-        if 'RH' in self.radar.fields:
-            gatefilter.exclude_below('RH', 0.7)
-        
-        # Exclude very low reflectivity
-        if 'CZ' in self.radar.fields:
-            gatefilter.exclude_below('CZ', 0.0)
-        
-        # Run PyART's region-based unfolding
-        # For NPOL: 0-360° range → nyquist_phase = 180°
-        unfolded_radar = pyart.correct.dealias_unwrap_phase(
-            self.radar,
-            unwrap_unit='sweep',
-            nyquist_phase=180.0,           # ← 360° / 2 for NPOL
-            check_nyquist_uniform=True,
-            gatefilter=gatefilter,
-            rays_wrap_around=False,        # NPOL is sector scan
-            keep_original=False,
-            set_limits=True,
-            skip_checks=False,
-            vel_field='VR',
-            phase_field='PH',
-            unfolded_phase_field='PH'      # Your standard field name
-        )
-        
-        self.radar = cm.add_field_to_radar_object(
-            unfolded_radar, self.radar, 
-            field_name='PH',
-            units='deg',
-            long_name='Unfolded Differential Phase',
-            standard_name='Differential Phase',
-            dz_field=self.ref_field_name
-        )
-
-        print('    PyART PhiDP unfolding completed successfully')
-        
-    except Exception as e:
-        print(f'    WARNING: PyART unfolding failed: {e}')
-        print('    Falling back to simple gate-to-gate method')
-        traceback.print_exc()
-        
-        # Use the fixed simple method above
-        self.radar = unfold_phidp_new()
-    
-    return self.radar
-
-def unfold_phidp_new(self):
-    """
     Unfold PhiDP for NPOL (0-360° range system).
 
     Parameters:
