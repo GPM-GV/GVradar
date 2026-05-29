@@ -744,7 +744,7 @@ def update_metadata(self):
     
     # Also store as JSON for programmatic access (won't be pretty in info() but useful for scripts)
     self.radar.metadata['qc_parameters_json'] = json.dumps(
-        self.self.kwargs, 
+        self.kwargs, 
         indent=2,
         default=str
     )
