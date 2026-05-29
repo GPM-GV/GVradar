@@ -868,9 +868,9 @@ def output_cf(self):
         
         print(f"DEBUG: Output file will be: {out_file}")
         
-        # Update metadata
+        # Update metadata - call as function, not method
         print("DEBUG: Calling update_metadata()...")
-        self.radar = self.update_metadata()
+        self.radar = update_metadata(self)  # ← Fixed here
         print("DEBUG: Metadata updated successfully")
         
         # Write CF file
