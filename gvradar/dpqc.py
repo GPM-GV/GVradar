@@ -1264,59 +1264,76 @@ def calculate_kdp(self):
 # ***************************************************************************************
 
 def get_SD(self):
-    
-    BAD_DATA       = -32767.0
+    """
+    Calculate standard deviation of PhiDP over a sliding window.
+    Vectorized version using sliding_window_view.
+    """
+    BAD_DATA = -32767.0
     ws = self.SD_window
+    ws_h = ws // 2
     
-    ws_h = ws//2
-
-    # Copy current PhiDP field to phm_field
-    ph_field = self.radar.fields['PH']['data'].copy()
-    sd_field = self.radar.fields['PH']['data'].copy() * 0
-    dz_field = self.radar.fields['CZ']['data'].copy()
-    nrays = ph_field.data.shape[0]
-    gate_data = ph_field.data[0]
-    ngates = gate_data.shape[0]
-
-    for iray in range(0, nrays-1):
-        ph_gate_data = ph_field.data[iray]
-        sd_gate_data = sd_field.data[iray]
-        dz_gate_data = dz_field.data[iray]
+    # Get fields
+    ph_field = self.radar.fields['PH']['data']
+    dz_field = self.radar.fields['CZ']['data']
     
-        for igate in range(0, ws_h-1):
-            phbox=ph_gate_data[0:ws]
-            dzbox=dz_gate_data[0:ws]
-            x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
-            if sum(x) >= 5:
-                sd_gate_data[igate] = np.std(phbox[x])
-            else:
-                sd_gate_data[igate] = BAD_DATA
+    nrays, ngates = ph_field.shape
+    
+    # Create combined valid mask
+    valid_mask = ~(ph_field.mask | dz_field.mask)
+    
+    # Convert to regular array with NaN for invalid
+    ph_data = ph_field.filled(np.nan)
+    ph_data[~valid_mask] = np.nan
+    
+    # Initialize output
+    sd_field = np.full((nrays, ngates), BAD_DATA, dtype=np.float32)
+    
+    for iray in range(nrays):
+        ph_ray = ph_data[iray]
+        
+        # Process middle section with sliding window (most efficient)
+        if ngates >= ws:
+            windows = sliding_window_view(ph_ray, ws)
             
-        for igate in range(ws_h,ngates-(ws_h+1)):
-            phbox=ph_gate_data[igate-ws_h:igate+ws_h]
-            dzbox=dz_gate_data[igate-ws_h:igate+ws_h]
-            x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
-            if sum(x) >= 5:
-                sd_gate_data[igate] = np.std(phbox[x])
-            else:
-                sd_gate_data[igate] = BAD_DATA
-         
-        for igate in range(ngates-ws_h,ngates-1):
-            phbox=ph_gate_data[igate-ws:igate-1]
-            dzbox=dz_gate_data[igate-ws:igate-1]
-            x = np.logical_and(phbox != BAD_DATA, dzbox != BAD_DATA)
-            if sum(x) >= 5:
-                sd_gate_data[igate] = np.std(phbox[x])
-            else:
-                sd_gate_data[igate] = BAD_DATA
-         
-        sd_field.data[iray] = sd_gate_data
+            for i, window in enumerate(windows):
+                igate = i + ws_h
+                valid_count = np.sum(~np.isnan(window))
+                if valid_count >= 5:
+                    sd_field[iray, igate] = np.nanstd(window)
+                else:
+                    sd_field[iray, igate] = BAD_DATA
+            
+            # Handle first ws_h gates
+            for igate in range(ws_h):
+                window = ph_ray[0:ws]
+                valid_count = np.sum(~np.isnan(window))
+                if valid_count >= 5:
+                    sd_field[iray, igate] = np.nanstd(window)
+                else:
+                    sd_field[iray, igate] = BAD_DATA
+            
+            # Handle last ws_h gates
+            for igate in range(ngates - ws_h, ngates):
+                window = ph_ray[-ws:]
+                valid_count = np.sum(~np.isnan(window))
+                if valid_count >= 5:
+                    sd_field[iray, igate] = np.nanstd(window)
+                else:
+                    sd_field[iray, igate] = BAD_DATA
     
-    sd_dict = {"data": sd_field, "units": "Std(PhiDP)",
-               "long_name": "STD Differential Phase (GPM-GV)", "_FillValue": -32767.0,
-               "standard_name": "STD Differential Phase (GPM-GV)",}
+    # Convert back to masked array
+    sd_field_ma = ma.masked_equal(sd_field, BAD_DATA)
+    
+    # Create field dictionary
+    sd_dict = {
+        "data": sd_field_ma,
+        "units": "degrees",
+        "long_name": "STD Differential Phase (GPM-GV)",
+        "_FillValue": BAD_DATA,
+        "standard_name": "differential_phase_standard_deviation",
+    }
     self.radar.add_field("SD", sd_dict, replace_existing=True)
-
+    
     return self.radar
 
 # ***************************************************************************************
