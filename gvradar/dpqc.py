@@ -17,6 +17,7 @@ from numpy.lib.stride_tricks import sliding_window_view
 from copy import deepcopy
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
 import pyart
+import time
 import traceback
 from gvradar import common as cm
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,
@@ -1074,78 +1075,6 @@ def unfold_phidp(self):
     
     return self.radar
 
-def unfold_phidp_old(self):
-
-    """
-    Function for unfolding phidp
-    Written by: David A. Marks, NASA/WFF/SSAI
-
-    Parameters:
-    radar: pyart radar object
-    ref_field_name: name of reflectivty field (should be QC'd)
-    phi_field_name: name of PhiDP field (should be unfolded)
-
-    Return
-    radar: radar object with unfolded PHM field included
-    """
-                
-    print('    Unfolding PhiDP...')
-
-    BAD_DATA       = -32767.0        # Fill in bad data values
-    FIRST_GATE     = 5000           # First gate to begin unfolding
-    MAX_PHIDP_DIFF = self.max_phidp_diff  # Set maximum phidp gate-to-gate difference allowed
-
-    # Copy current PhiDP field to phm_field
-    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
-
-    # Get gate spacing info and determine start gate for unfolding
-    # Start at 5 km from radar to avoid clutter gates with bad phase 
-    gate_spacing = self.radar.range['meters_between_gates']
-    start_gate = int(FIRST_GATE / gate_spacing)
-    nsweeps = self.radar.nsweeps
-    nrays = phm_field.data.shape[0]
-
-    # Loop through the rays and perform unfolding if needed
-    # By specifying iray for data and mask provides gate info
-    # for iray in range(0, 1):
-
-    for iray in range(0, nrays-1):
-        gate_data = phm_field.data[iray]
-        ngates = gate_data.shape[0]
-
-        # Conditional where for valid data -- NPOL only.
-        # Phase data from other radars should be evaluated for phase range values
-        good = np.ma.where(gate_data >= 0)
-        bad = np.ma.where(gate_data < 0)
-        final_data = gate_data[good]
-        num_final = final_data.shape[0]
-        #print("Num_Final = ", str(num_final))
-
-        folded_gates = 0
-        for igate in range(start_gate,num_final-2):
-            diff = final_data[igate+1] - final_data[igate]
-            if(diff < 0.0):
-                if abs(diff) >= MAX_PHIDP_DIFF:
-                    #print('igate: igate+1: ',final_data[igate],final_data[igate+1])
-                    final_data[igate+1] += 360
-                    folded_gates += 1
-
-        # Put corrected data back into ray
-        gate_data[good] = final_data
-        gate_data[bad] = BAD_DATA
-
-        # Replace corrected data in phm_field. Original phidp remains the same
-        phm_field.data[iray] = gate_data
-
-    # Create new field for corrected PH -- name it phm
-    self.radar = cm.add_field_to_radar_object(phm_field, self.radar, field_name='PH', 
-		units='deg',
-		long_name='Unfolded Differential Phase (Marks)',
-		standard_name='Differential Phase',
-		dz_field=self.ref_field_name)
-    
-    return self.radar
-
 # ***************************************************************************************
 
 def calculate_kdp(self):
@@ -1270,6 +1199,7 @@ def get_SD(self):
     Calculate standard deviation of PhiDP over a sliding window.
     Vectorized version using sliding_window_view.
     """
+    start_time = time.perf_counter()
     BAD_DATA = -32767.0
     ws = self.SD_window
     ws_h = ws // 2
@@ -1336,6 +1266,10 @@ def get_SD(self):
     }
     self.radar.add_field("SD", sd_dict, replace_existing=True)
     
+    end_time = time.perf_counter()
+    elapsed = end_time - start_time
+    print(f"DS time: {elapsed:.2f} seconds")
+
     return self.radar
 
 # ***************************************************************************************
