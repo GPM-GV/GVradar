@@ -732,15 +732,21 @@ def update_metadata(self):
     # Add processing parameters as individual metadata fields (visible in radar.info())
     try:
         for key, value in self.kwargs.items():
-            # Convert numpy types to native Python for netCDF compatibility
-            if isinstance(value, (np.integer, np.floating)):
-                value = value.item()
+            # Convert to netCDF-compatible types
+            if isinstance(value, (bool, np.bool_)):  # Check bool first, before np types
+                value = int(value)  # Convert to 0 or 1 for netCDF compatibility
+            elif isinstance(value, np.integer):
+                value = int(value.item())
+            elif isinstance(value, np.floating):
+                value = float(value.item())
             elif isinstance(value, np.ndarray):
-                value = value.tolist()
-            elif isinstance(value, np.bool_):
-                value = bool(value)
+                value = str(value.tolist())  # Convert arrays to string
             elif isinstance(value, (list, tuple)):
                 value = str(value)  # Convert lists to strings for readability
+            elif value is None:
+                value = "None"
+            elif not isinstance(value, (int, float, str)):
+                value = str(value)  # Fallback: convert to string
             
             # Add with qc_param_ prefix so they're grouped together
             self.radar.metadata[f'qc_param_{key}'] = value
@@ -756,14 +762,18 @@ def update_metadata(self):
         clean_kwargs = {}
         for key, value in self.kwargs.items():
             try:
-                if isinstance(value, (np.integer, np.floating)):
-                    clean_kwargs[key] = value.item()
+                if isinstance(value, (bool, np.bool_)):
+                    clean_kwargs[key] = bool(value)
+                elif isinstance(value, np.integer):
+                    clean_kwargs[key] = int(value.item())
+                elif isinstance(value, np.floating):
+                    clean_kwargs[key] = float(value.item())
                 elif isinstance(value, np.ndarray):
                     clean_kwargs[key] = value.tolist()
-                elif isinstance(value, np.bool_):
-                    clean_kwargs[key] = bool(value)
                 elif isinstance(value, (list, tuple)):
                     clean_kwargs[key] = list(value)
+                elif value is None:
+                    clean_kwargs[key] = None
                 else:
                     # Try to serialize, fall back to string
                     json.dumps(value)  # Test if it's serializable
