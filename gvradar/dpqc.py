@@ -13,7 +13,7 @@ import numpy as np
 import os
 from scipy import ndimage
 import numpy.ma as ma
-from numpy.lib.stride_tricks import sliding_window_view
+from scipy import signal
 from copy import deepcopy
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
 import pyart
@@ -1196,8 +1196,7 @@ def calculate_kdp(self):
 
 def get_SD(self):
     """
-    Calculate standard deviation of PhiDP over a sliding window.
-    Vectorized version using sliding_window_view.
+    Fast SD calculation using scipy's correlation for counting valid points.
     """
     start_time = time.perf_counter()
     BAD_DATA = -32767.0
@@ -1213,48 +1212,46 @@ def get_SD(self):
     # Create combined valid mask
     valid_mask = ~(ph_field.mask | dz_field.mask)
     
-    # Convert to regular array with NaN for invalid
-    ph_data = ph_field.filled(np.nan)
-    ph_data[~valid_mask] = np.nan
+    # Convert to arrays
+    ph_data = ph_field.filled(0.0).astype(np.float64)
+    valid_array = valid_mask.astype(np.float64)
+    
+    # Create 1D kernel for row-wise convolution
+    kernel = np.ones(ws, dtype=np.float64)
     
     # Initialize output
-    sd_field = np.full((nrays, ngates), BAD_DATA, dtype=np.float32)
+    sd_field = np.full((nrays, ngates), np.nan, dtype=np.float32)
     
+    # Process each ray (still need loop, but much faster operations)
     for iray in range(nrays):
-        ph_ray = ph_data[iray]
+        ph_row = ph_data[iray]
+        valid_row = valid_array[iray]
         
-        # Process middle section with sliding window (most efficient)
-        if ngates >= ws:
-            windows = sliding_window_view(ph_ray, ws)
-            
-            for i, window in enumerate(windows):
-                igate = i + ws_h
-                valid_count = np.sum(~np.isnan(window))
-                if valid_count >= 5:
-                    sd_field[iray, igate] = np.nanstd(window)
-                else:
-                    sd_field[iray, igate] = BAD_DATA
-            
-            # Handle first ws_h gates
-            for igate in range(ws_h):
-                window = ph_ray[0:ws]
-                valid_count = np.sum(~np.isnan(window))
-                if valid_count >= 5:
-                    sd_field[iray, igate] = np.nanstd(window)
-                else:
-                    sd_field[iray, igate] = BAD_DATA
-            
-            # Handle last ws_h gates
-            for igate in range(ngates - ws_h, ngates):
-                window = ph_ray[-ws:]
-                valid_count = np.sum(~np.isnan(window))
-                if valid_count >= 5:
-                    sd_field[iray, igate] = np.nanstd(window)
-                else:
-                    sd_field[iray, igate] = BAD_DATA
+        # Pad the arrays for edge handling
+        ph_padded = np.pad(ph_row, ws_h, mode='edge')
+        valid_padded = np.pad(valid_row, ws_h, mode='edge')
+        
+        # Calculate sums using convolution (very fast)
+        ph_masked = ph_padded * valid_padded
+        sum_vals = np.convolve(ph_masked, kernel, mode='valid')
+        sum_sq = np.convolve(ph_masked * ph_masked, kernel, mode='valid')
+        count_valid = np.convolve(valid_padded, kernel, mode='valid')
+        
+        # Calculate std where we have enough valid points
+        mask = count_valid >= 5
+        mean = np.zeros_like(sum_vals)
+        mean[mask] = sum_vals[mask] / count_valid[mask]
+        
+        variance = np.zeros_like(sum_sq)
+        variance[mask] = (sum_sq[mask] / count_valid[mask]) - (mean[mask] ** 2)
+        variance[variance < 0] = 0  # Numerical precision issues
+        
+        sd_field[iray] = np.sqrt(variance)
+        sd_field[iray, ~mask] = np.nan
     
-    # Convert back to masked array
-    sd_field_ma = ma.masked_equal(sd_field, BAD_DATA)
+    # Convert to masked array
+    sd_field_ma = ma.masked_invalid(sd_field)
+    sd_field_ma.fill_value = BAD_DATA
     
     # Create field dictionary
     sd_dict = {
@@ -1268,7 +1265,7 @@ def get_SD(self):
     
     end_time = time.perf_counter()
     elapsed = end_time - start_time
-    print(f"DS time: {elapsed:.2f} seconds")
+    print(f"SD time: {elapsed:.2f} seconds")
 
     return self.radar
 
