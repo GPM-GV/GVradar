@@ -727,27 +727,60 @@ def update_metadata(self):
     self.radar.metadata['source'] = 'GVradar V1.5'
     self.radar.metadata['references'] = 'https://github.com/GPM-GV/GVradar'
     
-    # Add processing parameters as individual metadata fields (visible in radar.info())
-    for key, value in self.kwargs.items():
-        # Convert numpy types to native Python for netCDF compatibility
-        if isinstance(value, (np.integer, np.floating)):
-            value = value.item()
-        elif isinstance(value, np.ndarray):
-            value = value.tolist()
-        elif isinstance(value, np.bool_):
-            value = bool(value)
-        elif isinstance(value, (list, tuple)):
-            value = str(value)  # Convert lists to strings for readability
-        
-        # Add with qc_param_ prefix so they're grouped together
-        self.radar.metadata[f'qc_param_{key}'] = value
+    print("DEBUG: Starting metadata update...")
     
-    # Also store as JSON for programmatic access (won't be pretty in info() but useful for scripts)
-    self.radar.metadata['qc_parameters_json'] = json.dumps(
-        self.kwargs, 
-        indent=2,
-        default=str
-    )
+    # Add processing parameters as individual metadata fields (visible in radar.info())
+    try:
+        for key, value in self.kwargs.items():
+            # Convert numpy types to native Python for netCDF compatibility
+            if isinstance(value, (np.integer, np.floating)):
+                value = value.item()
+            elif isinstance(value, np.ndarray):
+                value = value.tolist()
+            elif isinstance(value, np.bool_):
+                value = bool(value)
+            elif isinstance(value, (list, tuple)):
+                value = str(value)  # Convert lists to strings for readability
+            
+            # Add with qc_param_ prefix so they're grouped together
+            self.radar.metadata[f'qc_param_{key}'] = value
+        print(f"DEBUG: Added {len(self.kwargs)} parameters to metadata")
+    except Exception as e:
+        print(f"ERROR adding individual parameters: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    # Store as JSON - with better error handling
+    try:
+        # Create a clean copy of kwargs for JSON serialization
+        clean_kwargs = {}
+        for key, value in self.kwargs.items():
+            try:
+                if isinstance(value, (np.integer, np.floating)):
+                    clean_kwargs[key] = value.item()
+                elif isinstance(value, np.ndarray):
+                    clean_kwargs[key] = value.tolist()
+                elif isinstance(value, np.bool_):
+                    clean_kwargs[key] = bool(value)
+                elif isinstance(value, (list, tuple)):
+                    clean_kwargs[key] = list(value)
+                else:
+                    # Try to serialize, fall back to string
+                    json.dumps(value)  # Test if it's serializable
+                    clean_kwargs[key] = value
+            except (TypeError, ValueError):
+                clean_kwargs[key] = str(value)
+        
+        self.radar.metadata['qc_parameters_json'] = json.dumps(
+            clean_kwargs,
+            indent=2,
+            default=str
+        )
+        print("DEBUG: Successfully created JSON metadata")
+    except Exception as e:
+        print(f"WARNING: Could not create JSON metadata: {e}")
+        # Don't fail the whole function, just skip the JSON
+        pass
     
     # Add processing summary
     timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -759,6 +792,8 @@ def update_metadata(self):
 
     self.radar.metadata['field_names'] = new_fields
 
+    print("DEBUG: Updating field metadata...")
+    
     if 'CZ' in self.radar.fields:
         cz = self.radar.fields['CZ']['data'].copy()
         self.radar = add_field_to_radar_object(cz, self.radar, field_name='CZ', 
@@ -807,36 +842,58 @@ def update_metadata(self):
                                          standard_name='doppler_spectrum_width', 
                                          dz_field='CZ')                                                                     
 
+    print("DEBUG: Metadata update complete")
     return self.radar
 
 # ***************************************************************************************
 
 def output_cf(self):
-
-    # Outputs CF radial file
-    # Declare output dir
-
-    out_dir = self.cf_dir
-    os.makedirs(out_dir, exist_ok=True)
-    if self.site == 'NPOL': self.site = 'NPOL1'
-
-    if self.scan_type == 'RHI':
-        out_file = out_dir + '/' + self.site + '_' + self.year + '_' + self.month + self.day + '_' + self.hh + self.mm + self.ss + '_rhi.cf'
-    else: 
-        out_file = out_dir + '/' + self.site + '_' + self.year + '_' + self.month + self.day + '_' + self.hh + self.mm + self.ss + '.cf'
+    """Outputs CF radial file"""
     
-    self.radar = update_metadata(self)
+    print("DEBUG: Starting output_cf()...")
+    
+    try:
+        # Declare output dir
+        out_dir = self.cf_dir
+        print(f"DEBUG: Output directory: {out_dir}")
+        os.makedirs(out_dir, exist_ok=True)
+        
+        if self.site == 'NPOL': 
+            self.site = 'NPOL1'
 
-    pyart.io.write_cfradial(out_file,self.radar)
-    
-    #Gzip cf file
-    with open(out_file, 'rb') as f_in:
-        with gzip.open(out_file + '.gz', 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
-    os.remove(out_file)
-    
-    gz_file = out_file + '.gz'
-    print('Output cfRadial --> ' + gz_file, '', sep='\n')
+        if self.scan_type == 'RHI':
+            out_file = f"{out_dir}/{self.site}_{self.year}_{self.month}{self.day}_{self.hh}{self.mm}{self.ss}_rhi.cf"
+        else: 
+            out_file = f"{out_dir}/{self.site}_{self.year}_{self.month}{self.day}_{self.hh}{self.mm}{self.ss}.cf"
+        
+        print(f"DEBUG: Output file will be: {out_file}")
+        
+        # Update metadata
+        print("DEBUG: Calling update_metadata()...")
+        self.radar = self.update_metadata()
+        print("DEBUG: Metadata updated successfully")
+        
+        # Write CF file
+        print(f"DEBUG: Writing CF file...")
+        pyart.io.write_cfradial(out_file, self.radar)
+        print(f"DEBUG: CF file written successfully")
+        
+        # Gzip cf file
+        print("DEBUG: Compressing file...")
+        with open(out_file, 'rb') as f_in:
+            with gzip.open(out_file + '.gz', 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        os.remove(out_file)
+        print("DEBUG: File compressed successfully")
+        
+        gz_file = out_file + '.gz'
+        print(f'Output cfRadial --> {gz_file}\n')
+        
+    except Exception as e:
+        print(f"ERROR in output_cf: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 # ***************************************************************************************       
 
