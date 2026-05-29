@@ -142,10 +142,6 @@ class QC:
         if self.do_sq_sector == True:
             self.radar = qc.sq_sector(self)  
                 
-    # Create mask to filter a range/azm/height sector of radar based on KD threshold
-        if self.do_kd_sector == True:
-            self.radar = qc.kd_sector(self)
-
     # Create Temperature and/or Height field
         if self.use_sounding == True:
             if self.sounding_type == 'get_ruc':
@@ -177,16 +173,20 @@ class QC:
         if self.do_sw_mask == True:
             self.radar = qc.apply_SW_mask(self)
 
-    # Get KDP and Std(PhiDP)
-        if self.site not in D3R_list:
-           self.radar = qc.calculate_kdp(self)
-
     # Apply CSU_RT filters
         self.radar = qc.csu_filters(self)
                                                   
     # Apply gatefilters on DP fields
         self.radar = qc.threshold_qc_dpfields(self)
-        
+
+    # Get KDP and Std(PhiDP)
+        if self.site not in D3R_list:
+           self.radar = qc.calculate_kdp(self)
+
+    # Create mask to filter a range/azm/height sector of radar based on KD threshold
+        if self.do_kd_sector == True:
+            self.radar = qc.kd_sector(self)
+
     # Create mask to filter a range/azm/height sector of radar based on SD threshold
         if self.do_sd_sector == True:
             self.radar = qc.sd_sector(self)         
