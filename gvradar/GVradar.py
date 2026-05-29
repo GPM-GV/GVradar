@@ -75,6 +75,7 @@ class QC:
             
         print('', 'QC parameters:    ', '', kwargs, '',
               'Processing --> ' + self.file, sep='\n')     
+        self.kwargs = kwargs      
         
         # Remove temp file
         if cfy == '.gz': os.remove(file_unzip)

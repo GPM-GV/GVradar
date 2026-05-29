@@ -21,6 +21,7 @@ import gzip
 import shutil
 import mmap
 import xarray
+import json
 import pandas as pd
 from skewt import SkewT
 from collections import defaultdict
@@ -723,9 +724,35 @@ def update_metadata(self):
     self.radar.metadata['Release_Date'] = str(datetime.datetime.utcnow())
     self.radar.metadata['institution'] = "NASA GSFC"
     self.radar.metadata['project'] = "Global Precipitation Measurement (GPM)"
-    self.radar.metadata['source'] = 'GVradar V1.1'
+    self.radar.metadata['source'] = 'GVradar V1.5'
     self.radar.metadata['references'] = 'https://github.com/GPM-GV/GVradar'
-
+    
+    # Add processing parameters as individual metadata fields (visible in radar.info())
+    for key, value in self.kwargs.items():
+        # Convert numpy types to native Python for netCDF compatibility
+        if isinstance(value, (np.integer, np.floating)):
+            value = value.item()
+        elif isinstance(value, np.ndarray):
+            value = value.tolist()
+        elif isinstance(value, np.bool_):
+            value = bool(value)
+        elif isinstance(value, (list, tuple)):
+            value = str(value)  # Convert lists to strings for readability
+        
+        # Add with qc_param_ prefix so they're grouped together
+        self.radar.metadata[f'qc_param_{key}'] = value
+    
+    # Also store as JSON for programmatic access (won't be pretty in info() but useful for scripts)
+    self.radar.metadata['qc_parameters_json'] = json.dumps(
+        self.default_thresh_dict, 
+        indent=2,
+        default=str
+    )
+    
+    # Add processing summary
+    timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    self.radar.metadata['processing_timestamp'] = timestamp
+    
     new_fields = []
     for key in self.radar.fields.keys():
             new_fields.append(key)
@@ -779,8 +806,6 @@ def update_metadata(self):
                                          long_name='Spectrum Width', 
                                          standard_name='doppler_spectrum_width', 
                                          dz_field='CZ')                                                                     
-
-    #print('', self.radar.metadata, '',sep='\n') 
 
     return self.radar
 
