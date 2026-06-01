@@ -263,6 +263,7 @@ class DP_products:
         
         print('', 'DP products parameters:    ', '', kwargs, '', 
               'Processing --> ' + file, sep='\n')    
+        self.kwargs = kwargs
         
         # Remove temp file
         if cfy == '.gz': os.remove(file_unzip)

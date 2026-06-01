@@ -22,6 +22,7 @@ import shutil
 import mmap
 import xarray
 import json
+import traceback
 import pandas as pd
 from skewt import SkewT
 from collections import defaultdict
@@ -726,37 +727,33 @@ def update_metadata(self):
     self.radar.metadata['project'] = "Global Precipitation Measurement (GPM)"
     self.radar.metadata['source'] = 'GVradar V1.5'
     self.radar.metadata['references'] = 'https://github.com/GPM-GV/GVradar'
-    
-    print("DEBUG: Starting metadata update...")
-    
+        
     # Add processing parameters as individual metadata fields (visible in radar.info())
     try:
         for key, value in self.kwargs.items():
             # Convert to netCDF-compatible types
-            if isinstance(value, (bool, np.bool_)):  # Check bool first, before np types
-                value = int(value)  # Convert to 0 or 1 for netCDF compatibility
+            if isinstance(value, (bool, np.bool_)):  
+                value = int(value)  
             elif isinstance(value, np.integer):
                 value = int(value.item())
             elif isinstance(value, np.floating):
                 value = float(value.item())
             elif isinstance(value, np.ndarray):
-                value = str(value.tolist())  # Convert arrays to string
+                value = str(value.tolist())  
             elif isinstance(value, (list, tuple)):
-                value = str(value)  # Convert lists to strings for readability
+                value = str(value)  
             elif value is None:
                 value = "None"
             elif not isinstance(value, (int, float, str)):
-                value = str(value)  # Fallback: convert to string
+                value = str(value) 
             
             # Add with qc_param_ prefix so they're grouped together
             self.radar.metadata[f'qc_param_{key}'] = value
-        print(f"DEBUG: Added {len(self.kwargs)} parameters to metadata")
     except Exception as e:
         print(f"ERROR adding individual parameters: {e}")
-        import traceback
         traceback.print_exc()
     
-    # Store as JSON - with better error handling
+    # Store as JSON
     try:
         # Create a clean copy of kwargs for JSON serialization
         clean_kwargs = {}
@@ -776,7 +773,7 @@ def update_metadata(self):
                     clean_kwargs[key] = None
                 else:
                     # Try to serialize, fall back to string
-                    json.dumps(value)  # Test if it's serializable
+                    json.dumps(value)
                     clean_kwargs[key] = value
             except (TypeError, ValueError):
                 clean_kwargs[key] = str(value)
@@ -786,10 +783,8 @@ def update_metadata(self):
             indent=2,
             default=str
         )
-        print("DEBUG: Successfully created JSON metadata")
     except Exception as e:
         print(f"WARNING: Could not create JSON metadata: {e}")
-        # Don't fail the whole function, just skip the JSON
         pass
     
     # Add processing summary
@@ -801,8 +796,6 @@ def update_metadata(self):
             new_fields.append(key)
 
     self.radar.metadata['field_names'] = new_fields
-
-    print("DEBUG: Updating field metadata...")
     
     if 'CZ' in self.radar.fields:
         cz = self.radar.fields['CZ']['data'].copy()
@@ -852,20 +845,16 @@ def update_metadata(self):
                                          standard_name='doppler_spectrum_width', 
                                          dz_field='CZ')                                                                     
 
-    print("DEBUG: Metadata update complete")
     return self.radar
 
 # ***************************************************************************************
 
 def output_cf(self):
     """Outputs CF radial file"""
-    
-    print("DEBUG: Starting output_cf()...")
-    
+        
     try:
         # Declare output dir
         out_dir = self.cf_dir
-        print(f"DEBUG: Output directory: {out_dir}")
         os.makedirs(out_dir, exist_ok=True)
         
         if self.site == 'NPOL': 
@@ -875,33 +864,23 @@ def output_cf(self):
             out_file = f"{out_dir}/{self.site}_{self.year}_{self.month}{self.day}_{self.hh}{self.mm}{self.ss}_rhi.cf"
         else: 
             out_file = f"{out_dir}/{self.site}_{self.year}_{self.month}{self.day}_{self.hh}{self.mm}{self.ss}.cf"
-        
-        print(f"DEBUG: Output file will be: {out_file}")
-        
-        # Update metadata - call as function, not method
-        print("DEBUG: Calling update_metadata()...")
+                
+        # Update metadata
         self.radar = update_metadata(self)  # ← Fixed here
-        print("DEBUG: Metadata updated successfully")
         
         # Write CF file
-        print(f"DEBUG: Writing CF file...")
         pyart.io.write_cfradial(out_file, self.radar)
-        print(f"DEBUG: CF file written successfully")
         
         # Gzip cf file
-        print("DEBUG: Compressing file...")
         with open(out_file, 'rb') as f_in:
             with gzip.open(out_file + '.gz', 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
-        os.remove(out_file)
-        print("DEBUG: File compressed successfully")
-        
+        os.remove(out_file)        
         gz_file = out_file + '.gz'
         print(f'Output cfRadial --> {gz_file}\n')
         
     except Exception as e:
         print(f"ERROR in output_cf: {e}")
-        import traceback
         traceback.print_exc()
         raise
 
