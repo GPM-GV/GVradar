@@ -1015,7 +1015,8 @@ def unfold_phidp(self):
     print('    Unfolding PhiDP...')
 
     BAD_DATA = -32767.0
-    FIRST_GATE = 5000  # meters (5 km)
+    #FIRST_GATE = 5000  # meters (5 km)
+    FIRST_GATE = 10000
     MAX_PHIDP_DIFF = self.max_phidp_diff
     PHASE_WRAP = self.phase_wrap
 
@@ -1050,6 +1051,12 @@ def unfold_phidp(self):
             # Calculate gate-to-gate difference
             diff = gate_data[igate+1] - gate_data[igate]
             
+            if diff < -MAX_PHIDP_DIFF:  # Instead of checking abs(diff)
+                cumulative_unwrap += PHASE_WRAP
+                gate_data[igate+1] += cumulative_unwrap
+            elif cumulative_unwrap > 0:
+                gate_data[igate+1] += cumulative_unwrap
+            '''    
             # Detect forward wrap (large negative jump: 350° → 5°)
             if diff < 0.0 and abs(diff) >= MAX_PHIDP_DIFF:
                 cumulative_unwrap += PHASE_WRAP
@@ -1057,7 +1064,7 @@ def unfold_phidp(self):
             # Apply existing unwrap to this gate
             elif cumulative_unwrap > 0:
                 gate_data[igate+1] += cumulative_unwrap
-        
+            '''
         # Set invalid gates to BAD_DATA
         gate_data[~valid_mask] = BAD_DATA
         
