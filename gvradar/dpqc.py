@@ -1071,6 +1071,58 @@ def unfold_phidp(self):
         # Replace in field
         phm_field.data[iray] = gate_data
 
+    # Fix ray-to-ray inconsistencies
+    print('        Applying ray consistency correction...')
+    
+    # Find a good reference range (where most rays have valid precip data)
+    ref_gate_start = min(50, ngates - 20)  # Adjust based on gate spacing
+    ref_gate_end = min(ref_gate_start + 20, ngates)
+    
+    corrections_made = 0
+    
+    for iray in range(nrays):
+        # Get neighboring rays (circular wrap)
+        prev_ray = (iray - 1) % nrays
+        next_ray = (iray + 1) % nrays
+        
+        # Get median PhiDP at reference range for each ray
+        curr_data = phm_field.data[iray, ref_gate_start:ref_gate_end]
+        prev_data = phm_field.data[prev_ray, ref_gate_start:ref_gate_end]
+        next_data = phm_field.data[next_ray, ref_gate_start:ref_gate_end]
+        
+        # Calculate medians, ignoring bad data
+        curr_valid = curr_data[(curr_data != BAD_DATA) & (curr_data >= 0)]
+        prev_valid = prev_data[(prev_data != BAD_DATA) & (prev_data >= 0)]
+        next_valid = next_data[(next_data != BAD_DATA) & (next_data >= 0)]
+        
+        if len(curr_valid) < 5:  # Need enough valid gates
+            continue
+            
+        curr_median = np.median(curr_valid)
+        
+        # Get neighbor average (if both valid)
+        neighbor_vals = []
+        if len(prev_valid) >= 5:
+            neighbor_vals.append(np.median(prev_valid))
+        if len(next_valid) >= 5:
+            neighbor_vals.append(np.median(next_valid))
+        
+        if len(neighbor_vals) == 0:
+            continue
+        
+        neighbor_median = np.median(neighbor_vals)
+        diff = neighbor_median - curr_median
+        
+        # If current ray differs by ~360° from neighbors, correct entire ray
+        if 180 < diff < 540:  # Ray is ~360° too low
+            phm_field.data[iray, start_gate:] += 360
+            corrections_made += 1
+        elif -540 < diff < -180:  # Ray is ~360° too high
+            phm_field.data[iray, start_gate:] -= 360
+            corrections_made += 1
+    
+    print(f'        Corrected {corrections_made} outlier rays')   
+
     self.radar = cm.add_field_to_radar_object(
         phm_field, self.radar, 
         field_name='PH',
