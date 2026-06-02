@@ -1012,8 +1012,6 @@ def unfold_phidp(self):
     PHASE_WRAP = self.phase_wrap
 
     phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
-    
-    # GET REFLECTIVITY FOR MASKING
     ref_field = self.radar.fields[self.ref_field_name]['data'].copy()
 
     gate_spacing = self.radar.range['meters_between_gates']
@@ -1028,79 +1026,88 @@ def unfold_phidp(self):
     print('        Applying median filter to remove noise...')
     from scipy.ndimage import median_filter
     
-    # Create a working copy with bad data masked
     phm_work = phm_field.data.copy()
     phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
     
     # Apply 2D median filter (5 gates x 3 rays)
-    # This smooths out random noise while preserving real phase trends
     phm_filtered = median_filter(phm_work, size=(3, 5), mode='constant', cval=np.nan)
-    
-    # Restore bad data mask
     phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
     
     # Check improvement
-    valid_before = phm_work[(~np.isnan(phm_work))]
-    valid_after = phm_filtered[(phm_filtered != BAD_DATA) & (phm_filtered >= 0)]
+    sample_ray = 100
+    if sample_ray < nrays:
+        ray_data = phm_filtered[sample_ray, start_gate:start_gate+50]
+        ray_valid = ray_data[(ray_data != BAD_DATA) & (ray_data >= 0)]
+        if len(ray_valid) > 10:
+            diffs = np.diff(ray_valid)
+            print(f'        After filtering - max gate-to-gate diff={np.max(np.abs(diffs)):.1f}°')
     
-    if len(valid_after) > 50:
-        # Sample gate-to-gate differences after filtering
-        sample_ray = 100
-        if sample_ray < nrays:
-            ray_data = phm_filtered[sample_ray, start_gate:start_gate+50]
-            ray_valid = ray_data[(ray_data != BAD_DATA) & (ray_data >= 0)]
-            if len(ray_valid) > 10:
-                diffs = np.diff(ray_valid)
-                print(f'        After filtering - Sample ray {sample_ray}: '
-                      f'max gate-to-gate diff={np.max(np.abs(diffs)):.1f}°')
+    # STEP 2: UNFOLD - USE NUMPY UNWRAP INSTEAD
+    print('        Unfolding with numpy.unwrap...')
     
-    # STEP 2: UNFOLD THE FILTERED DATA
-    wraps_detected = 0
+    wraps_applied = 0
     
     for iray in range(nrays):
         gate_data = phm_filtered[iray].copy()
-        
-        cumulative_unwrap = 0.0
-        
-        # Enhanced validity mask with reflectivity
         ref_data = ref_field.data[iray]
+        
+        # Create validity mask
         valid_mask = (
             (gate_data >= 0) & 
             (gate_data <= 360) & 
             (gate_data != BAD_DATA) &
-            (ref_data > 10)  # Only where reflectivity > 10 dBZ
+            (ref_data > 10)
         )
         
-        # Process gates from start_gate to end
-        for igate in range(start_gate, ngates-1):
-            if not valid_mask[igate] or not valid_mask[igate+1]:
-                continue
-            
-            diff = gate_data[igate+1] - gate_data[igate]
-            
-            # Only unfold if difference exceeds threshold
-            # Use a more conservative threshold for filtered data
-            if diff < -MAX_PHIDP_DIFF:
-                cumulative_unwrap += PHASE_WRAP
-                wraps_detected += 1
-            
-            # Apply cumulative unwrap
-            if cumulative_unwrap > 0:
-                gate_data[igate+1] += cumulative_unwrap
+        # Extract valid data
+        valid_indices = np.where(valid_mask)[0]
+        
+        if len(valid_indices) < 10:  # Need enough valid gates
+            continue
+        
+        # Only process from start_gate onward
+        valid_indices = valid_indices[valid_indices >= start_gate]
+        
+        if len(valid_indices) < 10:
+            continue
+        
+        valid_data = gate_data[valid_indices]
+        
+        # Convert to radians for numpy.unwrap
+        valid_data_rad = np.deg2rad(valid_data)
+        
+        # Unwrap using numpy (handles 2π wrapping)
+        unwrapped_rad = np.unwrap(valid_data_rad)
+        
+        # Convert back to degrees
+        unwrapped_deg = np.rad2deg(unwrapped_rad)
+        
+        # Count how many wraps were applied
+        max_unwrapped = np.max(unwrapped_deg)
+        if max_unwrapped > 360:
+            wraps_applied += 1
+        
+        # Put unwrapped data back
+        gate_data[valid_indices] = unwrapped_deg
         
         # Set invalid gates to BAD_DATA
         gate_data[~valid_mask] = BAD_DATA
+        
         phm_filtered[iray] = gate_data
 
-    print(f'        Detected and corrected {wraps_detected} wraps total')
+    print(f'        Applied unfolding to {wraps_applied} rays')
     
     # Check final result
     valid_final = phm_filtered[(phm_filtered != BAD_DATA) & (phm_filtered >= 0)]
     if len(valid_final) > 0:
         print(f'        Final PhiDP range: [{np.min(valid_final):.1f}°, {np.max(valid_final):.1f}°], '
               f'median={np.median(valid_final):.1f}°')
+        
+        # Show percentiles
+        print(f'        Percentiles: 10%={np.percentile(valid_final, 10):.1f}°, '
+              f'90%={np.percentile(valid_final, 90):.1f}°, '
+              f'99%={np.percentile(valid_final, 99):.1f}°')
 
-    # Update field
     phm_field.data = phm_filtered
     
     self.radar = cm.add_field_to_radar_object(
