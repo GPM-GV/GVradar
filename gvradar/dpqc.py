@@ -14,6 +14,7 @@ import os
 from scipy import ndimage
 import numpy.ma as ma
 from scipy import signal
+from scipy.ndimage import median_filter
 from copy import deepcopy
 os.environ['PYART_QUIET'] = '1'  # Suppress PyART citation
 import pyart
@@ -999,10 +1000,19 @@ def ph_sector(self):
     return self.radar
 
 # ***************************************************************************************
+
 def unfold_phidp(self):
+
     """
-    Unfold PhiDP for NPOL (0-360° range system).
-    Filters noise spikes and bad data before processing.
+    Unfold PhiDP for 0-360° range system.
+
+    Parameters:
+    radar: pyart radar object
+    ref_field_name: name of reflectivty field
+    phi_field_name: name of PhiDP field
+
+    Return
+    radar: radar object with unfolded PH field included
     """
     print('    Unfolding PhiDP...')
 
@@ -1022,7 +1032,7 @@ def unfold_phidp(self):
     print(f'        Unfolding params: start_gate={start_gate}, '
           f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
     
-    # STEP 1: Remove unrealistic PhiDP values based on range (VECTORIZED)
+    # Remove unrealistic PhiDP values based on range
     print(f'        Filtering unrealistic PhiDP values by range...')
     
     # Create range array (km) for all gates
@@ -1038,9 +1048,8 @@ def unfold_phidp(self):
     
     print(f'        Removed {range_filtered} gates with unrealistic PhiDP for range')
     
-    # STEP 2: Apply median filter to remove isolated noise spikes
+    # Apply median filter to remove isolated noise spikes
     print(f'        Applying median filter to remove noise spikes...')
-    from scipy.ndimage import median_filter
     
     phm_work = phm_field.data.copy()
     phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
@@ -1051,7 +1060,7 @@ def unfold_phidp(self):
     # Restore BAD_DATA mask
     phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
     
-    # STEP 3: Remove outliers - gates that differ too much from neighbors (VECTORIZED)
+    # Remove outliers - gates that differ too much from neighbors
     print(f'        Removing outlier gates...')
     
     # Get previous and next gate values (shifted along gate dimension)
@@ -1078,7 +1087,7 @@ def unfold_phidp(self):
     
     print(f'        Removed {outliers_removed} outlier gates')
     
-    # STEP 4: Check for non-monotonic PhiDP (VECTORIZED)
+    # Check for non-monotonic PhiDP
     print(f'        Checking for non-monotonic PhiDP...')
     
     # Get differences along range direction
@@ -1095,7 +1104,7 @@ def unfold_phidp(self):
     
     print(f'        Removed {non_monotonic_fixed} gates where PhiDP decreased')
     
-    # STEP 5: Check if data needs unfolding
+    # Check if data needs unfolding
     needs_unfolding = False
     large_negative_jumps = 0
     
@@ -1116,7 +1125,7 @@ def unfold_phidp(self):
     
     print(f'        Data assessment: {"Needs unfolding" if needs_unfolding else "No unfolding needed"}')
     
-    # STEP 6: Unfold if needed
+    # Unfold if needed
     rays_unfolded = 0
     
     if needs_unfolding:
@@ -1165,257 +1174,6 @@ def unfold_phidp(self):
         dz_field=self.ref_field_name
     )
 
-    return self.radar
-
-def unfold_phidp_old(self):
-    """
-    Unfold PhiDP for NPOL (0-360° range system).
-    Handles both wrapped and non-wrapped data.
-
-    Parameters:
-    radar: pyart radar object
-    ref_field_name: name of reflectivty field (should be QC'd)
-    phi_field_name: name of PhiDP field (should be unfolded)
-
-    Return
-    radar: radar object with unfolded PHM field included
-    """
-    print('    Unfolding PhiDP...')
-
-    BAD_DATA = -32767.0
-    FIRST_GATE = 5000  # meters (5 km)
-    MAX_PHIDP_DIFF = self.max_phidp_diff
-    PHASE_WRAP = self.phase_wrap
-
-    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
-
-    # Get gate spacing info and determine start gate for unfolding
-    # Start at 5 km from radar to avoid clutter gates with bad phase 
-    gate_spacing = self.radar.range['meters_between_gates']
-    start_gate = int(FIRST_GATE / gate_spacing)
-    nrays = phm_field.data.shape[0]
-
-    print(f'        Unfolding params: start_gate={start_gate}, '
-          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
-    
-    # Check if data actually needs unfolding
-    # Sample some rays to see if there are large negative jumps
-    needs_unfolding = False
-    sample_size = min(100, nrays)
-    large_negative_jumps = 0
-    
-    for iray in range(0, nrays, nrays // sample_size):
-        gate_data = phm_field.data[iray].copy()
-        valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-        
-        for igate in range(start_gate, len(gate_data)-1):
-            if valid_mask[igate] and valid_mask[igate+1]:
-                diff = gate_data[igate+1] - gate_data[igate]
-                if diff < -MAX_PHIDP_DIFF:
-                    large_negative_jumps += 1
-                    if large_negative_jumps > 10:  # Found enough evidence
-                        needs_unfolding = True
-                        break
-        if needs_unfolding:
-            break
-    
-    print(f'        Data assessment: {"Needs unfolding" if needs_unfolding else "No unfolding needed"}')
-    
-    # Process each ray
-    rays_unfolded = 0
-    
-    for iray in range(nrays):
-        gate_data = phm_field.data[iray].copy()
-        ngates = gate_data.shape[0]
-        
-        # Create validity mask
-        valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-        
-        if needs_unfolding:
-            # Track cumulative unwrap offset
-            cumulative_unwrap = 0.0
-            ray_had_wrap = False
-            
-            # Process gates from start_gate to end
-            for igate in range(start_gate, ngates-1):
-                # Skip if either current or next gate is invalid
-                if not valid_mask[igate] or not valid_mask[igate+1]:
-                    continue
-                
-                # Calculate gate-to-gate difference
-                diff = gate_data[igate+1] - gate_data[igate]
-                
-                # Detect forward wrap (large negative jump: 350° → 5°)
-                # Use strict threshold to avoid false positives
-                if diff < -MAX_PHIDP_DIFF:
-                    cumulative_unwrap += PHASE_WRAP
-                    ray_had_wrap = True
-                
-                # Apply cumulative unwrap to this gate
-                if cumulative_unwrap > 0:
-                    gate_data[igate+1] += cumulative_unwrap
-            
-            if ray_had_wrap:
-                rays_unfolded += 1
-        
-        # Set invalid gates to BAD_DATA
-        gate_data[~valid_mask] = BAD_DATA
-        
-        # Replace in field
-        phm_field.data[iray] = gate_data
-    
-    if needs_unfolding:
-        print(f'        Unfolded {rays_unfolded} rays')
-    
-    # Check final statistics
-    valid_data = phm_field.data[(phm_field.data != BAD_DATA) & (phm_field.data >= 0)]
-    if len(valid_data) > 0:
-        print(f'        Final PhiDP: range=[{np.min(valid_data):.1f}°, {np.max(valid_data):.1f}°], '
-              f'median={np.median(valid_data):.1f}°')
-
-    self.radar = cm.add_field_to_radar_object(
-        phm_field.data, self.radar, 
-        field_name='PH',
-        units='deg',
-        long_name='Unfolded Differential Phase',
-        standard_name='Differential Phase',
-        dz_field=self.ref_field_name
-    )
-
-    return self.radar
-
-def unfold_phidp_temp(self):
-    """
-    Unfold PhiDP for NPOL (0-360° range system).
-
-    Parameters:
-    radar: pyart radar object
-    ref_field_name: name of reflectivty field (should be QC'd)
-    phi_field_name: name of PhiDP field (should be unfolded)
-
-    Return
-    radar: radar object with unfolded PHM field included
-    """
-    print('    Unfolding PhiDP...')
-
-    BAD_DATA = -32767.0
-    #FIRST_GATE = 5000  # meters (5 km)
-    FIRST_GATE = 10000
-    MAX_PHIDP_DIFF = self.max_phidp_diff
-    PHASE_WRAP = self.phase_wrap
-
-    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
-
-    # Get gate spacing info and determine start gate for unfolding
-    # Start at 5 km from radar to avoid clutter gates with bad phase 
-    gate_spacing = self.radar.range['meters_between_gates']
-    start_gate = int(FIRST_GATE / gate_spacing)
-    nrays = phm_field.data.shape[0]
-
-    print(f'        Unfolding params: start_gate={start_gate}, '
-          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
-    
-    for iray in range(nrays):
-        gate_data = phm_field.data[iray].copy()
-        ngates = gate_data.shape[0]
-        
-        # Work directly on full array
-        # Track cumulative unwrap offset
-        cumulative_unwrap = 0.0
-        
-        # Create validity mask
-        valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-        
-        # Process gates from start_gate to end
-        for igate in range(start_gate, ngates-1):
-            # Skip if either current or next gate is invalid
-            if not valid_mask[igate] or not valid_mask[igate+1]:
-                continue
-            
-            # Calculate gate-to-gate difference
-            diff = gate_data[igate+1] - gate_data[igate]
-            
-            if diff < -MAX_PHIDP_DIFF:  # Instead of checking abs(diff)
-                cumulative_unwrap += PHASE_WRAP
-                gate_data[igate+1] += cumulative_unwrap
-            elif cumulative_unwrap > 0:
-                gate_data[igate+1] += cumulative_unwrap
-            '''    
-            # Detect forward wrap (large negative jump: 350° → 5°)
-            if diff < 0.0 and abs(diff) >= MAX_PHIDP_DIFF:
-                cumulative_unwrap += PHASE_WRAP
-                gate_data[igate+1] += cumulative_unwrap
-            # Apply existing unwrap to this gate
-            elif cumulative_unwrap > 0:
-                gate_data[igate+1] += cumulative_unwrap
-            '''
-        # Set invalid gates to BAD_DATA
-        gate_data[~valid_mask] = BAD_DATA
-        
-        # Replace in field
-        phm_field.data[iray] = gate_data
-
-    # Fix ray-to-ray inconsistencies
-    print('        Applying ray consistency correction...')
-    
-    # Find a good reference range (where most rays have valid precip data)
-    ref_gate_start = min(50, ngates - 20)  # Adjust based on gate spacing
-    ref_gate_end = min(ref_gate_start + 20, ngates)
-    
-    corrections_made = 0
-    
-    for iray in range(nrays):
-        # Get neighboring rays (circular wrap)
-        prev_ray = (iray - 1) % nrays
-        next_ray = (iray + 1) % nrays
-        
-        # Get median PhiDP at reference range for each ray
-        curr_data = phm_field.data[iray, ref_gate_start:ref_gate_end]
-        prev_data = phm_field.data[prev_ray, ref_gate_start:ref_gate_end]
-        next_data = phm_field.data[next_ray, ref_gate_start:ref_gate_end]
-        
-        # Calculate medians, ignoring bad data
-        curr_valid = curr_data[(curr_data != BAD_DATA) & (curr_data >= 0)]
-        prev_valid = prev_data[(prev_data != BAD_DATA) & (prev_data >= 0)]
-        next_valid = next_data[(next_data != BAD_DATA) & (next_data >= 0)]
-        
-        if len(curr_valid) < 5:  # Need enough valid gates
-            continue
-            
-        curr_median = np.median(curr_valid)
-        
-        # Get neighbor average (if both valid)
-        neighbor_vals = []
-        if len(prev_valid) >= 5:
-            neighbor_vals.append(np.median(prev_valid))
-        if len(next_valid) >= 5:
-            neighbor_vals.append(np.median(next_valid))
-        
-        if len(neighbor_vals) == 0:
-            continue
-        
-        neighbor_median = np.median(neighbor_vals)
-        diff = neighbor_median - curr_median
-        
-        # If current ray differs by ~360° from neighbors, correct entire ray
-        if 180 < diff < 540:  # Ray is ~360° too low
-            phm_field.data[iray, start_gate:] += 360
-            corrections_made += 1
-        elif -540 < diff < -180:  # Ray is ~360° too high
-            phm_field.data[iray, start_gate:] -= 360
-            corrections_made += 1
-    
-    print(f'        Corrected {corrections_made} outlier rays')   
-
-    self.radar = cm.add_field_to_radar_object(
-        phm_field, self.radar, 
-        field_name='PH',
-        units='deg',
-        long_name='Unfolded Differential Phase',
-        standard_name='Differential Phase',
-        dz_field=self.ref_field_name
-    )
-    
     return self.radar
 
 # ***************************************************************************************
