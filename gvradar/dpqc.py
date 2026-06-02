@@ -1000,7 +1000,7 @@ def ph_sector(self):
 
 # ***************************************************************************************
 
-def unfold_phidp_temp(self):
+def unfold_phidp(self):
     """
     Unfold PhiDP for NPOL (0-360° range system).
     """
@@ -1008,8 +1008,6 @@ def unfold_phidp_temp(self):
 
     BAD_DATA = -32767.0
     FIRST_GATE = 10000
-    MAX_PHIDP_DIFF = self.max_phidp_diff
-    PHASE_WRAP = self.phase_wrap
 
     phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
     ref_field = self.radar.fields[self.ref_field_name]['data'].copy()
@@ -1019,139 +1017,62 @@ def unfold_phidp_temp(self):
     nrays = phm_field.data.shape[0]
     ngates = phm_field.data.shape[1]
 
-    print(f'        Unfolding params: start_gate={start_gate}, '
-          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
+    print(f'        Processing PhiDP (start_gate={start_gate})...')
     
-    # STEP 1: APPLY MEDIAN FILTER TO REMOVE NOISE
-    print('        Applying median filter to remove noise...')
     from scipy.ndimage import median_filter
     
+    # Step 1: Filter noise
     phm_work = phm_field.data.copy()
     phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
-    
-    # Apply 2D median filter (5 gates x 3 rays)
     phm_filtered = median_filter(phm_work, size=(3, 5), mode='constant', cval=np.nan)
     phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
     
-    # Check improvement
-    sample_ray = 100
-    if sample_ray < nrays:
-        ray_data = phm_filtered[sample_ray, start_gate:start_gate+50]
-        ray_valid = ray_data[(ray_data != BAD_DATA) & (ray_data >= 0)]
-        if len(ray_valid) > 10:
-            diffs = np.diff(ray_valid)
-            print(f'        After filtering - max gate-to-gate diff={np.max(np.abs(diffs)):.1f}°')
-    
-    # STEP 2: UNFOLD - USE NUMPY UNWRAP INSTEAD
-    print('        Unfolding with numpy.unwrap...')
-    
-    wraps_applied = 0
+    # Step 2: Find median PhiDP value across the scan
+    ref_gate = min(100, ngates - 10)
+    all_vals = []
     
     for iray in range(nrays):
-        gate_data = phm_filtered[iray].copy()
-        ref_data = ref_field.data[iray]
-        
-        # Create validity mask
-        valid_mask = (
-            (gate_data >= 0) & 
-            (gate_data <= 360) & 
-            (gate_data != BAD_DATA) &
-            (ref_data > 10)
-        )
-        
-        # Extract valid data
-        valid_indices = np.where(valid_mask)[0]
-        
-        if len(valid_indices) < 10:  # Need enough valid gates
-            continue
-        
-        # Only process from start_gate onward
-        valid_indices = valid_indices[valid_indices >= start_gate]
-        
-        if len(valid_indices) < 10:
-            continue
-        
-        valid_data = gate_data[valid_indices]
-        
-        # Convert to radians for numpy.unwrap
-        valid_data_rad = np.deg2rad(valid_data)
-        
-        # Unwrap using numpy (handles 2π wrapping)
-        unwrapped_rad = np.unwrap(valid_data_rad)
-        
-        # Convert back to degrees
-        unwrapped_deg = np.rad2deg(unwrapped_rad)
-        
-        # Count how many wraps were applied
-        max_unwrapped = np.max(unwrapped_deg)
-        if max_unwrapped > 360:
-            wraps_applied += 1
-        
-        # Put unwrapped data back
-        gate_data[valid_indices] = unwrapped_deg
-        
-        # Set invalid gates to BAD_DATA
-        gate_data[~valid_mask] = BAD_DATA
-        
-        phm_filtered[iray] = gate_data
-
-    print(f'        Applied unfolding to {wraps_applied} rays')
+        val = phm_filtered[iray, ref_gate]
+        if val != BAD_DATA and val >= 0 and ref_field.data[iray, ref_gate] > 10:
+            all_vals.append(val)
     
-    # STEP 3: FIX RAY-TO-RAY CONSISTENCY
-    print('        Fixing ray-to-ray consistency...')
-    
-    # Check each ray against its neighbors
-    ref_gate = min(100, ngates - 10)  # Check at ~50 km range
-    corrections = 0
-    
-    for iray in range(nrays):
-        prev_ray = (iray - 1) % nrays
-        next_ray = (iray + 1) % nrays
+    if len(all_vals) > 100:
+        median_phi = np.median(all_vals)
+        print(f'        Median PhiDP at gate {ref_gate}: {median_phi:.1f}°')
         
-        # Get data at reference gate for current and neighbor rays
-        curr_val = phm_filtered[iray, ref_gate]
-        prev_val = phm_filtered[prev_ray, ref_gate]
-        next_val = phm_filtered[next_ray, ref_gate]
-        
-        # Skip if any are bad data
-        if curr_val == BAD_DATA or prev_val == BAD_DATA or next_val == BAD_DATA:
-            continue
-        if curr_val < 0 or prev_val < 0 or next_val < 0:
-            continue
-        
-        # Calculate neighbor average
-        neighbor_avg = (prev_val + next_val) / 2.0
-        
-        # If current ray differs by ~360° from neighbors, it needs correction
-        diff = neighbor_avg - curr_val
-        
-        if 180 < diff < 540:  # Current ray is ~360° too low
-            # Add 360° to entire ray (only valid gates)
-            ray_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
-            phm_filtered[iray, ray_mask] += 360
-            corrections += 1
+        # Step 3: Fix rays that differ by ~360° from the median
+        corrections = 0
+        for iray in range(nrays):
+            ray_val = phm_filtered[iray, ref_gate]
             
-        elif -540 < diff < -180:  # Current ray is ~360° too high
-            # Subtract 360° from entire ray
-            ray_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
-            phm_filtered[iray, ray_mask] -= 360
-            corrections += 1
+            if ray_val == BAD_DATA or ray_val < 0:
+                continue
+            
+            diff = median_phi - ray_val
+            
+            # If this ray is ~360° too low, add 360° to the whole ray
+            if diff > 180:
+                valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                phm_filtered[iray, valid_mask] += 360
+                corrections += 1
+            # If this ray is ~360° too high, subtract 360°
+            elif diff < -180:
+                valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                phm_filtered[iray, valid_mask] -= 360
+                corrections += 1
+        
+        print(f'        Corrected {corrections} wrapped rays')
     
-    print(f'        Corrected {corrections} inconsistent rays')
+    # Mask by reflectivity
+    phm_filtered[ref_field.data <= 10] = BAD_DATA
     
-    # Check final result
+    # Final stats
     valid_final = phm_filtered[(phm_filtered != BAD_DATA) & (phm_filtered >= 0)]
     if len(valid_final) > 0:
-        print(f'        Final PhiDP range: [{np.min(valid_final):.1f}°, {np.max(valid_final):.1f}°], '
+        print(f'        Final range: [{np.min(valid_final):.1f}°, {np.max(valid_final):.1f}°], '
               f'median={np.median(valid_final):.1f}°')
-        
-        # Show percentiles
-        print(f'        Percentiles: 10%={np.percentile(valid_final, 10):.1f}°, '
-              f'90%={np.percentile(valid_final, 90):.1f}°, '
-              f'99%={np.percentile(valid_final, 99):.1f}°')
-
-    # Add field to radar
-    print('        Adding PH field to radar object...')
+    
+    print('        Adding PH field...')
     
     self.radar = cm.add_field_to_radar_object(
         phm_filtered,
@@ -1163,11 +1084,9 @@ def unfold_phidp_temp(self):
         dz_field=self.ref_field_name
     )
     
-    print('        PH field added successfully')
-    
     return self.radar
 
-def unfold_phidp(self):
+def unfold_phidp_temp(self):
     """
     Unfold PhiDP for NPOL (0-360° range system).
 
