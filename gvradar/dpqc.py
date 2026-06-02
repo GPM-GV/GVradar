@@ -1108,16 +1108,20 @@ def unfold_phidp(self):
               f'90%={np.percentile(valid_final, 90):.1f}°, '
               f'99%={np.percentile(valid_final, 99):.1f}°')
 
-    phm_field.data = phm_filtered
+    # Add field to radar - pass the data array directly
+    print('        Adding PH field to radar object...')
     
     self.radar = cm.add_field_to_radar_object(
-        phm_field, self.radar, 
+        phm_filtered,  # Just pass the data array, not phm_field
+        self.radar, 
         field_name='PH',
-        units='deg',
+        units='degrees',
         long_name='Unfolded Differential Phase',
-        standard_name='Differential Phase',
+        standard_name='differential_phase_hv',
         dz_field=self.ref_field_name
     )
+    
+    print('        PH field added successfully')
     
     return self.radar
 
