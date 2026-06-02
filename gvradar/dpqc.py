@@ -1009,6 +1009,21 @@ def unfold_phidp(self):
     BAD_DATA = -32767.0
     FIRST_GATE = 10000
 
+    # Add this at the very start of your function to diagnose
+    print('    Checking raw PhiDP...')
+    phm_raw = self.radar.fields[self.phi_field_name]['data'].copy()
+
+    # Check a radial profile 
+    sample_ray = 100
+    ray_data = phm_raw.data[sample_ray, :]
+    ref_data = self.radar.fields[self.ref_field_name]['data'].data[sample_ray, :]
+
+    print(f'    Sample ray {sample_ray}:')
+    for gate in [20, 50, 100, 150, 200]:
+        if gate < len(ray_data):
+            print(f'      Gate {gate} ({gate * gate_spacing / 1000:.1f} km): '
+                  f'PHM={ray_data[gate]:.1f}°, REF={ref_data[gate]:.1f} dBZ')
+
     phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
     ref_field = self.radar.fields[self.ref_field_name]['data'].copy()
 
