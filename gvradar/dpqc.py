@@ -1000,7 +1000,7 @@ def ph_sector(self):
 
 # ***************************************************************************************
 
-def unfold_phidp(self):
+def unfold_phidp_temp(self):
     """
     Unfold PhiDP for NPOL (0-360° range system).
     """
@@ -1167,7 +1167,7 @@ def unfold_phidp(self):
     
     return self.radar
 
-def unfold_phidp_temp(self):
+def unfold_phidp(self):
     """
     Unfold PhiDP for NPOL (0-360° range system).
 
