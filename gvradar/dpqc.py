@@ -1015,6 +1015,215 @@ def unfold_phidp(self):
     print('    Unfolding PhiDP...')
 
     BAD_DATA = -32767.0
+    FIRST_GATE = 10000
+    MAX_PHIDP_DIFF = self.max_phidp_diff
+    PHASE_WRAP = self.phase_wrap
+
+    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
+
+    # Get gate spacing info and determine start gate for unfolding
+    # Start at 10 km from radar to avoid clutter gates with bad phase 
+    gate_spacing = self.radar.range['meters_between_gates']
+    start_gate = int(FIRST_GATE / gate_spacing)
+    nrays = phm_field.data.shape[0]
+    ngates = phm_field.data.shape[1]
+
+    print(f'        Unfolding params: start_gate={start_gate}, '
+          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
+    print(f'        Data shape: {nrays} rays x {ngates} gates')
+    
+    # DEBUG: Check initial data distribution
+    valid_data = phm_field.data[(phm_field.data != BAD_DATA) & (phm_field.data >= 0) & (phm_field.data <= 360)]
+    if len(valid_data) > 0:
+        print(f'        Initial PhiDP range: [{np.min(valid_data):.1f}°, {np.max(valid_data):.1f}°], '
+              f'median={np.median(valid_data):.1f}°')
+    
+    # DEBUG: Sample a few rays to see gate-to-gate changes
+    sample_rays = [100, 200, 300]
+    for sample_ray in sample_rays:
+        if sample_ray < nrays:
+            ray_data = phm_field.data[sample_ray, start_gate:start_gate+50]
+            ray_valid = ray_data[(ray_data != BAD_DATA) & (ray_data >= 0)]
+            if len(ray_valid) > 10:
+                diffs = np.diff(ray_valid)
+                print(f'        Sample ray {sample_ray}: mean={np.mean(ray_valid):.1f}°, '
+                      f'max gate-to-gate diff={np.max(np.abs(diffs)):.1f}°')
+    
+    wraps_detected = 0
+    rays_with_wraps = []
+    
+    for iray in range(nrays):
+        gate_data = phm_field.data[iray].copy()
+        
+        # Work directly on full array
+        # Track cumulative unwrap offset
+        cumulative_unwrap = 0.0
+        ray_wraps = 0
+        
+        # Create validity mask
+        valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+        
+        # Process gates from start_gate to end
+        for igate in range(start_gate, ngates-1):
+            # Skip if either current or next gate is invalid
+            if not valid_mask[igate] or not valid_mask[igate+1]:
+                continue
+            
+            # Calculate gate-to-gate difference
+            diff = gate_data[igate+1] - gate_data[igate]
+            
+            if diff < -MAX_PHIDP_DIFF:  # Detect wrap
+                cumulative_unwrap += PHASE_WRAP
+                gate_data[igate+1] += cumulative_unwrap
+                ray_wraps += 1
+                
+                # DEBUG: Show first few wraps
+                if wraps_detected < 5:
+                    print(f'        WRAP detected: ray {iray}, gate {igate}, '
+                          f'{gate_data[igate]:.1f}° → {gate_data[igate+1]-PHASE_WRAP:.1f}° (diff={diff:.1f}°)')
+                
+            elif cumulative_unwrap > 0:
+                gate_data[igate+1] += cumulative_unwrap
+        
+        if ray_wraps > 0:
+            wraps_detected += 1
+            if len(rays_with_wraps) < 10:
+                rays_with_wraps.append(iray)
+        
+        # Set invalid gates to BAD_DATA
+        gate_data[~valid_mask] = BAD_DATA
+        
+        # Replace in field
+        phm_field.data[iray] = gate_data
+
+    print(f'        Detected wraps in {wraps_detected} rays (e.g., rays: {rays_with_wraps[:5]})')
+    
+    # DEBUG: Check data after unfolding
+    valid_data_after = phm_field.data[(phm_field.data != BAD_DATA) & (phm_field.data >= 0)]
+    if len(valid_data_after) > 0:
+        print(f'        After unfolding: [{np.min(valid_data_after):.1f}°, {np.max(valid_data_after):.1f}°], '
+              f'median={np.median(valid_data_after):.1f}°')
+
+    # Fix ray-to-ray inconsistencies
+    print('        Applying ray consistency correction...')
+    
+    # Find a good reference range (where most rays have valid precip data)
+    ref_gate_start = min(50, ngates - 20)
+    ref_gate_end = min(ref_gate_start + 20, ngates)
+    
+    # DEBUG: Check sample rays before correction
+    test_rays = [100, 200, 300, 400]
+    print(f'        Pre-correction samples (at gates {ref_gate_start}-{ref_gate_end}):')
+    for test_ray in test_rays:
+        if test_ray < nrays:
+            test_data = phm_field.data[test_ray, ref_gate_start:ref_gate_end]
+            test_valid = test_data[(test_data != BAD_DATA) & (test_data >= 0)]
+            if len(test_valid) > 0:
+                print(f'          Ray {test_ray}: median={np.median(test_valid):.1f}°, '
+                      f'range=[{np.min(test_valid):.1f}°, {np.max(test_valid):.1f}°]')
+    
+    corrections_made = 0
+    correction_details = []
+    
+    for iray in range(nrays):
+        # Get neighboring rays (circular wrap)
+        prev_ray = (iray - 1) % nrays
+        next_ray = (iray + 1) % nrays
+        
+        # Get median PhiDP at reference range for each ray
+        curr_data = phm_field.data[iray, ref_gate_start:ref_gate_end]
+        prev_data = phm_field.data[prev_ray, ref_gate_start:ref_gate_end]
+        next_data = phm_field.data[next_ray, ref_gate_start:ref_gate_end]
+        
+        # Calculate medians, ignoring bad data
+        curr_valid = curr_data[(curr_data != BAD_DATA) & (curr_data >= 0)]
+        prev_valid = prev_data[(prev_data != BAD_DATA) & (prev_data >= 0)]
+        next_valid = next_data[(next_data != BAD_DATA) & (next_data >= 0)]
+        
+        if len(curr_valid) < 5:  # Need enough valid gates
+            continue
+            
+        curr_median = np.median(curr_valid)
+        
+        # Get neighbor average (if both valid)
+        neighbor_vals = []
+        if len(prev_valid) >= 5:
+            neighbor_vals.append(np.median(prev_valid))
+        if len(next_valid) >= 5:
+            neighbor_vals.append(np.median(next_valid))
+        
+        if len(neighbor_vals) == 0:
+            continue
+        
+        neighbor_median = np.median(neighbor_vals)
+        diff = neighbor_median - curr_median
+        
+        # Store original for debugging
+        original_median = curr_median
+        applied_correction = False
+        
+        # If current ray differs by ~360° from neighbors, correct entire ray
+        if 180 < diff < 540:  # Ray is ~360° too low
+            phm_field.data[iray, start_gate:] += 360
+            corrections_made += 1
+            applied_correction = True
+            correction_type = '+360'
+        elif -540 < diff < -180:  # Ray is ~360° too high
+            phm_field.data[iray, start_gate:] -= 360
+            corrections_made += 1
+            applied_correction = True
+            correction_type = '-360'
+        
+        # DEBUG: Show first few corrections
+        if applied_correction and len(correction_details) < 5:
+            correction_details.append(
+                f'Ray {iray}: {original_median:.1f}° {correction_type} '
+                f'(neighbors={neighbor_median:.1f}°, diff={diff:.1f}°)'
+            )
+    
+    print(f'        Corrected {corrections_made} outlier rays')
+    if correction_details:
+        print('        Sample corrections:')
+        for detail in correction_details:
+            print(f'          {detail}')
+    
+    # DEBUG: Check final data distribution
+    valid_data_final = phm_field.data[(phm_field.data != BAD_DATA) & (phm_field.data >= -360)]
+    if len(valid_data_final) > 0:
+        print(f'        Final PhiDP range: [{np.min(valid_data_final):.1f}°, {np.max(valid_data_final):.1f}°], '
+              f'median={np.median(valid_data_final):.1f}°')
+    
+    # Check how many rays are in different value ranges
+    low_rays = np.sum(np.median(phm_field.data[:, ref_gate_start:ref_gate_end], axis=1) < 180)
+    high_rays = np.sum(np.median(phm_field.data[:, ref_gate_start:ref_gate_end], axis=1) > 360)
+    print(f'        Ray distribution: {low_rays} rays <180°, {high_rays} rays >360°')
+
+    self.radar = cm.add_field_to_radar_object(
+        phm_field, self.radar, 
+        field_name='PH',
+        units='deg',
+        long_name='Unfolded Differential Phase',
+        standard_name='Differential Phase',
+        dz_field=self.ref_field_name
+    )
+    
+    return self.radar
+
+def unfold_phidp_temp(self):
+    """
+    Unfold PhiDP for NPOL (0-360° range system).
+
+    Parameters:
+    radar: pyart radar object
+    ref_field_name: name of reflectivty field (should be QC'd)
+    phi_field_name: name of PhiDP field (should be unfolded)
+
+    Return
+    radar: radar object with unfolded PHM field included
+    """
+    print('    Unfolding PhiDP...')
+
+    BAD_DATA = -32767.0
     #FIRST_GATE = 5000  # meters (5 km)
     FIRST_GATE = 10000
     MAX_PHIDP_DIFF = self.max_phidp_diff
