@@ -1022,29 +1022,19 @@ def unfold_phidp(self):
     print(f'        Unfolding params: start_gate={start_gate}, '
           f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
     
-    # STEP 1: Remove unrealistic PhiDP values based on range
+    # STEP 1: Remove unrealistic PhiDP values based on range (VECTORIZED)
     print(f'        Filtering unrealistic PhiDP values by range...')
-    range_filtered = 0
     
-    for iray in range(nrays):
-        for igate in range(ngates):
-            val = phm_field.data[iray, igate]
-            
-            if val == BAD_DATA or val < 0:
-                continue
-            
-            # Calculate range in km
-            range_km = (igate * gate_spacing) / 1000.0
-            
-            # PhiDP should be roughly proportional to range
-            # Typical max: ~1-2° per km in heavy rain
-            # Use conservative threshold: 3° per km
-            max_expected_phidp = 3.0 * range_km + 10.0  # +10° buffer
-            
-            # If PhiDP is way too high for this range, it's bad data
-            if val > max_expected_phidp and val > 50:  # Only flag if also > 50°
-                phm_field.data[iray, igate] = BAD_DATA
-                range_filtered += 1
+    # Create range array (km) for all gates
+    range_km = np.arange(ngates) * gate_spacing / 1000.0
+    
+    # Max expected PhiDP at each range (broadcast across all rays)
+    max_expected_phidp = 3.0 * range_km + 10.0  # 3°/km + 10° buffer
+    
+    # Create mask for unrealistic values
+    unrealistic_mask = (phm_field.data > max_expected_phidp) & (phm_field.data > 50)
+    range_filtered = np.sum(unrealistic_mask)
+    phm_field.data[unrealistic_mask] = BAD_DATA
     
     print(f'        Removed {range_filtered} gates with unrealistic PhiDP for range')
     
@@ -1061,50 +1051,47 @@ def unfold_phidp(self):
     # Restore BAD_DATA mask
     phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
     
-    # STEP 3: Remove outliers (gates that differ too much from neighbors)
+    # STEP 3: Remove outliers - gates that differ too much from neighbors (VECTORIZED)
     print(f'        Removing outlier gates...')
-    outliers_removed = 0
     
-    for iray in range(nrays):
-        for igate in range(1, ngates-1):
-            val = phm_filtered[iray, igate]
-            
-            if val == BAD_DATA or val < 0:
-                continue
-            
-            # Get neighbors
-            prev_gate = phm_filtered[iray, igate-1]
-            next_gate = phm_filtered[iray, igate+1]
-            
-            # Check if neighbors are valid
-            if prev_gate != BAD_DATA and next_gate != BAD_DATA and prev_gate >= 0 and next_gate >= 0:
-                neighbor_avg = (prev_gate + next_gate) / 2.0
-                
-                # If this gate differs by >100° from neighbor average, it's probably bad
-                if abs(val - neighbor_avg) > 100:
-                    phm_filtered[iray, igate] = BAD_DATA
-                    outliers_removed += 1
+    # Get previous and next gate values (shifted along gate dimension)
+    prev_gates = np.roll(phm_filtered, 1, axis=1)  # Shift right
+    next_gates = np.roll(phm_filtered, -1, axis=1)  # Shift left
+    
+    # Mark boundaries as invalid
+    prev_gates[:, 0] = BAD_DATA
+    next_gates[:, -1] = BAD_DATA
+    
+    # Calculate neighbor average
+    valid_prev = (prev_gates != BAD_DATA) & (prev_gates >= 0)
+    valid_next = (next_gates != BAD_DATA) & (next_gates >= 0)
+    valid_curr = (phm_filtered != BAD_DATA) & (phm_filtered >= 0)
+    
+    both_neighbors_valid = valid_prev & valid_next & valid_curr
+    
+    neighbor_avg = (prev_gates + next_gates) / 2.0
+    
+    # Find outliers (differ by >100° from neighbor average)
+    outlier_mask = both_neighbors_valid & (np.abs(phm_filtered - neighbor_avg) > 100)
+    outliers_removed = np.sum(outlier_mask)
+    phm_filtered[outlier_mask] = BAD_DATA
     
     print(f'        Removed {outliers_removed} outlier gates')
     
-    # STEP 4: Check if PhiDP is decreasing along rays (shouldn't happen)
+    # STEP 4: Check for non-monotonic PhiDP (VECTORIZED)
     print(f'        Checking for non-monotonic PhiDP...')
-    non_monotonic_fixed = 0
     
-    for iray in range(nrays):
-        for igate in range(1, ngates):
-            curr_val = phm_filtered[iray, igate]
-            prev_val = phm_filtered[iray, igate-1]
-            
-            if curr_val == BAD_DATA or prev_val == BAD_DATA:
-                continue
-            if curr_val < 0 or prev_val < 0:
-                continue
-            
-            # PhiDP should not decrease by more than a few degrees
-            if curr_val < prev_val - 5.0:
-                phm_filtered[iray, igate] = BAD_DATA
-                non_monotonic_fixed += 1
+    # Get differences along range direction
+    prev_gates = np.roll(phm_filtered, 1, axis=1)
+    prev_gates[:, 0] = BAD_DATA
+    
+    valid_curr = (phm_filtered != BAD_DATA) & (phm_filtered >= 0)
+    valid_prev = (prev_gates != BAD_DATA) & (prev_gates >= 0)
+    
+    # PhiDP shouldn't decrease by more than 5°
+    decreasing_mask = valid_curr & valid_prev & (phm_filtered < prev_gates - 5.0)
+    non_monotonic_fixed = np.sum(decreasing_mask)
+    phm_filtered[decreasing_mask] = BAD_DATA
     
     print(f'        Removed {non_monotonic_fixed} gates where PhiDP decreased')
     
@@ -1132,13 +1119,13 @@ def unfold_phidp(self):
     # STEP 6: Unfold if needed
     rays_unfolded = 0
     
-    for iray in range(nrays):
-        gate_data = phm_filtered[iray].copy()
-        
-        # Create validity mask
-        valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-        
-        if needs_unfolding:
+    if needs_unfolding:
+        for iray in range(nrays):
+            gate_data = phm_filtered[iray].copy()
+            
+            # Create validity mask
+            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+            
             cumulative_unwrap = 0.0
             ray_had_wrap = False
             
@@ -1157,11 +1144,10 @@ def unfold_phidp(self):
             
             if ray_had_wrap:
                 rays_unfolded += 1
+            
+            gate_data[~valid_mask] = BAD_DATA
+            phm_filtered[iray] = gate_data
         
-        gate_data[~valid_mask] = BAD_DATA
-        phm_filtered[iray] = gate_data
-    
-    if needs_unfolding:
         print(f'        Unfolded {rays_unfolded} rays')
     
     # Check final statistics
