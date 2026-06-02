@@ -1022,20 +1022,46 @@ def unfold_phidp(self):
     print(f'        Unfolding params: start_gate={start_gate}, '
           f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
     
-    # STEP 1: Apply median filter to remove isolated noise spikes
+    # STEP 1: Remove unrealistic PhiDP values based on range
+    print(f'        Filtering unrealistic PhiDP values by range...')
+    range_filtered = 0
+    
+    for iray in range(nrays):
+        for igate in range(ngates):
+            val = phm_field.data[iray, igate]
+            
+            if val == BAD_DATA or val < 0:
+                continue
+            
+            # Calculate range in km
+            range_km = (igate * gate_spacing) / 1000.0
+            
+            # PhiDP should be roughly proportional to range
+            # Typical max: ~1-2° per km in heavy rain
+            # Use conservative threshold: 3° per km
+            max_expected_phidp = 3.0 * range_km + 10.0  # +10° buffer
+            
+            # If PhiDP is way too high for this range, it's bad data
+            if val > max_expected_phidp and val > 50:  # Only flag if also > 50°
+                phm_field.data[iray, igate] = BAD_DATA
+                range_filtered += 1
+    
+    print(f'        Removed {range_filtered} gates with unrealistic PhiDP for range')
+    
+    # STEP 2: Apply median filter to remove isolated noise spikes
     print(f'        Applying median filter to remove noise spikes...')
     from scipy.ndimage import median_filter
     
     phm_work = phm_field.data.copy()
     phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
     
-    # Apply median filter - this removes isolated high values
+    # Apply median filter
     phm_filtered = median_filter(phm_work, size=(5, 5), mode='constant', cval=np.nan)
     
     # Restore BAD_DATA mask
     phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
     
-    # STEP 2: Detect and remove outliers (gates that differ too much from neighbors)
+    # STEP 3: Remove outliers (gates that differ too much from neighbors)
     print(f'        Removing outlier gates...')
     outliers_removed = 0
     
@@ -1061,7 +1087,28 @@ def unfold_phidp(self):
     
     print(f'        Removed {outliers_removed} outlier gates')
     
-    # STEP 3: Check if data needs unfolding
+    # STEP 4: Check if PhiDP is decreasing along rays (shouldn't happen)
+    print(f'        Checking for non-monotonic PhiDP...')
+    non_monotonic_fixed = 0
+    
+    for iray in range(nrays):
+        for igate in range(1, ngates):
+            curr_val = phm_filtered[iray, igate]
+            prev_val = phm_filtered[iray, igate-1]
+            
+            if curr_val == BAD_DATA or prev_val == BAD_DATA:
+                continue
+            if curr_val < 0 or prev_val < 0:
+                continue
+            
+            # PhiDP should not decrease by more than a few degrees
+            if curr_val < prev_val - 5.0:
+                phm_filtered[iray, igate] = BAD_DATA
+                non_monotonic_fixed += 1
+    
+    print(f'        Removed {non_monotonic_fixed} gates where PhiDP decreased')
+    
+    # STEP 5: Check if data needs unfolding
     needs_unfolding = False
     large_negative_jumps = 0
     
@@ -1082,7 +1129,7 @@ def unfold_phidp(self):
     
     print(f'        Data assessment: {"Needs unfolding" if needs_unfolding else "No unfolding needed"}')
     
-    # STEP 4: Unfold if needed
+    # STEP 6: Unfold if needed
     rays_unfolded = 0
     
     for iray in range(nrays):
