@@ -1009,7 +1009,15 @@ def unfold_phidp(self):
     BAD_DATA = -32767.0
     FIRST_GATE = 10000
 
-    # Add this at the very start of your function to diagnose
+    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
+    ref_field = self.radar.fields[self.ref_field_name]['data'].copy()
+
+    gate_spacing = self.radar.range['meters_between_gates']
+    start_gate = int(FIRST_GATE / gate_spacing)
+    nrays = phm_field.data.shape[0]
+    ngates = phm_field.data.shape[1]
+
+   # Add this at the very start of your function to diagnose
     print('    Checking raw PhiDP...')
     phm_raw = self.radar.fields[self.phi_field_name]['data'].copy()
 
@@ -1023,14 +1031,6 @@ def unfold_phidp(self):
         if gate < len(ray_data):
             print(f'      Gate {gate} ({gate * gate_spacing / 1000:.1f} km): '
                   f'PHM={ray_data[gate]:.1f}°, REF={ref_data[gate]:.1f} dBZ')
-
-    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
-    ref_field = self.radar.fields[self.ref_field_name]['data'].copy()
-
-    gate_spacing = self.radar.range['meters_between_gates']
-    start_gate = int(FIRST_GATE / gate_spacing)
-    nrays = phm_field.data.shape[0]
-    ngates = phm_field.data.shape[1]
 
     print(f'        Processing PhiDP (start_gate={start_gate})...')
     
