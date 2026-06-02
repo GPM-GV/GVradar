@@ -1097,6 +1097,48 @@ def unfold_phidp(self):
 
     print(f'        Applied unfolding to {wraps_applied} rays')
     
+    # STEP 3: FIX RAY-TO-RAY CONSISTENCY
+    print('        Fixing ray-to-ray consistency...')
+    
+    # Check each ray against its neighbors
+    ref_gate = min(100, ngates - 10)  # Check at ~50 km range
+    corrections = 0
+    
+    for iray in range(nrays):
+        prev_ray = (iray - 1) % nrays
+        next_ray = (iray + 1) % nrays
+        
+        # Get data at reference gate for current and neighbor rays
+        curr_val = phm_filtered[iray, ref_gate]
+        prev_val = phm_filtered[prev_ray, ref_gate]
+        next_val = phm_filtered[next_ray, ref_gate]
+        
+        # Skip if any are bad data
+        if curr_val == BAD_DATA or prev_val == BAD_DATA or next_val == BAD_DATA:
+            continue
+        if curr_val < 0 or prev_val < 0 or next_val < 0:
+            continue
+        
+        # Calculate neighbor average
+        neighbor_avg = (prev_val + next_val) / 2.0
+        
+        # If current ray differs by ~360° from neighbors, it needs correction
+        diff = neighbor_avg - curr_val
+        
+        if 180 < diff < 540:  # Current ray is ~360° too low
+            # Add 360° to entire ray (only valid gates)
+            ray_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+            phm_filtered[iray, ray_mask] += 360
+            corrections += 1
+            
+        elif -540 < diff < -180:  # Current ray is ~360° too high
+            # Subtract 360° from entire ray
+            ray_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+            phm_filtered[iray, ray_mask] -= 360
+            corrections += 1
+    
+    print(f'        Corrected {corrections} inconsistent rays')
+    
     # Check final result
     valid_final = phm_filtered[(phm_filtered != BAD_DATA) & (phm_filtered >= 0)]
     if len(valid_final) > 0:
@@ -1108,11 +1150,11 @@ def unfold_phidp(self):
               f'90%={np.percentile(valid_final, 90):.1f}°, '
               f'99%={np.percentile(valid_final, 99):.1f}°')
 
-    # Add field to radar - pass the data array directly
+    # Add field to radar
     print('        Adding PH field to radar object...')
     
     self.radar = cm.add_field_to_radar_object(
-        phm_filtered,  # Just pass the data array, not phm_field
+        phm_filtered,
         self.radar, 
         field_name='PH',
         units='degrees',
