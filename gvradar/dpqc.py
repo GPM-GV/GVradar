@@ -1340,14 +1340,20 @@ def calculate_kdp(self):
     """
 
     print('    Calculating Kdp using CSU Bringi method...')
-        
-    # Extract data fields        
-    try:
-        DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
-        DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
-    except:
+    
+    # Canadian radars require MaskedArray input for calc_kdp_bringi
+    # Using extract_unmasked_data (filled arrays) causes hangs on precipitation-free data    
+    can_sites = ['CASMB','CASMM','CASHR','CASCM','CASGO']
+    if self.site in can_sites:
         DZ = self.radar.fields[self.ref_field_name]['data'].copy()
         DP = self.radar.fields[self.phi_field_name]['data'].copy()
+    else:
+        try:
+            DZ = cm.extract_unmasked_data(self.radar, self.ref_field_name)
+            DP = cm.extract_unmasked_data(self.radar, self.phi_field_name)
+        except:
+            DZ = self.radar.fields[self.ref_field_name]['data'].copy()
+            DP = self.radar.fields[self.phi_field_name]['data'].copy()
         
     # Set parameters based on user input
     window = self.kd_window
@@ -1365,16 +1371,6 @@ def calculate_kdp(self):
     gate_spacing = self.radar.range['meters_between_gates']
         
     try:
-        import signal
-        
-        # Timeout handler
-        def timeout_handler(signum, frame):
-            raise TimeoutError("calc_kdp_bringi timed out")
-        
-        # Set 150 second timeout
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(150)
-
         KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(
             dp=DP, 
             dz=DZ, 
@@ -1385,7 +1381,6 @@ def calculate_kdp(self):
             nfilter=nfilter,
             std_gate=std_gate
         )
-        signal.alarm(0)  # Cancel alarm            
         print('    CSU Bringi calc_kdp_bringi completed successfully')
             
     except Exception as e:
