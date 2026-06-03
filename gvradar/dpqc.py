@@ -1365,6 +1365,16 @@ def calculate_kdp(self):
     gate_spacing = self.radar.range['meters_between_gates']
         
     try:
+        import signal
+        
+        # Timeout handler
+        def timeout_handler(signum, frame):
+            raise TimeoutError("calc_kdp_bringi timed out")
+        
+        # Set 150 second timeout
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(150)
+
         KDPB, PHIDPB, STDPHIB = csu_kdp.calc_kdp_bringi(
             dp=DP, 
             dz=DZ, 
@@ -1375,7 +1385,7 @@ def calculate_kdp(self):
             nfilter=nfilter,
             std_gate=std_gate
         )
-            
+        signal.alarm(0)  # Cancel alarm            
         print('    CSU Bringi calc_kdp_bringi completed successfully')
             
     except Exception as e:
