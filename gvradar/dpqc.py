@@ -1025,93 +1025,57 @@ def unfold_phidp(self):
     
     # Check if Canadian site
     can_sites = ['CASMB', 'CASMM', 'CASHR', 'CASCM', 'CASGO']
-    rays_unfolded = 0  # Initialize here for proper scoping
+    rays_unfolded = 0
     
     if self.site in can_sites:
         print(f'        Using numpy.unwrap method (Canadian site)...')
+        from scipy.ndimage import median_filter
         
-        try:
-            from scipy.ndimage import median_filter
+        # Apply median filter first
+        print(f'        Applying median filter...')
+        phm_work = phm_field.data.copy()
+        phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
+        
+        phm_filtered = median_filter(phm_work, size=(3, 5), mode='constant', cval=np.nan)
+        phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
+        
+        print(f'        Unwrapping rays...')
+        
+        # Use numpy.unwrap (handles wrapping properly)
+        for iray in range(nrays):
+            gate_data = phm_filtered[iray].copy()
             
-            # Apply median filter first
-            print(f'        Applying median filter...')
-            phm_work = phm_field.data.copy()
-            phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
+            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+            valid_indices = np.where(valid_mask)[0]
             
-            phm_filtered = median_filter(phm_work, size=(3, 5), mode='constant', cval=np.nan)
-            phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
+            if len(valid_indices) < 10:
+                continue
             
-            print(f'        Unwrapping rays...')
+            # Only process from start_gate onward
+            valid_indices = valid_indices[valid_indices >= start_gate]
             
-            # Use numpy.unwrap (handles wrapping properly)
-            for iray in range(nrays):
-                gate_data = phm_filtered[iray].copy()
-                
-                valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-                valid_indices = np.where(valid_mask)[0]
-                
-                if len(valid_indices) < 10:
-                    continue
-                
-                # Only process from start_gate onward
-                valid_indices = valid_indices[valid_indices >= start_gate]
-                
-                if len(valid_indices) < 10:
-                    continue
-                
-                valid_data = gate_data[valid_indices]
-                
-                # Convert to radians, unwrap, convert back
-                valid_data_rad = np.deg2rad(valid_data)
-                unwrapped_rad = np.unwrap(valid_data_rad)
-                unwrapped_deg = np.rad2deg(unwrapped_rad)
-                
-                if np.max(unwrapped_deg) > 360:
-                    rays_unfolded += 1
-                
-                # Put back
-                gate_data[valid_indices] = unwrapped_deg
-                gate_data[~valid_mask] = BAD_DATA
-                
-                phm_filtered[iray] = gate_data
+            if len(valid_indices) < 10:
+                continue
             
-            phm_field.data = phm_filtered
-            print(f'        Numpy unwrap completed')
+            valid_data = gate_data[valid_indices]
             
-        except Exception as e:
-            print(f'        ERROR in numpy unwrap: {e}')
-            import traceback
-            traceback.print_exc()
-            print(f'        Falling back to manual unfolding...')
+            # Convert to radians, unwrap, convert back
+            valid_data_rad = np.deg2rad(valid_data)
+            unwrapped_rad = np.unwrap(valid_data_rad)
+            unwrapped_deg = np.rad2deg(unwrapped_rad)
             
-            # Fallback to manual method
-            rays_unfolded = 0
-            for iray in range(nrays):
-                gate_data = phm_field.data[iray].copy()
-                
-                valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-                
-                cumulative_unwrap = 0.0
-                ray_had_wrap = False
-                
-                for igate in range(start_gate, ngates-1):
-                    if not valid_mask[igate] or not valid_mask[igate+1]:
-                        continue
-                    
-                    diff = gate_data[igate+1] - gate_data[igate]
-                    
-                    if diff < -MAX_PHIDP_DIFF:
-                        cumulative_unwrap += PHASE_WRAP
-                        ray_had_wrap = True
-                    
-                    if cumulative_unwrap > 0:
-                        gate_data[igate+1] += cumulative_unwrap
-                
-                if ray_had_wrap:
-                    rays_unfolded += 1
-                
-                gate_data[~valid_mask] = BAD_DATA
-                phm_field.data[iray] = gate_data
+            if np.max(unwrapped_deg) > 360:
+                rays_unfolded += 1
+            
+            # Put back
+            gate_data[valid_indices] = unwrapped_deg
+            gate_data[~valid_mask] = BAD_DATA
+            
+            phm_filtered[iray] = gate_data
+        
+        # Use in-place assignment instead of phm_field.data = phm_filtered
+        phm_field.data[:] = phm_filtered
+        print(f'        Numpy unwrap completed')
         
     else:
         print(f'        Using manual unfolding (non-Canadian site)...')
