@@ -1004,15 +1004,7 @@ def ph_sector(self):
 def unfold_phidp(self):
     """
     Unfold PhiDP for 0-360° range system.
-    Applies median filter for Canadian sites (noisy data).
-
-    Parameters:
-    radar: pyart radar object
-    ref_field_name: name of reflectivity field
-    phi_field_name: name of PhiDP field
-
-    Return
-    radar: radar object with unfolded PH field included
+    Uses numpy.unwrap for Canadian sites (more robust).
     """
     print('    Unfolding PhiDP...')
 
@@ -1031,65 +1023,99 @@ def unfold_phidp(self):
     print(f'        Unfolding params: start_gate={start_gate}, '
           f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
     
-    # Apply median filter for Canadian sites (noisy data)
+    # Check if Canadian site
     can_sites = ['CASMB', 'CASMM', 'CASHR', 'CASCM', 'CASGO']
     
     if self.site in can_sites:
-        print(f'        Applying median filter (Canadian site)...')
+        print(f'        Using numpy.unwrap method (Canadian site)...')
         from scipy.ndimage import median_filter
         
+        # Apply median filter first
         phm_work = phm_field.data.copy()
         phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
         
         phm_filtered = median_filter(phm_work, size=(3, 5), mode='constant', cval=np.nan)
         phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
-    else:
-        print(f'        No filtering applied (non-Canadian site)...')
-        phm_filtered = phm_field.data.copy()
-    
-    # Unfold all rays
-    rays_unfolded = 0
-    
-    for iray in range(nrays):
-        gate_data = phm_filtered[iray].copy()
         
-        # Create validity mask
-        valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+        # Use numpy.unwrap (handles wrapping properly)
+        rays_unfolded = 0
         
-        cumulative_unwrap = 0.0
-        ray_had_wrap = False
-        
-        for igate in range(start_gate, ngates-1):
-            if not valid_mask[igate] or not valid_mask[igate+1]:
+        for iray in range(nrays):
+            gate_data = phm_filtered[iray].copy()
+            
+            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+            valid_indices = np.where(valid_mask)[0]
+            
+            if len(valid_indices) < 10:
                 continue
             
-            diff = gate_data[igate+1] - gate_data[igate]
+            # Only process from start_gate onward
+            valid_indices = valid_indices[valid_indices >= start_gate]
             
-            # Detect wrap (large negative jump)
-            if diff < -MAX_PHIDP_DIFF:
-                cumulative_unwrap += PHASE_WRAP
-                ray_had_wrap = True
+            if len(valid_indices) < 10:
+                continue
             
-            # Apply cumulative unwrap
-            if cumulative_unwrap > 0:
-                gate_data[igate+1] += cumulative_unwrap
+            valid_data = gate_data[valid_indices]
+            
+            # Convert to radians, unwrap, convert back
+            valid_data_rad = np.deg2rad(valid_data)
+            unwrapped_rad = np.unwrap(valid_data_rad)
+            unwrapped_deg = np.rad2deg(unwrapped_rad)
+            
+            if np.max(unwrapped_deg) > 360:
+                rays_unfolded += 1
+            
+            # Put back
+            gate_data[valid_indices] = unwrapped_deg
+            gate_data[~valid_mask] = BAD_DATA
+            
+            phm_filtered[iray] = gate_data
         
-        if ray_had_wrap:
-            rays_unfolded += 1
+        phm_field.data = phm_filtered
         
-        gate_data[~valid_mask] = BAD_DATA
-        phm_filtered[iray] = gate_data
+    else:
+        print(f'        Using manual unfolding (non-Canadian site)...')
+        
+        # Manual unfolding for non-Canadian sites
+        rays_unfolded = 0
+        
+        for iray in range(nrays):
+            gate_data = phm_field.data[iray].copy()
+            
+            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+            
+            cumulative_unwrap = 0.0
+            ray_had_wrap = False
+            
+            for igate in range(start_gate, ngates-1):
+                if not valid_mask[igate] or not valid_mask[igate+1]:
+                    continue
+                
+                diff = gate_data[igate+1] - gate_data[igate]
+                
+                if diff < -MAX_PHIDP_DIFF:
+                    cumulative_unwrap += PHASE_WRAP
+                    ray_had_wrap = True
+                
+                if cumulative_unwrap > 0:
+                    gate_data[igate+1] += cumulative_unwrap
+            
+            if ray_had_wrap:
+                rays_unfolded += 1
+            
+            gate_data[~valid_mask] = BAD_DATA
+            phm_field.data[iray] = gate_data
     
     print(f'        Unfolded {rays_unfolded} rays')
     
     # Check final statistics
-    valid_data = phm_filtered[(phm_filtered != BAD_DATA) & (phm_filtered >= 0)]
+    valid_data = phm_field.data[(phm_field.data != BAD_DATA) & (phm_field.data >= 0)]
     if len(valid_data) > 0:
         print(f'        Final PhiDP: range=[{np.min(valid_data):.1f}°, {np.max(valid_data):.1f}°], '
               f'median={np.median(valid_data):.1f}°')
 
     self.radar = cm.add_field_to_radar_object(
-        phm_filtered, self.radar, 
+        phm_field.data, self.radar, 
         field_name='PH',
         units='deg',
         long_name='Unfolded Differential Phase',
