@@ -1000,10 +1000,11 @@ def ph_sector(self):
     return self.radar
 
 # ***************************************************************************************
+
 def unfold_phidp(self):
     """
     Unfold PhiDP for 0-360° range system.
-    Simple unfolding without filtering - always unfolds.
+    Applies median filter for Canadian sites (noisy data).
 
     Parameters:
     radar: pyart radar object
@@ -1030,11 +1031,27 @@ def unfold_phidp(self):
     print(f'        Unfolding params: start_gate={start_gate}, '
           f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
     
+    # Apply median filter for Canadian sites (noisy data)
+    can_sites = ['CASMB', 'CASMM', 'CASHR', 'CASCM', 'CASGO']
+    
+    if self.site in can_sites:
+        print(f'        Applying median filter (Canadian site)...')
+        from scipy.ndimage import median_filter
+        
+        phm_work = phm_field.data.copy()
+        phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
+        
+        phm_filtered = median_filter(phm_work, size=(3, 5), mode='constant', cval=np.nan)
+        phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
+    else:
+        print(f'        No filtering applied (non-Canadian site)...')
+        phm_filtered = phm_field.data.copy()
+    
     # Unfold all rays
     rays_unfolded = 0
     
     for iray in range(nrays):
-        gate_data = phm_field.data[iray].copy()
+        gate_data = phm_filtered[iray].copy()
         
         # Create validity mask
         valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
@@ -1061,237 +1078,9 @@ def unfold_phidp(self):
             rays_unfolded += 1
         
         gate_data[~valid_mask] = BAD_DATA
-        phm_field.data[iray] = gate_data
+        phm_filtered[iray] = gate_data
     
     print(f'        Unfolded {rays_unfolded} rays')
-    
-    # Check final statistics
-    valid_data = phm_field.data[(phm_field.data != BAD_DATA) & (phm_field.data >= 0)]
-    if len(valid_data) > 0:
-        print(f'        Final PhiDP: range=[{np.min(valid_data):.1f}°, {np.max(valid_data):.1f}°], '
-              f'median={np.median(valid_data):.1f}°')
-
-    self.radar = cm.add_field_to_radar_object(
-        phm_field.data, self.radar, 
-        field_name='PH',
-        units='deg',
-        long_name='Unfolded Differential Phase',
-        standard_name='Differential Phase',
-        dz_field=self.ref_field_name
-    )
-
-    return self.radar
-
-def unfold_phidp_test(self):
-
-    """
-    Unfold PhiDP for 0-360° range system.
-
-    Parameters:
-    radar: pyart radar object
-    ref_field_name: name of reflectivty field
-    phi_field_name: name of PhiDP field
-
-    Return
-    radar: radar object with unfolded PH field included
-    """
-    print('    Unfolding PhiDP...')
-
-    BAD_DATA = -32767.0
-    FIRST_GATE = 5000  # meters (5 km)
-    MAX_PHIDP_DIFF = self.max_phidp_diff
-    PHASE_WRAP = self.phase_wrap
-
-    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
-    ref_field = self.radar.fields[self.ref_field_name]['data'].copy()
-
-    gate_spacing = self.radar.range['meters_between_gates']
-    start_gate = int(FIRST_GATE / gate_spacing)
-    nrays = phm_field.data.shape[0]
-    ngates = phm_field.data.shape[1]
-
-    print(f'        Unfolding params: start_gate={start_gate}, '
-          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
-    
-    # Estimate system phase offset
-    print(f'        Estimating system phase offset...')
-    
-    # Sample PhiDP values at first valid gates (within 10-20 km)
-    sample_start_gate = max(start_gate, int(10000 / gate_spacing))
-    sample_end_gate = int(20000 / gate_spacing)
-    
-    sample_values = []
-    for iray in range(0, nrays, max(1, nrays // 100)):  
-        for igate in range(sample_start_gate, min(sample_end_gate, ngates)):
-            val = phm_field.data[iray, igate]
-            if val != BAD_DATA and val >= 0 and val <= 360:
-                ref_val = ref_field.data[iray, igate]
-                if ref_val > 10: 
-                    sample_values.append(val)
-                    break 
-    
-    if len(sample_values) > 20:
-        system_phase = np.median(sample_values)
-        print(f'        Estimated system phase: {system_phase:.1f}°')
-    else:
-        system_phase = 0.0
-        print(f'        Could not estimate system phase (insufficient data)')
-    
-    # Remove unrealistic PhiDP values based on range
-    print(f'        Filtering unrealistic PhiDP values by range...')
-    
-    # Create range array (km) for all gates
-    range_km = np.arange(ngates) * gate_spacing / 1000.0
-    
-    # Max expected PhiDP CHANGE from system phase at each range
-    # (not absolute PhiDP, but change from baseline)
-    max_expected_change = 3.0 * range_km + 10.0  # 3°/km + 10° buffer
-    max_expected_phidp = system_phase + max_expected_change
-    
-    # Also check for values way below system phase (shouldn't happen)
-    min_expected_phidp = system_phase - 20.0
-    
-    # Create mask for unrealistic values
-    unrealistic_mask = (
-        ((phm_field.data > max_expected_phidp) | (phm_field.data < min_expected_phidp)) & 
-        (phm_field.data != BAD_DATA) &
-        (phm_field.data >= 0)
-    )
-    range_filtered = np.sum(unrealistic_mask)
-    phm_field.data[unrealistic_mask] = BAD_DATA
-    
-    print(f'        Removed {range_filtered} gates with unrealistic PhiDP for range')
-    
-    # Apply median filter to remove isolated noise spikes
-    print(f'        Applying median filter to remove noise spikes...')
-    
-    phm_work = phm_field.data.copy()
-    phm_work[(phm_work == BAD_DATA) | (phm_work < 0) | (phm_work > 360)] = np.nan
-    
-    # Apply median filter
-    phm_filtered = median_filter(phm_work, size=(5, 5), mode='constant', cval=np.nan)
-    
-    # Restore BAD_DATA mask
-    phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
-    
-    # Remove outliers - gates that differ too much from neighbors (VECTORIZED)
-    print(f'        Removing outlier gates...')
-    
-    # Get previous and next gate values (shifted along gate dimension)
-    prev_gates = np.roll(phm_filtered, 1, axis=1)  # Shift right
-    next_gates = np.roll(phm_filtered, -1, axis=1)  # Shift left
-    
-    # Mark boundaries as invalid
-    prev_gates[:, 0] = BAD_DATA
-    next_gates[:, -1] = BAD_DATA
-    
-    # Calculate neighbor average
-    valid_prev = (prev_gates != BAD_DATA) & (prev_gates >= 0)
-    valid_next = (next_gates != BAD_DATA) & (next_gates >= 0)
-    valid_curr = (phm_filtered != BAD_DATA) & (phm_filtered >= 0)
-    
-    both_neighbors_valid = valid_prev & valid_next & valid_curr
-    
-    neighbor_avg = (prev_gates + next_gates) / 2.0
-    
-    # Find outliers (differ by >100° from neighbor average)
-    outlier_mask = both_neighbors_valid & (np.abs(phm_filtered - neighbor_avg) > 100)
-    outliers_removed = np.sum(outlier_mask)
-    phm_filtered[outlier_mask] = BAD_DATA
-    
-    print(f'        Removed {outliers_removed} outlier gates')
-    
-    # Check for non-monotonic PhiDP
-    # PhiDP should increase with range, accounting for wraps
-    print(f'        Checking for non-monotonic PhiDP...')
-    
-    # Get differences along range direction
-    prev_gates = np.roll(phm_filtered, 1, axis=1)
-    prev_gates[:, 0] = BAD_DATA
-    
-    valid_curr = (phm_filtered != BAD_DATA) & (phm_filtered >= 0)
-    valid_prev = (prev_gates != BAD_DATA) & (prev_gates >= 0)
-    
-    # PhiDP shouldn't decrease by more than 5° (unless it's a wrap artifact)
-    decreasing_mask = valid_curr & valid_prev & (phm_filtered < prev_gates - 5.0)
-    non_monotonic_fixed = np.sum(decreasing_mask)
-    phm_filtered[decreasing_mask] = BAD_DATA
-    
-    print(f'        Removed {non_monotonic_fixed} gates where PhiDP decreased')
-    
-    # Check if data needs unfolding
-    # If system phase is high, data might need unfolding even without large negative jumps
-    needs_unfolding = False
-    large_negative_jumps = 0
-    
-    # If system phase is high (> 150°), likely needs unfolding
-    if system_phase > 150:
-        print(f'        High system phase detected - checking for wrapping...')
-        # Look for values that wrapped to low values
-        for iray in range(0, nrays, max(1, nrays // 100)):
-            gate_data = phm_filtered[iray].copy()
-            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-            
-            # Check if we have both high values (near system phase) and low values (wrapped)
-            valid_data = gate_data[valid_mask]
-            if len(valid_data) > 10:
-                has_high = np.any(valid_data > 150)
-                has_low = np.any(valid_data < 50)
-                if has_high and has_low:
-                    needs_unfolding = True
-                    break
-    else:
-        # Original detection logic
-        for iray in range(0, nrays, max(1, nrays // 100)):
-            gate_data = phm_filtered[iray].copy()
-            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-            
-            for igate in range(start_gate, ngates-1):
-                if valid_mask[igate] and valid_mask[igate+1]:
-                    diff = gate_data[igate+1] - gate_data[igate]
-                    if diff < -MAX_PHIDP_DIFF:
-                        large_negative_jumps += 1
-                        if large_negative_jumps > 10:
-                            needs_unfolding = True
-                            break
-            if needs_unfolding:
-                break
-    
-    print(f'        Data assessment: {"Needs unfolding" if needs_unfolding else "No unfolding needed"}')
-    
-    # Unfold if needed
-    rays_unfolded = 0
-    
-    if needs_unfolding:
-        for iray in range(nrays):
-            gate_data = phm_filtered[iray].copy()
-            
-            # Create validity mask
-            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
-            
-            cumulative_unwrap = 0.0
-            ray_had_wrap = False
-            
-            for igate in range(start_gate, ngates-1):
-                if not valid_mask[igate] or not valid_mask[igate+1]:
-                    continue
-                
-                diff = gate_data[igate+1] - gate_data[igate]
-                
-                if diff < -MAX_PHIDP_DIFF:
-                    cumulative_unwrap += PHASE_WRAP
-                    ray_had_wrap = True
-                
-                if cumulative_unwrap > 0:
-                    gate_data[igate+1] += cumulative_unwrap
-            
-            if ray_had_wrap:
-                rays_unfolded += 1
-            
-            gate_data[~valid_mask] = BAD_DATA
-            phm_filtered[iray] = gate_data
-        
-        print(f'        Unfolded {rays_unfolded} rays')
     
     # Check final statistics
     valid_data = phm_filtered[(phm_filtered != BAD_DATA) & (phm_filtered >= 0)]
