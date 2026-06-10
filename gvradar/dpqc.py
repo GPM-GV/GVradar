@@ -1073,34 +1073,71 @@ def unfold_phidp(self):
             
             phm_filtered[iray] = gate_data
         
+        # NEW: More robust ray-to-ray consistency fix
         print(f'        Fixing ray consistency...')
-        ref_gate = min(100, ngates - 10)
+        
+        # Check at multiple ranges (not just one gate)
+        check_gates = [50, 100, 150, 200]  # Multiple reference points
+        check_gates = [g for g in check_gates if g < ngates]
+        
         corrections = 0
+        correction_applied = np.zeros(nrays, dtype=bool)  # Track which rays were corrected
         
         for iray in range(nrays):
-            prev_ray = (iray - 1) % nrays
-            next_ray = (iray + 1) % nrays
+            if correction_applied[iray]:
+                continue  # Already corrected
             
-            curr_val = phm_filtered[iray, ref_gate]
-            prev_val = phm_filtered[prev_ray, ref_gate]
-            next_val = phm_filtered[next_ray, ref_gate]
+            # Check against multiple neighbor rays (not just prev/next)
+            neighbor_rays = [
+                (iray - 2) % nrays,
+                (iray - 1) % nrays,
+                (iray + 1) % nrays,
+                (iray + 2) % nrays
+            ]
             
-            if curr_val == BAD_DATA or prev_val == BAD_DATA or next_val == BAD_DATA:
-                continue
-            if curr_val < 0 or prev_val < 0 or next_val < 0:
-                continue
+            # Vote across multiple gates
+            votes_for_add360 = 0
+            votes_for_sub360 = 0
+            total_votes = 0
             
-            neighbor_avg = (prev_val + next_val) / 2.0
-            diff = neighbor_avg - curr_val
+            for ref_gate in check_gates:
+                curr_val = phm_filtered[iray, ref_gate]
+                
+                if curr_val == BAD_DATA or curr_val < 0:
+                    continue
+                
+                # Get neighbor values
+                neighbor_vals = []
+                for nray in neighbor_rays:
+                    nval = phm_filtered[nray, ref_gate]
+                    if nval != BAD_DATA and nval >= 0:
+                        neighbor_vals.append(nval)
+                
+                if len(neighbor_vals) < 2:
+                    continue
+                
+                neighbor_median = np.median(neighbor_vals)
+                diff = neighbor_median - curr_val
+                
+                total_votes += 1
+                
+                if 180 < diff < 540:  # Vote to add 360
+                    votes_for_add360 += 1
+                elif -540 < diff < -180:  # Vote to subtract 360
+                    votes_for_sub360 += 1
             
-            if 180 < diff < 540:  # Current ray ~360° too low
-                valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
-                phm_filtered[iray, valid_mask] += 360
-                corrections += 1
-            elif -540 < diff < -180:  # Current ray ~360° too high
-                valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
-                phm_filtered[iray, valid_mask] -= 360
-                corrections += 1
+            # Apply correction if majority of gates agree
+            if total_votes > 0:
+                if votes_for_add360 > total_votes / 2:
+                    valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                    phm_filtered[iray, valid_mask] += 360
+                    corrections += 1
+                    correction_applied[iray] = True
+                elif votes_for_sub360 > total_votes / 2:
+                    valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                    phm_filtered[iray, valid_mask] -= 360
+                    corrections += 1
+                    correction_applied[iray] = True
         
         print(f'        Corrected {corrections} inconsistent rays')
         
