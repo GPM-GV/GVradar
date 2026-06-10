@@ -1108,6 +1108,35 @@ def unfold_phidp(self):
                     corrections += 1
             
             print(f'        Corrected {corrections} outlier rays')
+
+            print(f'        Final neighbor smoothing...')
+            final_corrections = 0
+            
+            for iray in range(nrays):
+                prev_ray = (iray - 1) % nrays
+                next_ray = (iray + 1) % nrays
+                
+                curr_val = phm_filtered[iray, ref_gate]
+                prev_val = phm_filtered[prev_ray, ref_gate]
+                next_val = phm_filtered[next_ray, ref_gate]
+                
+                if curr_val == BAD_DATA or prev_val == BAD_DATA or next_val == BAD_DATA:
+                    continue
+                
+                neighbor_avg = (prev_val + next_val) / 2.0
+                diff = curr_val - neighbor_avg
+                
+                if 180 < abs(diff) < 540:
+                    if diff > 0:
+                        valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                        phm_filtered[iray, valid_mask] -= 360
+                        final_corrections += 1
+                    else:
+                        valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                        phm_filtered[iray, valid_mask] += 360
+                        final_corrections += 1
+            
+            print(f'        Final smoothing: {final_corrections} rays')
         
         phm_field.data[:] = phm_filtered
         print(f'        Unwrap completed')
