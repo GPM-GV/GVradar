@@ -93,15 +93,22 @@ def csu_filters(self):
             print("    CSU despeckle...")
             mask_ds = csu_misc.despeckle(dz, bad = -32767.0, ngates=size)
             bad = -32767.0
-
+        
+            # Don't despeckle phase fields!
+            phase_fields = ['PHM', 'PH', 'PHIDP', 'KDP', 'KD']
+            
             for fld in self.radar.fields:
+                if fld in phase_fields:
+                    continue
+                
                 nf = cm.extract_unmasked_data(self.radar, fld)
                 nf_ds = 1.0 * nf
                 nf_ds[mask_ds] = bad 
-                cm.add_field_to_radar_object(nf_ds, self.radar, field_name=fld, units='', 
-                                         long_name=fld,
-                                         standard_name=fld, 
-                                         dz_field=self.ref_field_name)
+                cm.add_field_to_radar_object(nf_ds, self.radar, field_name=fld, 
+                                             units='', 
+                                             long_name=fld,
+                                             standard_name=fld, 
+                                             dz_field=self.ref_field_name)
         
     return self.radar  
 
