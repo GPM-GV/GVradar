@@ -1073,9 +1073,40 @@ def unfold_phidp(self):
             
             phm_filtered[iray] = gate_data
         
-        # Use in-place assignment instead of phm_field.data = phm_filtered
+        print(f'        Fixing ray consistency...')
+        ref_gate = min(100, ngates - 10)
+        corrections = 0
+        
+        for iray in range(nrays):
+            prev_ray = (iray - 1) % nrays
+            next_ray = (iray + 1) % nrays
+            
+            curr_val = phm_filtered[iray, ref_gate]
+            prev_val = phm_filtered[prev_ray, ref_gate]
+            next_val = phm_filtered[next_ray, ref_gate]
+            
+            if curr_val == BAD_DATA or prev_val == BAD_DATA or next_val == BAD_DATA:
+                continue
+            if curr_val < 0 or prev_val < 0 or next_val < 0:
+                continue
+            
+            neighbor_avg = (prev_val + next_val) / 2.0
+            diff = neighbor_avg - curr_val
+            
+            if 180 < diff < 540:  # Current ray ~360° too low
+                valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                phm_filtered[iray, valid_mask] += 360
+                corrections += 1
+            elif -540 < diff < -180:  # Current ray ~360° too high
+                valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                phm_filtered[iray, valid_mask] -= 360
+                corrections += 1
+        
+        print(f'        Corrected {corrections} inconsistent rays')
+        
+        # Use in-place assignment
         phm_field.data[:] = phm_filtered
-        print(f'        Numpy unwrap completed')
+        print(f'        Numpy unwrap completed')    
         
     else:
         print(f'        Using manual unfolding (non-Canadian site)...')
