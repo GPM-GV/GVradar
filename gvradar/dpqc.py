@@ -1000,8 +1000,76 @@ def ph_sector(self):
     return self.radar
 
 # ***************************************************************************************
-
 def unfold_phidp(self):
+    """
+    Unfold PhiDP for 0-360° range system.
+    Simple gate-to-gate unfolding.
+    """
+    print('    Unfolding PhiDP...')
+
+    BAD_DATA = -32767.0
+    FIRST_GATE = 5000  # meters (5 km)
+    MAX_PHIDP_DIFF = self.max_phidp_diff
+    PHASE_WRAP = self.phase_wrap
+
+    phm_field = self.radar.fields[self.phi_field_name]['data'].copy()
+
+    gate_spacing = self.radar.range['meters_between_gates']
+    start_gate = int(FIRST_GATE / gate_spacing)
+    nrays = phm_field.data.shape[0]
+    ngates = phm_field.data.shape[1]
+
+    print(f'        Unfolding params: start_gate={start_gate}, '
+          f'max_diff={MAX_PHIDP_DIFF}°, wrap={PHASE_WRAP}°')
+    
+    rays_unfolded = 0
+    
+    for iray in range(nrays):
+        gate_data = phm_field.data[iray].copy()
+        
+        valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+        
+        cumulative_unwrap = 0.0
+        ray_had_wrap = False
+        
+        for igate in range(start_gate, ngates-1):
+            if not valid_mask[igate] or not valid_mask[igate+1]:
+                continue
+            
+            diff = gate_data[igate+1] - gate_data[igate]
+            
+            if diff < -MAX_PHIDP_DIFF:
+                cumulative_unwrap += PHASE_WRAP
+                ray_had_wrap = True
+            
+            if cumulative_unwrap > 0:
+                gate_data[igate+1] += cumulative_unwrap
+        
+        if ray_had_wrap:
+            rays_unfolded += 1
+        
+        gate_data[~valid_mask] = BAD_DATA
+        phm_field.data[iray] = gate_data
+    
+    print(f'        Unfolded {rays_unfolded} rays')
+    
+    valid_data = phm_field.data[(phm_field.data != BAD_DATA) & (phm_field.data >= 0)]
+    if len(valid_data) > 0:
+        print(f'        Final PhiDP: range=[{np.min(valid_data):.1f}°, {np.max(valid_data):.1f}°], '
+              f'median={np.median(valid_data):.1f}°')
+
+    self.radar = cm.add_field_to_radar_object(
+        phm_field.data, self.radar, 
+        field_name='PH',
+        units='deg',
+        long_name='Unfolded Differential Phase',
+        standard_name='Differential Phase',
+        dz_field=self.ref_field_name
+    )
+
+    return self.radar
+
+def unfold_phidp_old(self):
     """
     Unfold PhiDP for 0-360° range system.
     Uses numpy.unwrap for Canadian sites (more robust).
