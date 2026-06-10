@@ -1073,7 +1073,82 @@ def unfold_phidp(self):
             
             phm_filtered[iray] = gate_data
         
-        # NEW: More robust ray-to-ray consistency fix
+        print(f'        Unwrapping rays...')
+        
+        # Use numpy.unwrap (handles wrapping properly)
+        for iray in range(nrays):
+            gate_data = phm_filtered[iray].copy()
+            
+            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+            valid_indices = np.where(valid_mask)[0]
+            
+            if len(valid_indices) < 10:
+                continue
+            
+            # Only process from start_gate onward
+            valid_indices = valid_indices[valid_indices >= start_gate]
+            
+            if len(valid_indices) < 10:
+                continue
+            
+            valid_data = gate_data[valid_indices]
+            
+            # Convert to radians, unwrap, convert back
+            valid_data_rad = np.deg2rad(valid_data)
+            unwrapped_rad = np.unwrap(valid_data_rad)
+            unwrapped_deg = np.rad2deg(unwrapped_rad)
+            
+            if np.max(unwrapped_deg) > 360:
+                rays_unfolded += 1
+            
+            # Put back
+            gate_data[valid_indices] = unwrapped_deg
+            gate_data[~valid_mask] = BAD_DATA
+            
+            phm_filtered[iray] = gate_data
+        
+        # Global ray normalization - bring all rays to same baseline
+        print(f'        Normalizing ray baselines...')
+        
+        ref_gate = min(100, ngates - 10)
+        
+        # Collect median PhiDP value for each ray at reference gate
+        ray_medians = []
+        for iray in range(nrays):
+            val = phm_filtered[iray, ref_gate]
+            if val != BAD_DATA and val >= 0:
+                ray_medians.append(val)
+        
+        if len(ray_medians) > 100:
+            global_median = np.median(ray_medians)
+            print(f'        Global median PhiDP: {global_median:.1f}°')
+            
+            # Adjust each ray to be close to global median
+            adjustments = 0
+            for iray in range(nrays):
+                ray_val = phm_filtered[iray, ref_gate]
+                
+                if ray_val == BAD_DATA or ray_val < 0:
+                    continue
+                
+                # Find which multiple of 360° to add/subtract to get close to global median
+                diff = ray_val - global_median
+                
+                if diff > 180:  # Ray is too high
+                    n_wraps = round(diff / 360.0)
+                    if n_wraps > 0:
+                        valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                        phm_filtered[iray, valid_mask] -= (n_wraps * 360)
+                        adjustments += 1
+                elif diff < -180:  # Ray is too low
+                    n_wraps = round(-diff / 360.0)
+                    if n_wraps > 0:
+                        valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                        phm_filtered[iray, valid_mask] += (n_wraps * 360)
+                        adjustments += 1
+            
+            print(f'        Adjusted {adjustments} rays to global baseline')
+        
         print(f'        Fixing ray consistency...')
         
         # Check at multiple ranges (not just one gate)
@@ -1140,7 +1215,7 @@ def unfold_phidp(self):
                     correction_applied[iray] = True
         
         print(f'        Corrected {corrections} inconsistent rays')
-        
+
         # Use in-place assignment
         phm_field.data[:] = phm_filtered
         print(f'        Numpy unwrap completed')    
