@@ -1028,7 +1028,7 @@ def unfold_phidp(self):
     rays_unfolded = 0
     
     if self.site in can_sites:
-        print(f'        Using 2D unwrap method (Canadian site)...')
+        print(f'        Using numpy.unwrap method (Canadian site)...')
         from scipy.ndimage import median_filter
         
         # Apply median filter first
@@ -1039,47 +1039,78 @@ def unfold_phidp(self):
         phm_filtered = median_filter(phm_work, size=(3, 5), mode='constant', cval=np.nan)
         phm_filtered[np.isnan(phm_filtered)] = BAD_DATA
         
-        print(f'        Unwrapping in 2D (azimuthal + radial)...')
+        print(f'        Unwrapping rays...')
         
-        # Create a mask of valid data
-        valid_mask = (phm_filtered >= 0) & (phm_filtered <= 360) & (phm_filtered != BAD_DATA)
-        
-        # Only unwrap region with data (from start_gate onward)
-        phm_to_unwrap = phm_filtered[:, start_gate:].copy()
-        valid_to_unwrap = valid_mask[:, start_gate:]
-        
-        # Replace BAD_DATA with NaN for unwrapping
-        phm_to_unwrap[~valid_to_unwrap] = np.nan
-        
-        # Convert to radians
-        phm_rad = np.deg2rad(phm_to_unwrap)
-        
-        # Unwrap azimuthally first (along rays), then radially (along gates)
-        # This handles ray-to-ray discontinuities
-        print(f'        Unwrapping azimuthally...')
-        phm_unwrapped_azimuth = np.unwrap(phm_rad, axis=0)  # Along ray dimension
-        
-        print(f'        Unwrapping radially...')
-        phm_unwrapped_both = np.unwrap(phm_unwrapped_azimuth, axis=1)  # Along gate dimension
-        
-        # Convert back to degrees
-        phm_unwrapped_deg = np.rad2deg(phm_unwrapped_both)
-        
-        # Restore to full array
-        phm_filtered[:, start_gate:] = phm_unwrapped_deg
-        
-        # Restore BAD_DATA mask
-        phm_filtered[~valid_mask] = BAD_DATA
-        
-        # Count rays that were unfolded
-        rays_unfolded = 0
+        # Use numpy.unwrap for each ray
         for iray in range(nrays):
-            if np.any(phm_filtered[iray, start_gate:] > 360):
+            gate_data = phm_filtered[iray].copy()
+            
+            valid_mask = (gate_data >= 0) & (gate_data <= 360) & (gate_data != BAD_DATA)
+            valid_indices = np.where(valid_mask)[0]
+            
+            if len(valid_indices) < 10:
+                continue
+            
+            valid_indices = valid_indices[valid_indices >= start_gate]
+            
+            if len(valid_indices) < 10:
+                continue
+            
+            valid_data = gate_data[valid_indices]
+            
+            # Unwrap
+            valid_data_rad = np.deg2rad(valid_data)
+            unwrapped_rad = np.unwrap(valid_data_rad)
+            unwrapped_deg = np.rad2deg(unwrapped_rad)
+            
+            if np.max(unwrapped_deg) > 360:
                 rays_unfolded += 1
+            
+            gate_data[valid_indices] = unwrapped_deg
+            gate_data[~valid_mask] = BAD_DATA
+            
+            phm_filtered[iray] = gate_data
         
-        # Use in-place assignment
+        # Simple post-processing: Find the mode and adjust outliers
+        print(f'        Adjusting outlier rays...')
+        
+        ref_gate = min(100, ngates - 10)
+        
+        # Collect all valid PhiDP values at reference gate
+        ref_values = []
+        for iray in range(nrays):
+            val = phm_filtered[iray, ref_gate]
+            if val != BAD_DATA and val >= 0:
+                ref_values.append((iray, val))
+        
+        if len(ref_values) > 100:
+            values_only = [v[1] for v in ref_values]
+            
+            # Create histogram to find dominant clusters
+            hist, bin_edges = np.histogram(values_only, bins=20)
+            dominant_bin = np.argmax(hist)
+            dominant_value = (bin_edges[dominant_bin] + bin_edges[dominant_bin+1]) / 2
+            
+            print(f'        Dominant PhiDP value: {dominant_value:.1f}°')
+            
+            # Adjust rays that are ~360° off from dominant value
+            corrections = 0
+            for iray, val in ref_values:
+                diff = val - dominant_value
+                
+                if 180 < diff < 540:  # Too high by ~360
+                    valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                    phm_filtered[iray, valid_mask] -= 360
+                    corrections += 1
+                elif -540 < diff < -180:  # Too low by ~360
+                    valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                    phm_filtered[iray, valid_mask] += 360
+                    corrections += 1
+            
+            print(f'        Corrected {corrections} outlier rays')
+        
         phm_field.data[:] = phm_filtered
-        print(f'        2D unwrap completed')  
+        print(f'        Unwrap completed')
         
     else:
         print(f'        Using manual unfolding (non-Canadian site)...')
