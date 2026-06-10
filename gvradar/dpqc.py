@@ -1073,8 +1073,6 @@ def unfold_phidp(self):
             
             phm_filtered[iray] = gate_data
         
-        print(f'        Unwrapping rays...')
-        
         # Use numpy.unwrap (handles wrapping properly)
         for iray in range(nrays):
             gate_data = phm_filtered[iray].copy()
@@ -1107,114 +1105,51 @@ def unfold_phidp(self):
             
             phm_filtered[iray] = gate_data
         
-        # Global ray normalization - bring all rays to same baseline
-        print(f'        Normalizing ray baselines...')
+        # NEW: Azimuthal propagation - fix rays relative to their neighbors
+        print(f'        Azimuthal ray-to-ray correction...')
         
         ref_gate = min(100, ngates - 10)
+        max_iterations = 3
+        corrections_total = 0
         
-        # Collect median PhiDP value for each ray at reference gate
-        ray_medians = []
-        for iray in range(nrays):
-            val = phm_filtered[iray, ref_gate]
-            if val != BAD_DATA and val >= 0:
-                ray_medians.append(val)
-        
-        if len(ray_medians) > 100:
-            global_median = np.median(ray_medians)
-            print(f'        Global median PhiDP: {global_median:.1f}°')
+        for iteration in range(max_iterations):
+            corrections_this_pass = 0
             
-            # Adjust each ray to be close to global median
-            adjustments = 0
             for iray in range(nrays):
-                ray_val = phm_filtered[iray, ref_gate]
+                prev_ray = (iray - 1) % nrays
+                next_ray = (iray + 1) % nrays
                 
-                if ray_val == BAD_DATA or ray_val < 0:
-                    continue
-                
-                # Find which multiple of 360° to add/subtract to get close to global median
-                diff = ray_val - global_median
-                
-                if diff > 180:  # Ray is too high
-                    n_wraps = round(diff / 360.0)
-                    if n_wraps > 0:
-                        valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
-                        phm_filtered[iray, valid_mask] -= (n_wraps * 360)
-                        adjustments += 1
-                elif diff < -180:  # Ray is too low
-                    n_wraps = round(-diff / 360.0)
-                    if n_wraps > 0:
-                        valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
-                        phm_filtered[iray, valid_mask] += (n_wraps * 360)
-                        adjustments += 1
-            
-            print(f'        Adjusted {adjustments} rays to global baseline')
-        
-        print(f'        Fixing ray consistency...')
-        
-        # Check at multiple ranges (not just one gate)
-        check_gates = [50, 100, 150, 200]  # Multiple reference points
-        check_gates = [g for g in check_gates if g < ngates]
-        
-        corrections = 0
-        correction_applied = np.zeros(nrays, dtype=bool)  # Track which rays were corrected
-        
-        for iray in range(nrays):
-            if correction_applied[iray]:
-                continue  # Already corrected
-            
-            # Check against multiple neighbor rays (not just prev/next)
-            neighbor_rays = [
-                (iray - 2) % nrays,
-                (iray - 1) % nrays,
-                (iray + 1) % nrays,
-                (iray + 2) % nrays
-            ]
-            
-            # Vote across multiple gates
-            votes_for_add360 = 0
-            votes_for_sub360 = 0
-            total_votes = 0
-            
-            for ref_gate in check_gates:
                 curr_val = phm_filtered[iray, ref_gate]
+                prev_val = phm_filtered[prev_ray, ref_gate]
+                next_val = phm_filtered[next_ray, ref_gate]
                 
-                if curr_val == BAD_DATA or curr_val < 0:
+                # Skip if any are bad
+                if curr_val == BAD_DATA or prev_val == BAD_DATA or next_val == BAD_DATA:
+                    continue
+                if curr_val < 0 or prev_val < 0 or next_val < 0:
                     continue
                 
-                # Get neighbor values
-                neighbor_vals = []
-                for nray in neighbor_rays:
-                    nval = phm_filtered[nray, ref_gate]
-                    if nval != BAD_DATA and nval >= 0:
-                        neighbor_vals.append(nval)
+                # Calculate neighbor average
+                neighbor_avg = (prev_val + next_val) / 2.0
+                diff = curr_val - neighbor_avg
                 
-                if len(neighbor_vals) < 2:
-                    continue
-                
-                neighbor_median = np.median(neighbor_vals)
-                diff = neighbor_median - curr_val
-                
-                total_votes += 1
-                
-                if 180 < diff < 540:  # Vote to add 360
-                    votes_for_add360 += 1
-                elif -540 < diff < -180:  # Vote to subtract 360
-                    votes_for_sub360 += 1
-            
-            # Apply correction if majority of gates agree
-            if total_votes > 0:
-                if votes_for_add360 > total_votes / 2:
-                    valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
-                    phm_filtered[iray, valid_mask] += 360
-                    corrections += 1
-                    correction_applied[iray] = True
-                elif votes_for_sub360 > total_votes / 2:
+                # If this ray differs by ~360° from neighbors, adjust it
+                if diff > 180:  # Too high
                     valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
                     phm_filtered[iray, valid_mask] -= 360
-                    corrections += 1
-                    correction_applied[iray] = True
+                    corrections_this_pass += 1
+                elif diff < -180:  # Too low
+                    valid_mask = (phm_filtered[iray, :] != BAD_DATA) & (phm_filtered[iray, :] >= 0)
+                    phm_filtered[iray, valid_mask] += 360
+                    corrections_this_pass += 1
+            
+            corrections_total += corrections_this_pass
+            print(f'          Iteration {iteration+1}: corrected {corrections_this_pass} rays')
+            
+            if corrections_this_pass == 0:
+                break  # Converged
         
-        print(f'        Corrected {corrections} inconsistent rays')
+        print(f'        Total azimuthal corrections: {corrections_total}')        
 
         # Use in-place assignment
         phm_field.data[:] = phm_filtered
