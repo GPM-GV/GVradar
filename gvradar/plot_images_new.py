@@ -830,7 +830,12 @@ def adjust_meth_colorbar_for_pyart(cb, tropical=False):
 
 def discrete_cmap(N, base_cmap=None):
     """Create an N-bin discrete colormap from the specified input map."""
-    base = plt.cm.get_cmap(base_cmap)
+    try:
+        from matplotlib import colormaps
+        base = colormaps[base_cmap]
+    except (ImportError, KeyError):
+        base = plt.cm.get_cmap(base_cmap)
+
     color_list = base(np.linspace(0, 1, N, 0))
     cmap_name = base.name + str(N)
     return plt.cm.colors.ListedColormap(color_list, cmap_name, N)
