@@ -27,7 +27,7 @@ import pandas as pd
 from skewt import SkewT
 from collections import defaultdict
 import urllib.request
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from csu_radartools import (csu_fhc, csu_liquid_ice_mass, csu_blended_rain,
                             csu_dsd, csu_kdp, csu_misc, fundamentals)
 
@@ -1690,7 +1690,11 @@ def twister_data(timeStamp, radar_site):
 
     url = requestURL.replace(" ","")
 
-    rawData = urlopen(url).read()
+    req = Request(url, headers={
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    })
+    rawData = urlopen(req).read()
+
     try:
         theData = rawData.decode('utf-8')
     except UnicodeDecodeError:
