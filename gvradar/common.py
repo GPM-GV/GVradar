@@ -1680,13 +1680,13 @@ def twister_data(timeStamp, radar_site):
     if model == 'RAP':  grid='255'
     if model == 'GFS':  grid='3'
 
-    requestURL = 'http://www.twisterdata.com/index.php?sounding.\
-                  lat='+lat+'&sounding.lon='+lon+'&sndclick=y&\
-                  prog=forecast&model='+model+'&grid='+grid+'&model_yyyy='+year+'&\
-                  model_mm='+month+'&model_dd='+day+'&model_init_hh='+hour+'&\
-                  fhour=00&parameter=TMPF&level=2&unit=M_ABOVE_GROUND&\
-                  maximize=n&mode=singlemap&sounding=y&output=text&\
-                  view=large&archive=false'
+    requestURL = ('http://www.twisterdata.com/index.php?sounding.'
+              'lat=' + lat + '&sounding.lon=' + lon + '&sndclick=y&'
+              'prog=forecast&model=' + model + '&grid=' + grid + '&model_yyyy=' + year + '&'
+              'model_mm=' + month + '&model_dd=' + day + '&model_init_hh=' + hour + '&'
+              'fhour=00&parameter=TMPF&level=2&unit=M_ABOVE_GROUND&'
+              'maximize=n&mode=singlemap&sounding=y&output=text&'
+              'view=large&archive=false')
 
     url = requestURL.replace(" ","")
 
