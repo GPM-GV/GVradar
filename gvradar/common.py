@@ -1598,7 +1598,7 @@ def remove_mrle(self):
 
 # ***************************************************************************************
 
-def reorder_sweeps(radar):
+def reorder_sweeps_old(radar):
 
     # Reorder sweeps in ascending order
     # sweep_index = np.argsort(radar.elevation['data'][radar.sweep_start_ray_index['data']])
@@ -1611,6 +1611,28 @@ def reorder_sweeps(radar):
         final_radar.azimuth['data'] = np.mod(final_radar.azimuth['data'], 360)
         az = final_radar.get_azimuth(0)
         print(f"Azimuth Min/Max:  {az.min()} {az.max()}")
+
+    return final_radar
+ 
+# ***************************************************************************************
+    
+def reorder_sweeps(radar):
+    """Reorder complete sweeps into ascending elevation order."""
+    import numpy as np
+
+    fixed = np.asarray(radar.fixed_angle["data"], dtype=float)
+    order = np.argsort(fixed, kind="stable")
+
+    # Reorder the complete sweep structure, not individual rays.
+    final_radar = radar.extract_sweeps(order.tolist())
+
+    # Normalize azimuth coordinates.
+    final_radar.azimuth["data"] = np.mod(
+        final_radar.azimuth["data"], 360.0
+    )
+
+    print("Reordered sweep angles:",
+          final_radar.fixed_angle["data"])
 
     return final_radar
 
