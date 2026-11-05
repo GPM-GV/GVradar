@@ -252,7 +252,7 @@ def add_polZR_rr(self):
 
 # ***************************************************************************************
 
-def add_ra(self):
+def add_ra_pyART(self):
 
     print('    Calculating RA...')
 
@@ -281,7 +281,272 @@ def add_ra(self):
                                            rr_field='RC')
     self.radar.add_field('RA',ra_field)
 
-    return self.radar 
+    return self.radar
+
+# ***************************************************************************************
+    
+def add_ra(self):
+    """
+    Calculate attenuation-based rain rate (RA) following Ryzhkov et al. 2014.
+    Uses PhiDP thresholding to identify reliable rain estimates.
+    
+    Reference: Ryzhkov et al. 2014, J. Appl. Meteor. Climatol.
+    """
+    
+    print('    Calculating RA rain rate...')
+    
+    # Parameters from IDL
+    B_COEFF = 0.65
+    ALPHA = 0.025
+    max_range = 200.0  # km
+    delta_phi_thresh = 3.0  # degrees
+    lambda_wavelength = 10.2  # GHz (S-band)
+    
+    # Check for required fields
+    if 'HEIGHT' not in self.radar.fields.keys():
+        print('    Error: HEIGHT field not found')
+        return self.radar
+    if 'TEMP' not in self.radar.fields.keys():
+        print('    Error: TEMP field not found')
+        return self.radar
+    
+    # Get surface temperature and melting level
+    T_surface = self.radar.fields['TEMP']['data'][0, 0]
+    
+    # Find melting level (height where temp first goes below 0)
+    temp_data = self.radar.fields['TEMP']['data'][0, :]
+    height_data = self.radar.fields['HEIGHT']['data'][0, :] * 1000.0  # Convert km to m
+    
+    freezing_mask = temp_data < 0
+    if np.any(freezing_mask):
+        freeze_idx = np.where(freezing_mask)[0][0]
+        if freeze_idx > 0:
+            H_ml = height_data[freeze_idx - 1]
+            T_ml = temp_data[freeze_idx - 1]
+        else:
+            H_ml = 4000.0  # Default 4 km
+            T_ml = 0.0
+    else:
+        H_ml = 4000.0
+        T_ml = 0.0
+    
+    print(f'    Surface temperature: {T_surface:.1f} C')
+    print(f'    Melting level height/temp: {H_ml:.1f} m / {T_ml:.1f} C')
+    
+    # Check which PhiDP field to use
+    if 'PH' in self.radar.fields.keys():
+        phi_field = 'PH'
+        print('    Using standard PhiDP (PH)')
+    else:
+        print('    Error: No PhiDP field available')
+        return self.radar
+    
+    # Get required fields
+    if 'CZ' not in self.radar.fields.keys():
+        print('    Error: CZ field not found')
+        return self.radar
+    if 'RC' not in self.radar.fields.keys():
+        print('    Error: RC field required as fallback')
+        return self.radar
+    
+    # Initialize RA as copy of RC (fallback values)
+    ra_data = self.radar.fields['RC']['data'].copy()
+    
+    # Get range array in km
+    ranges = self.radar.range['data'] / 1000.0
+    
+    # Process each sweep
+    for sweep_idx in range(self.radar.nsweeps):
+        sweep_slice = self.radar.get_slice(sweep_idx)
+        
+        # Get sweep data
+        cz_sweep = self.radar.fields['CZ']['data'][sweep_slice, :]
+        ph_sweep = self.radar.fields[phi_field]['data'][sweep_slice, :]
+        rc_sweep = self.radar.fields['RC']['data'][sweep_slice, :]
+        height_sweep = self.radar.fields['HEIGHT']['data'][sweep_slice, :] * 1000.0  # Convert to m
+        
+        # Determine range limits (0-125 km for PhiDP check)
+        r_mask = (ranges >= 0) & (ranges <= 125)
+        if not np.any(r_mask):
+            continue
+        r1 = np.where(r_mask)[0][0]
+        r2 = np.where(r_mask)[0][-1]
+        
+        valid_ray_count = 0
+        
+        # Loop through rays
+        nrays = sweep_slice.stop - sweep_slice.start
+        for ray_idx in range(nrays):
+            global_ray_idx = sweep_slice.start + ray_idx
+            
+            # Get PhiDP data for this ray (within 125 km)
+            ph_ray = ph_sweep[ray_idx, r1:r2+1]
+            
+            # Find valid PhiDP values
+            valid_mask = ~np.ma.getmaskarray(ph_ray) & (ph_ray > -999)
+            
+            if np.sum(valid_mask) > 0:
+                valid_indices = np.where(valid_mask)[0]
+                ibeg = valid_indices[0]
+                iend = valid_indices[-1]
+                
+                ph1 = ph_ray[ibeg]
+                ph2 = ph_ray[iend]
+                dph = ph2 - ph1
+                
+                # Check if delta PhiDP exceeds threshold
+                if dph > delta_phi_thresh:
+                    # Calculate RA for this ray
+                    ra_ray = self._calculate_ra_ryzhkov(
+                        cz_sweep[ray_idx, :],
+                        rc_sweep[ray_idx, :],
+                        height_sweep[ray_idx, :],
+                        ranges,
+                        T_surface,
+                        H_ml,
+                        dph,
+                        B_COEFF,
+                        ALPHA,
+                        lambda_wavelength,
+                        max_range
+                    )
+                    
+                    # Update RA data
+                    ra_data[global_ray_idx, :] = ra_ray
+                    valid_ray_count += 1
+        
+        print(f'    Sweep #{sweep_idx}: Found {valid_ray_count} rays that passed PhiDP threshold test.')
+    
+    # Add RA field to radar
+    ra_dict = {
+        "data": ra_data,
+        "units": "mm/h",
+        "long_name": "Attenuation-based Rainfall Rate (Ryzhkov)",
+        "_FillValue": -32767.0,
+        "standard_name": "Attenuation-based Rainfall Rate",
+    }
+    self.radar.add_field("RA", ra_dict, replace_existing=True)
+    
+    # Apply de-icing if requested
+    if self.de_ice and 'FH' in self.radar.fields.keys():
+        print('    Removing HID ice from RA rainrate...')
+        ra_cleaned = self.radar.fields['RA']['data'].copy()
+        ra_cleaned = remove_ice(ra_cleaned, self.radar.fields['FH']['data'])
+        ra_dict['data'] = ra_cleaned
+        self.radar.add_field("RA", ra_dict, replace_existing=True)
+    
+    print('    RA Rain Estimates finished')
+    
+    return self.radar
+
+# ***************************************************************************************
+
+def _calculate_ra_ryzhkov(self, cz_ray, rc_ray, height_ray, ranges, 
+                          T_surface, H_ml, dphi, B_COEFF, ALPHA, 
+                          lambda_wavelength, max_range):
+    """
+    Calculate attenuation-based rain rate for a single ray using 
+    Ryzhkov et al. 2014 methodology.
+    
+    Parameters:
+    -----------
+    cz_ray: reflectivity for ray (dBZ)
+    rc_ray: Cifelli rain rate for ray (fallback, mm/h)
+    height_ray: heights for ray (m)
+    ranges: range array (km)
+    T_surface: surface temperature (C)
+    H_ml: melting level height (m)
+    dphi: total PhiDP change (degrees)
+    B_COEFF: B coefficient (typically 0.6-0.9, default 0.65)
+    ALPHA: Alpha coefficient (default 0.025)
+    lambda_wavelength: radar wavelength (GHz, 10.2 for S-band)
+    max_range: maximum range for calculation (km)
+    
+    Returns:
+    --------
+    ra_ray: attenuation-corrected rain rate array (mm/h)
+    """
+    
+    missing = -32767.0
+    b = B_COEFF
+    
+    # Start with RC as default
+    ra_ray = rc_ray.copy()
+    
+    # Calculate temperature-dependent coefficient c1 (Ryzhkov et al. 2014)
+    c1 = (2.23 + 0.078 * T_surface + 0.00085 * T_surface**2) * 1000.0
+    
+    # Calculate wavelength-dependent coefficient c2
+    c2 = 1.0 - 0.26 * (11.0 - lambda_wavelength)
+    
+    # Calculate PIA (Path Integrated Attenuation) from Eq. 15
+    PIA = ALPHA * dphi
+    
+    # Calculate C from Eq. 8
+    C = np.exp(0.23 * b * PIA) - 1.0
+    
+    # Find all valid reflectivity gates (for full integration)
+    good_mask = ~np.ma.getmaskarray(cz_ray) & (cz_ray > missing)
+    
+    if not np.any(good_mask):
+        return ra_ray
+    
+    # Get valid dBZ and convert to linear Z
+    dbz_valid = cz_ray[good_mask]
+    zlin_all = 10.0 ** (0.1 * dbz_valid)
+    
+    # Calculate integral over entire ray (Eq. 13)
+    i_r1_r2 = 0.46 * b * np.sum(zlin_all) ** b
+    
+    # Find valid range gates (within max_range and below melting level)
+    valid_range_mask = (ranges <= max_range) & (height_ray <= H_ml)
+    valid_indices = np.where(valid_range_mask)[0]
+    
+    if len(valid_indices) == 0:
+        return ra_ray
+    
+    c_rng = len(valid_indices)
+    
+    # Process each valid gate
+    for i, irng in enumerate(valid_indices):
+        # Get dBZ at this gate
+        dbz_gate = cz_ray[irng]
+        
+        # Skip if missing
+        if np.ma.is_masked(dbz_gate) or dbz_gate <= missing:
+            continue
+        
+        # Convert to linear Z
+        zlin1 = 10.0 ** (0.1 * dbz_gate)
+        
+        # Get reflectivity from this gate to end of valid range (Eq. 14)
+        # This is the remaining gates from current position to end
+        remaining_indices = valid_indices[i:]
+        z_remaining = cz_ray[remaining_indices]
+        
+        # Find good values in remaining gates
+        good_remaining = ~np.ma.getmaskarray(z_remaining) & (z_remaining > missing)
+        
+        if not np.any(good_remaining):
+            continue
+        
+        # Convert remaining valid reflectivities to linear
+        zlin_remaining = 10.0 ** (0.1 * z_remaining[good_remaining])
+        
+        # Calculate integral from r to r2 (Eq. 14)
+        i_r_r2 = 0.46 * b * np.sum(zlin_remaining) ** b
+        
+        # Calculate attenuation factor
+        numerator = C * (zlin1 ** b)
+        denominator = i_r1_r2 + C * i_r_r2
+        
+        if denominator > 0:
+            atten = numerator / denominator
+            
+            # Calculate rain rate (main equation from Ryzhkov et al.)
+            ra_ray[irng] = c1 * c2 * (atten ** 1.03)
+        
+    return ra_ray
 
 # ***************************************************************************************
 
