@@ -323,34 +323,34 @@ def add_ra(self):
     temp_data = self.radar.fields['TEMP']['data'][0, :]
     height_data_raw = self.radar.fields['HEIGHT']['data'][0, :]
     
-    # Check the units and convert appropriately
-    height_units = self.radar.fields['HEIGHT']['units']
-    if height_units.lower() == 'km':
-        height_data = height_data_raw * 1000.0  # Convert km to m
-    else:
-        height_data = height_data_raw  # Already in meters
-    
-    # Debug: Check height range
-    valid_height_mask = ~np.ma.getmaskarray(height_data)
+    # Determine if height is in meters or km based on magnitude
+    # If max height > 100, assume it's in meters already
+    valid_height_mask = ~np.ma.getmaskarray(height_data_raw)
     if np.any(valid_height_mask):
-        print(f'    Height range: {np.min(height_data[valid_height_mask]):.1f} - {np.max(height_data[valid_height_mask]):.1f} m')
+        max_height = np.max(height_data_raw[valid_height_mask])
+        if max_height > 100:
+            # Already in meters
+            height_data = height_data_raw.copy()
+            print(f'    Height data already in meters (range: {np.min(height_data_raw[valid_height_mask]):.1f} - {max_height:.1f} m)')
+        else:
+            # In km, convert to meters
+            height_data = height_data_raw * 1000.0
+            print(f'    Height data converted from km to meters')
+    else:
+        print('    Error: No valid height data found')
+        return self.radar
     
-    # Find valid (non-masked) temperature values
+    # Find valid (non-masked) temperature and height values
     temp_valid_mask = ~np.ma.getmaskarray(temp_data)
+    combined_valid_mask = temp_valid_mask & valid_height_mask
     
-    if not np.any(temp_valid_mask):
-        print('    Error: No valid temperature data found')
+    if not np.any(combined_valid_mask):
+        print('    Error: No valid temperature/height data found')
         return self.radar
     
     # Get valid temperature and height arrays
-    valid_temps = temp_data[temp_valid_mask]
-    valid_heights = height_data[temp_valid_mask]
-    
-    # Check if heights make sense (should be < 20 km for typical radar)
-    if np.max(valid_heights) > 50000:  # Greater than 50 km is suspicious
-        print(f'    Warning: Heights seem too large (max={np.max(valid_heights):.1f} m), dividing by 1000')
-        valid_heights = valid_heights / 1000.0
-        height_data = height_data / 1000.0
+    valid_temps = temp_data[combined_valid_mask]
+    valid_heights = height_data[combined_valid_mask]
     
     # Sort by height (ascending order)
     sort_indices = np.argsort(valid_heights)
@@ -360,17 +360,21 @@ def add_ra(self):
     # Get first valid temperature as surface temperature
     T_surface = float(valid_temps_sorted[0])
     
-    # Debug: Show temperature profile
-    print(f'    Temperature profile (first 5 gates): {[f"{t:.1f}C@{h:.0f}m" for t, h in zip(valid_temps_sorted[:5], valid_heights_sorted[:5])]}')
+    # Debug: Show temperature profile at multiple levels
+    n_samples = min(10, len(valid_temps_sorted))
+    print(f'    Temperature profile (first {n_samples} gates):')
+    for i in range(n_samples):
+        print(f'      {i}: {valid_temps_sorted[i]:.1f}C @ {valid_heights_sorted[i]:.0f}m')
     
     # Find melting level (height where temp first goes below 0°C)
-    freezing_mask = valid_temps_sorted < 0
+    freezing_mask = valid_temps_sorted <= 0.0
     if np.any(freezing_mask):
         freeze_idx = np.where(freezing_mask)[0][0]
         if freeze_idx > 0:
             # Use the height just below freezing
             H_ml = float(valid_heights_sorted[freeze_idx - 1])
             T_ml = float(valid_temps_sorted[freeze_idx - 1])
+            print(f'    Found freezing level at index {freeze_idx}: {valid_temps_sorted[freeze_idx]:.1f}C @ {valid_heights_sorted[freeze_idx]:.0f}m')
         else:
             # Freezing at surface
             H_ml = float(valid_heights_sorted[0])
@@ -379,7 +383,7 @@ def add_ra(self):
         # No freezing level found - assume 4 km
         H_ml = 4000.0
         T_ml = float(valid_temps_sorted[-1])
-        print('    Warning: No freezing level found, using default 4000 m')
+        print(f'    Warning: No freezing level found (min temp: {np.min(valid_temps_sorted):.1f}C), using default 4000 m')
     
     print(f'    Surface temperature: {T_surface:.1f} C')
     print(f'    Melting level height/temp: {H_ml:.1f} m / {T_ml:.1f} C')
@@ -400,16 +404,12 @@ def add_ra(self):
         ph_sweep = self.radar.fields['PH']['data'][sweep_slice, :]
         rc_sweep = self.radar.fields['RC']['data'][sweep_slice, :]
         
-        # Get height data for sweep and apply same correction
+        # Get height data for sweep - use same logic as above
         height_sweep_raw = self.radar.fields['HEIGHT']['data'][sweep_slice, :]
-        if height_units.lower() == 'km':
-            height_sweep = height_sweep_raw * 1000.0
+        if max_height > 100:
+            height_sweep = height_sweep_raw.copy()
         else:
-            height_sweep = height_sweep_raw
-        
-        # Apply the same correction if heights were too large
-        if np.max(valid_heights) > 50000:
-            height_sweep = height_sweep / 1000.0
+            height_sweep = height_sweep_raw * 1000.0
         
         # Determine range limits (0-125 km for PhiDP check)
         r_mask = (ranges >= 0) & (ranges <= 125)
