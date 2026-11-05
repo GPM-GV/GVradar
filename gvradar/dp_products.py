@@ -331,11 +331,9 @@ def add_ra(self):
         if max_height > 100:
             # Already in meters
             height_data = height_data_raw.copy()
-            print(f'    Height data already in meters (range: {np.min(height_data_raw[valid_height_mask]):.1f} - {max_height:.1f} m)')
         else:
             # In km, convert to meters
             height_data = height_data_raw * 1000.0
-            print(f'    Height data converted from km to meters')
     else:
         print('    Error: No valid height data found')
         return self.radar
@@ -360,21 +358,21 @@ def add_ra(self):
     # Get first valid temperature as surface temperature
     T_surface = float(valid_temps_sorted[0])
     
-    # Debug: Show temperature profile at multiple levels
-    n_samples = min(10, len(valid_temps_sorted))
-    print(f'    Temperature profile (first {n_samples} gates):')
-    for i in range(n_samples):
-        print(f'      {i}: {valid_temps_sorted[i]:.1f}C @ {valid_heights_sorted[i]:.0f}m')
-    
     # Find melting level (height where temp first goes below 0°C)
     freezing_mask = valid_temps_sorted <= 0.0
     if np.any(freezing_mask):
         freeze_idx = np.where(freezing_mask)[0][0]
+        
+        # Debug: Show temperatures around freezing level
+        print(f'    Temperature profile around freezing level (indices {max(0,freeze_idx-5)} to {min(len(valid_temps_sorted)-1,freeze_idx+2)}):')
+        for i in range(max(0, freeze_idx-5), min(len(valid_temps_sorted), freeze_idx+3)):
+            marker = " <-- FREEZE" if i == freeze_idx else ""
+            print(f'      {i}: {valid_temps_sorted[i]:.1f}C @ {valid_heights_sorted[i]:.0f}m{marker}')
+        
         if freeze_idx > 0:
             # Use the height just below freezing
             H_ml = float(valid_heights_sorted[freeze_idx - 1])
             T_ml = float(valid_temps_sorted[freeze_idx - 1])
-            print(f'    Found freezing level at index {freeze_idx}: {valid_temps_sorted[freeze_idx]:.1f}C @ {valid_heights_sorted[freeze_idx]:.0f}m')
         else:
             # Freezing at surface
             H_ml = float(valid_heights_sorted[0])
