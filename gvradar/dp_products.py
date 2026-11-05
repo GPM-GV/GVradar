@@ -544,6 +544,78 @@ def add_ra(self):
 # ***************************************************************************************
 
 def calculate_ra_ryzhkov(self, cz_ray, rc_ray, height_ray, ranges, 
+                              T_surface, H_ml, dphi, B_COEFF, ALPHA, 
+                              lambda_wavelength, max_range):
+    """
+    Faster vectorized version of RA calculation.
+    """
+    
+    missing = -32767.0
+    b = B_COEFF
+    
+    # Start with RC as default
+    ra_ray = rc_ray.copy()
+    
+    # Calculate temperature-dependent coefficient c1
+    c1 = (2.23 + 0.078 * T_surface + 0.00085 * T_surface**2) * 1000.0
+    c2 = 1.0 - 0.26 * (11.0 - lambda_wavelength)
+    
+    # Calculate PIA and C
+    PIA = ALPHA * dphi
+    C = np.exp(0.23 * b * PIA) - 1.0
+    
+    # Find valid gates
+    valid_range_mask = (ranges <= max_range) & (height_ray <= H_ml)
+    good_dbz_mask = ~np.ma.getmaskarray(cz_ray) & (cz_ray > missing) & valid_range_mask
+    
+    if not np.any(good_dbz_mask):
+        return ra_ray
+    
+    # Get all valid dBZ and convert to linear Z
+    dbz_all = cz_ray.copy()
+    dbz_all[~good_dbz_mask] = 0  # Set invalid to 0 (will become 1 in linear space)
+    zlin_all = np.where(good_dbz_mask, 10.0 ** (0.1 * dbz_all), 0)
+    
+    # Calculate integral over entire ray (Eq. 13)
+    i_r1_r2 = 0.46 * b * np.sum(zlin_all[good_dbz_mask]) ** b
+    
+    if i_r1_r2 == 0:
+        return ra_ray
+    
+    # Vectorized calculation of cumulative integrals from each gate to end
+    # Use cumsum in reverse to get "sum from i to end"
+    zlin_reversed = zlin_all[::-1]
+    good_reversed = good_dbz_mask[::-1]
+    
+    # Compute cumulative sum from end to start, then reverse back
+    cumsum_reversed = np.nancumsum(np.where(good_reversed, zlin_reversed, 0))
+    cumsum_forward = cumsum_reversed[::-1]
+    
+    # Calculate i_r_r2 for all gates at once
+    i_r_r2_all = 0.46 * b * cumsum_forward ** b
+    
+    # Calculate attenuation factor for all gates
+    numerator = C * (zlin_all ** b)
+    denominator = i_r1_r2 + C * i_r_r2_all
+    
+    # Avoid division by zero
+    valid_calc = good_dbz_mask & (denominator > 0)
+    
+    if not np.any(valid_calc):
+        return ra_ray
+    
+    # Calculate rain rate
+    atten = np.zeros_like(numerator)
+    atten[valid_calc] = numerator[valid_calc] / denominator[valid_calc]
+    rain_rate = c1 * c2 * (atten ** 1.03)
+    
+    # Apply limits and update only valid gates
+    valid_rain = valid_calc & (rain_rate >= 0) & (rain_rate <= 300)
+    ra_ray[valid_rain] = rain_rate[valid_rain]
+    
+    return ra_ray
+
+def calculate_ra_ryzhkov_old(self, cz_ray, rc_ray, height_ray, ranges, 
                           T_surface, H_ml, dphi, B_COEFF, ALPHA, 
                           lambda_wavelength, max_range):
     """
