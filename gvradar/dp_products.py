@@ -296,7 +296,6 @@ def add_ra(self):
     print('    Calculating RA rain rate...')
     
     # Parameters from IDL
-    use_drops_phidp = True
     B_COEFF = 0.65
     ALPHA = 0.025
     max_range = 200.0  # km
@@ -310,8 +309,17 @@ def add_ra(self):
     if 'TEMP' not in self.radar.fields.keys():
         print('    Error: TEMP field not found')
         return self.radar
+    if 'PH' not in self.radar.fields.keys():
+        print('    Error: PH field not found')
+        return self.radar
+    if 'CZ' not in self.radar.fields.keys():
+        print('    Error: CZ field not found')
+        return self.radar
+    if 'RC' not in self.radar.fields.keys():
+        print('    Error: RC field required as fallback')
+        return self.radar
     
-    # Get temperature data from first ray (lowest gates first)
+    # Get temperature and height data from first ray
     temp_data = self.radar.fields['TEMP']['data'][0, :]
     height_data = self.radar.fields['HEIGHT']['data'][0, :] * 1000.0  # Convert km to m
     
@@ -322,50 +330,38 @@ def add_ra(self):
         print('    Error: No valid temperature data found')
         return self.radar
     
-    # Get first valid temperature as surface temperature
-    valid_temp_indices = np.where(temp_valid_mask)[0]
-    T_surface = float(temp_data[valid_temp_indices[0]])
-    
-    # Find melting level (height where temp first goes below 0)
-    # Only look at valid temperature values
+    # Get valid temperature and height arrays
     valid_temps = temp_data[temp_valid_mask]
     valid_heights = height_data[temp_valid_mask]
     
-    # Find where temperature crosses 0°C
-    freezing_mask = valid_temps < 0
+    # Sort by height (ascending order)
+    sort_indices = np.argsort(valid_heights)
+    valid_temps_sorted = valid_temps[sort_indices]
+    valid_heights_sorted = valid_heights[sort_indices]
+    
+    # Get first valid temperature as surface temperature
+    T_surface = float(valid_temps_sorted[0])
+    
+    # Find melting level (height where temp first goes below 0°C)
+    freezing_mask = valid_temps_sorted < 0
     if np.any(freezing_mask):
         freeze_idx = np.where(freezing_mask)[0][0]
         if freeze_idx > 0:
-            H_ml = float(valid_heights[freeze_idx - 1])
-            T_ml = float(valid_temps[freeze_idx - 1])
+            # Use the height just below freezing
+            H_ml = float(valid_heights_sorted[freeze_idx - 1])
+            T_ml = float(valid_temps_sorted[freeze_idx - 1])
         else:
             # Freezing at surface
-            H_ml = float(valid_heights[0])
+            H_ml = float(valid_heights_sorted[0])
             T_ml = 0.0
     else:
         # No freezing level found - assume 4 km
         H_ml = 4000.0
-        T_ml = 0.0
+        T_ml = float(valid_temps_sorted[-1])
         print('    Warning: No freezing level found, using default 4000 m')
     
     print(f'    Surface temperature: {T_surface:.1f} C')
     print(f'    Melting level height/temp: {H_ml:.1f} m / {T_ml:.1f} C')
-    
-    # Check which PhiDP field to use
-    if 'PH' in self.radar.fields.keys():
-        phi_field = 'PH'
-        print('    Using standard PhiDP (PH)')
-    else:
-        print('    Error: No PhiDP field available')
-        return self.radar
-    
-    # Get required fields
-    if 'CZ' not in self.radar.fields.keys():
-        print('    Error: CZ field not found')
-        return self.radar
-    if 'RC' not in self.radar.fields.keys():
-        print('    Error: RC field required as fallback')
-        return self.radar
     
     # Initialize RA as copy of RC (fallback values)
     ra_data = self.radar.fields['RC']['data'].copy()
@@ -380,7 +376,7 @@ def add_ra(self):
         
         # Get sweep data
         cz_sweep = self.radar.fields['CZ']['data'][sweep_slice, :]
-        ph_sweep = self.radar.fields[phi_field]['data'][sweep_slice, :]
+        ph_sweep = self.radar.fields['PH']['data'][sweep_slice, :]
         rc_sweep = self.radar.fields['RC']['data'][sweep_slice, :]
         height_sweep = self.radar.fields['HEIGHT']['data'][sweep_slice, :] * 1000.0  # Convert to m
         
@@ -438,7 +434,10 @@ def add_ra(self):
             print(f'    Sweep #{sweep_idx}: Found {valid_ray_count} rays that passed PhiDP threshold test.')
         total_valid_rays += valid_ray_count
     
-    print(f'    Total valid RA rays across all sweeps: {total_valid_rays}')
+    if total_valid_rays > 0:
+        print(f'    Total valid RA rays across all sweeps: {total_valid_rays}')
+    else:
+        print('    Warning: No rays passed PhiDP threshold test')
     
     # Add RA field to radar
     ra_dict = {
@@ -527,8 +526,6 @@ def _calculate_ra_ryzhkov(self, cz_ray, rc_ray, height_ray, ranges,
     
     if len(valid_indices) == 0:
         return ra_ray
-    
-    c_rng = len(valid_indices)
     
     # Process each valid gate
     for i, irng in enumerate(valid_indices):
