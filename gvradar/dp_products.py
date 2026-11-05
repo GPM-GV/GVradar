@@ -296,6 +296,7 @@ def add_ra(self):
     print('    Calculating RA rain rate...')
     
     # Parameters from IDL
+    use_drops_phidp = True
     B_COEFF = 0.65
     ALPHA = 0.025
     max_range = 200.0  # km
@@ -310,25 +311,42 @@ def add_ra(self):
         print('    Error: TEMP field not found')
         return self.radar
     
-    # Get surface temperature and melting level
-    T_surface = self.radar.fields['TEMP']['data'][0, 0]
-    
-    # Find melting level (height where temp first goes below 0)
+    # Get temperature data from first ray (lowest gates first)
     temp_data = self.radar.fields['TEMP']['data'][0, :]
     height_data = self.radar.fields['HEIGHT']['data'][0, :] * 1000.0  # Convert km to m
     
-    freezing_mask = temp_data < 0
+    # Find valid (non-masked) temperature values
+    temp_valid_mask = ~np.ma.getmaskarray(temp_data)
+    
+    if not np.any(temp_valid_mask):
+        print('    Error: No valid temperature data found')
+        return self.radar
+    
+    # Get first valid temperature as surface temperature
+    valid_temp_indices = np.where(temp_valid_mask)[0]
+    T_surface = float(temp_data[valid_temp_indices[0]])
+    
+    # Find melting level (height where temp first goes below 0)
+    # Only look at valid temperature values
+    valid_temps = temp_data[temp_valid_mask]
+    valid_heights = height_data[temp_valid_mask]
+    
+    # Find where temperature crosses 0°C
+    freezing_mask = valid_temps < 0
     if np.any(freezing_mask):
         freeze_idx = np.where(freezing_mask)[0][0]
         if freeze_idx > 0:
-            H_ml = height_data[freeze_idx - 1]
-            T_ml = temp_data[freeze_idx - 1]
+            H_ml = float(valid_heights[freeze_idx - 1])
+            T_ml = float(valid_temps[freeze_idx - 1])
         else:
-            H_ml = 4000.0  # Default 4 km
+            # Freezing at surface
+            H_ml = float(valid_heights[0])
             T_ml = 0.0
     else:
+        # No freezing level found - assume 4 km
         H_ml = 4000.0
         T_ml = 0.0
+        print('    Warning: No freezing level found, using default 4000 m')
     
     print(f'    Surface temperature: {T_surface:.1f} C')
     print(f'    Melting level height/temp: {H_ml:.1f} m / {T_ml:.1f} C')
@@ -356,6 +374,7 @@ def add_ra(self):
     ranges = self.radar.range['data'] / 1000.0
     
     # Process each sweep
+    total_valid_rays = 0
     for sweep_idx in range(self.radar.nsweeps):
         sweep_slice = self.radar.get_slice(sweep_idx)
         
@@ -390,8 +409,8 @@ def add_ra(self):
                 ibeg = valid_indices[0]
                 iend = valid_indices[-1]
                 
-                ph1 = ph_ray[ibeg]
-                ph2 = ph_ray[iend]
+                ph1 = float(ph_ray[ibeg])
+                ph2 = float(ph_ray[iend])
                 dph = ph2 - ph1
                 
                 # Check if delta PhiDP exceeds threshold
@@ -415,7 +434,11 @@ def add_ra(self):
                     ra_data[global_ray_idx, :] = ra_ray
                     valid_ray_count += 1
         
-        print(f'    Sweep #{sweep_idx}: Found {valid_ray_count} rays that passed PhiDP threshold test.')
+        if valid_ray_count > 0:
+            print(f'    Sweep #{sweep_idx}: Found {valid_ray_count} rays that passed PhiDP threshold test.')
+        total_valid_rays += valid_ray_count
+    
+    print(f'    Total valid RA rays across all sweeps: {total_valid_rays}')
     
     # Add RA field to radar
     ra_dict = {
@@ -493,7 +516,7 @@ def _calculate_ra_ryzhkov(self, cz_ray, rc_ray, height_ray, ranges,
     
     # Get valid dBZ and convert to linear Z
     dbz_valid = cz_ray[good_mask]
-    zlin_all = 10.0 ** (0.1 * dbz_valid)
+    zlin_all = 10.0 ** (0.1 * dbz_valid.astype(float))
     
     # Calculate integral over entire ray (Eq. 13)
     i_r1_r2 = 0.46 * b * np.sum(zlin_all) ** b
@@ -517,7 +540,7 @@ def _calculate_ra_ryzhkov(self, cz_ray, rc_ray, height_ray, ranges,
             continue
         
         # Convert to linear Z
-        zlin1 = 10.0 ** (0.1 * dbz_gate)
+        zlin1 = 10.0 ** (0.1 * float(dbz_gate))
         
         # Get reflectivity from this gate to end of valid range (Eq. 14)
         # This is the remaining gates from current position to end
@@ -531,7 +554,7 @@ def _calculate_ra_ryzhkov(self, cz_ray, rc_ray, height_ray, ranges,
             continue
         
         # Convert remaining valid reflectivities to linear
-        zlin_remaining = 10.0 ** (0.1 * z_remaining[good_remaining])
+        zlin_remaining = 10.0 ** (0.1 * z_remaining[good_remaining].astype(float))
         
         # Calculate integral from r to r2 (Eq. 14)
         i_r_r2 = 0.46 * b * np.sum(zlin_remaining) ** b
@@ -544,7 +567,11 @@ def _calculate_ra_ryzhkov(self, cz_ray, rc_ray, height_ray, ranges,
             atten = numerator / denominator
             
             # Calculate rain rate (main equation from Ryzhkov et al.)
-            ra_ray[irng] = c1 * c2 * (atten ** 1.03)
+            rain_rate = c1 * c2 * (atten ** 1.03)
+            
+            # Apply reasonable limits
+            if 0 <= rain_rate <= 300:
+                ra_ray[irng] = rain_rate
         
     return ra_ray
 
