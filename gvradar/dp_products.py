@@ -339,7 +339,7 @@ def add_ra(self):
         return self.radar
     
     # Find valid (non-masked) temperature and height values
-    temp_valid_mask = ~np.ma.getmaskarray(temp_data)
+    temp_valid_mask = ~np.ma.getmaskarea(temp_data)
     combined_valid_mask = temp_valid_mask & valid_height_mask
     
     if not np.any(combined_valid_mask):
@@ -399,8 +399,13 @@ def add_ra(self):
     # Get range array in km
     ranges = self.radar.range['data'] / 1000.0
     
+    print(f'    Processing {self.radar.nsweeps} sweeps...')
+    
     # Process each sweep
     total_valid_rays = 0
+    total_rays_checked = 0
+    dphi_values = []
+    
     for sweep_idx in range(self.radar.nsweeps):
         sweep_slice = self.radar.get_slice(sweep_idx)
         
@@ -419,16 +424,19 @@ def add_ra(self):
         # Determine range limits (0-125 km for PhiDP check)
         r_mask = (ranges >= 0) & (ranges <= 125)
         if not np.any(r_mask):
+            print(f'    Sweep #{sweep_idx}: No valid range gates')
             continue
         r1 = np.where(r_mask)[0][0]
         r2 = np.where(r_mask)[0][-1]
         
         valid_ray_count = 0
+        rays_with_valid_phidp = 0
         
         # Loop through rays
         nrays = sweep_slice.stop - sweep_slice.start
         for ray_idx in range(nrays):
             global_ray_idx = sweep_slice.start + ray_idx
+            total_rays_checked += 1
             
             # Get PhiDP data for this ray (within 125 km)
             ph_ray = ph_sweep[ray_idx, r1:r2+1]
@@ -437,6 +445,7 @@ def add_ra(self):
             valid_mask = ~np.ma.getmaskarray(ph_ray) & (ph_ray > -999)
             
             if np.sum(valid_mask) > 0:
+                rays_with_valid_phidp += 1
                 valid_indices = np.where(valid_mask)[0]
                 ibeg = valid_indices[0]
                 iend = valid_indices[-1]
@@ -444,6 +453,10 @@ def add_ra(self):
                 ph1 = float(ph_ray[ibeg])
                 ph2 = float(ph_ray[iend])
                 dph = ph2 - ph1
+                
+                # Store dphi for statistics
+                if sweep_idx == 0 and len(dphi_values) < 100:  # Store first 100 from first sweep
+                    dphi_values.append(dph)
                 
                 # Check if delta PhiDP exceeds threshold
                 if dph > delta_phi_thresh:
@@ -466,14 +479,19 @@ def add_ra(self):
                     ra_data[global_ray_idx, :] = ra_ray
                     valid_ray_count += 1
         
-        if valid_ray_count > 0:
-            print(f'    Sweep #{sweep_idx}: Found {valid_ray_count} rays that passed PhiDP threshold test.')
+        if rays_with_valid_phidp > 0:
+            print(f'    Sweep #{sweep_idx}: {rays_with_valid_phidp}/{nrays} rays with valid PhiDP, {valid_ray_count} passed threshold')
         total_valid_rays += valid_ray_count
     
+    # Show PhiDP statistics
+    if len(dphi_values) > 0:
+        print(f'    Delta PhiDP statistics (first sweep): min={np.min(dphi_values):.1f}, max={np.max(dphi_values):.1f}, mean={np.mean(dphi_values):.1f} deg')
+        print(f'    Threshold = {delta_phi_thresh:.1f} deg')
+    
     if total_valid_rays > 0:
-        print(f'    Total valid RA rays across all sweeps: {total_valid_rays}')
+        print(f'    Total: {total_valid_rays}/{total_rays_checked} rays passed PhiDP threshold test')
     else:
-        print('    Warning: No rays passed PhiDP threshold test')
+        print(f'    Warning: No rays passed PhiDP threshold test (checked {total_rays_checked} rays)')
     
     # Add RA field to radar
     ra_dict = {
