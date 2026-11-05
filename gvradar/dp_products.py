@@ -363,16 +363,23 @@ def add_ra(self):
     if np.any(freezing_mask):
         freeze_idx = np.where(freezing_mask)[0][0]
         
-        # Debug: Show temperatures around freezing level
-        print(f'    Temperature profile around freezing level (indices {max(0,freeze_idx-5)} to {min(len(valid_temps_sorted)-1,freeze_idx+2)}):')
-        for i in range(max(0, freeze_idx-5), min(len(valid_temps_sorted), freeze_idx+3)):
-            marker = " <-- FREEZE" if i == freeze_idx else ""
-            print(f'      {i}: {valid_temps_sorted[i]:.1f}C @ {valid_heights_sorted[i]:.0f}m{marker}')
-        
         if freeze_idx > 0:
-            # Use the height just below freezing
-            H_ml = float(valid_heights_sorted[freeze_idx - 1])
-            T_ml = float(valid_temps_sorted[freeze_idx - 1])
+            # Check if there's a reasonable temperature gradient
+            # (gap in height < 1000m means continuous data)
+            height_gap = valid_heights_sorted[freeze_idx] - valid_heights_sorted[freeze_idx - 1]
+            temp_gap = valid_temps_sorted[freeze_idx - 1] - valid_temps_sorted[freeze_idx]
+            
+            if height_gap < 1000:
+                # Continuous data, use height below freezing
+                H_ml = float(valid_heights_sorted[freeze_idx - 1])
+                T_ml = float(valid_temps_sorted[freeze_idx - 1])
+                print(f'    Continuous data: using height below freezing')
+            else:
+                # Large gap in data, use the actual freezing level height
+                # This is more conservative and prevents including ice regions
+                H_ml = float(valid_heights_sorted[freeze_idx])
+                T_ml = float(valid_temps_sorted[freeze_idx])
+                print(f'    Large height gap ({height_gap:.0f}m) detected: using actual freezing level')
         else:
             # Freezing at surface
             H_ml = float(valid_heights_sorted[0])
