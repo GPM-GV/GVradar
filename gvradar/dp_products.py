@@ -472,7 +472,7 @@ def add_ra(self):
                     # Check if delta PhiDP exceeds threshold
                     if dph > delta_phi_thresh:
                         # Calculate RA for this ray
-                        ra_ray = calculate_ra_ryzhkov(self
+                        ra_ray = calculate_ra_ryzhkov(self,
                             cz_sweep[ray_idx, :],
                             rc_sweep[ray_idx, :],
                             height_sweep[ray_idx, :],
