@@ -322,9 +322,37 @@ def add_ra(self):
         
         print('    All required fields found')
         
-        # Get temperature and height data from first ray
-        temp_data = self.radar.fields['TEMP']['data'][0, :]
-        height_data_raw = self.radar.fields['HEIGHT']['data'][0, :]
+        # Find a ray with valid temperature and height data
+        # Try first 10 rays to find valid data
+        temp_data = None
+        height_data_raw = None
+        
+        for ray_idx in range(min(10, self.radar.nrays)):
+            temp_candidate = self.radar.fields['TEMP']['data'][ray_idx, :]
+            height_candidate = self.radar.fields['HEIGHT']['data'][ray_idx, :]
+            
+            temp_valid = ~np.ma.getmaskarray(temp_candidate)
+            height_valid = ~np.ma.getmaskarray(height_candidate)
+            
+            if np.any(temp_valid) and np.any(height_valid):
+                temp_data = temp_candidate
+                height_data_raw = height_candidate
+                print(f'    Using ray {ray_idx} for temperature/height profile')
+                break
+        
+        if temp_data is None or height_data_raw is None:
+            print('    Error: No rays with valid temperature/height data found')
+            # Add RA as copy of RC and continue
+            ra_data = self.radar.fields['RC']['data'].copy()
+            ra_dict = {
+                "data": ra_data,
+                "units": "mm/h",
+                "long_name": "Attenuation-based Rainfall Rate (Ryzhkov)",
+                "_FillValue": -32767.0,
+                "standard_name": "Attenuation-based Rainfall Rate",
+            }
+            self.radar.add_field("RA", ra_dict, replace_existing=True)
+            return self.radar
         
         print('    Extracted temp and height data')
         
@@ -346,7 +374,7 @@ def add_ra(self):
         print(f'    Height data processed (max: {max_height:.1f})')
         
         # Find valid (non-masked) temperature and height values
-        temp_valid_mask = ~np.ma.getmaskarray(temp_data)  # FIXED TYPO
+        temp_valid_mask = ~np.ma.getmaskarray(temp_data)
         combined_valid_mask = temp_valid_mask & valid_height_mask
         
         if not np.any(combined_valid_mask):
